@@ -3,6 +3,9 @@ name = "Klos"
 version = "0.1.0"
 authors = ["wellsilver <wellsilver2016@gmail.com>"]
 
+[dependencies]
+bootloader = "0.9.8"
+
 [profile.dev]
 panic = "abort" # disable stack unwinding on panic
 
