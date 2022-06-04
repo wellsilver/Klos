@@ -1,0 +1,13 @@
+[package]
+name = "Klos"
+version = "0.1.0"
+authors = ["wellsilver <wellsilver2016@gmail.com>"]
+
+[profile.dev]
+panic = "abort" # disable stack unwinding on panic
+
+[profile.release]
+panic = "abort" # disable stack unwinding on panic
+
+[unstable]
+build-std = ["core", "compiler_builtins"]
