@@ -1,9 +1,10 @@
 not public repository
 
 # build
-## win
-included run.bat (should work if changed to .sh)
+all platforms:
+
+```make all```
+
+needs ``qemu-system-x86_64`` installed
 
 # things
-
-# changes
