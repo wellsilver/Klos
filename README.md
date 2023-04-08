@@ -1,5 +1,3 @@
-not public repository
-
 # build
 all platforms: (made on wsl:debian)
 
