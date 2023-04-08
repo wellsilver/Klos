@@ -1,10 +1,8 @@
 not public repository
 
 # build
-all platforms:
+all platforms: (made on wsl:debian)
 
-```make all```
+```make run```  starts with qemu
 
-needs ``qemu-system-x86_64`` installed
-
-# things
+needs ``nasm``, ``qemu-system-x86_64``, ``make``, ``gcc``, ``cat``, ``truncate``, ``objcopy``
