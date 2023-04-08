@@ -1,7 +1,7 @@
 # to clean, delete the out folder
 
 asmc = nasm
-cc = gcc
+cc = /usr/local/x86_64elfgcc/bin/x86_64-elf-gcc
 src = src
 out = out
 imagesize = 50M
@@ -14,8 +14,7 @@ $(out):
 
 # compile things
 $(out)/kernel.bin:
-	$(cc) -c $(src)/kernel.c -masm=intel -o $(out)/kernelunstripped.o
-	objcopy -O binary -j .text $(out)/kernelunstripped.o $(out)/kernel.bin
+	$(cc) -c $(src)/kernel.c -masm=intel -o $(out)/kernel.bin
 
 $(out)/bootloader.bin:
 	$(asmc) $(src)/boot.asm -f bin -o $(out)/bootloader.bin
