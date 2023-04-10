@@ -14,14 +14,16 @@ $(out):
 
 # compile things
 $(out)/kernel.bin:
-	$(cc) -c $(src)/kernel.c -masm=intel -o $(out)/kernel.bin
+	$(cc) -c $(src)/kernel.c -masm=intel -g -o $(out)/kernel.bin
+	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
+	objcopy --strip-debug $(out)/kernel.bin
 
 $(out)/bootloader.bin:
 	$(asmc) $(src)/boot.asm -f bin -o $(out)/bootloader.bin
 
 $(out)/klos.img:
 	cat $(out)/bootloader.bin $(out)/kernel.bin > $(out)/klos.img
-	truncate $(out)/klos.img -s 5M
+	truncate $(out)/klos.img -s 50M
 
 qemu:
 	echo If wsl does not spawn a gui, switch to a popular distribution on wsl2 and restart until it works, otherwise instructions in https://github.com/microsoft/WSL/issues/4106
