@@ -73,8 +73,9 @@ longmode:
   mov fs, ax                    ; Set the F-segment to the A-register.
   mov gs, ax                    ; Set the G-segment to the A-register.
   mov ss, ax                    ; Set the stack segment to the A-register.
-  mov rsp, 0x00000500
-  jmp 0x7E00
+  mov rsp, 0x00007BFF
+  mov rbp, rsp
+  jmp 0x7E00+64 ; jump to the memory where our kernel is.
 
 bits 16
 brokenmsg: db "Disk Error",0
