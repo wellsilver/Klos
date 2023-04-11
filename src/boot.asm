@@ -66,15 +66,15 @@ protected32: ; switch straight to long mode
 
 bits 64
 longmode:
-    cli                           ; Clear the interrupt flag.
-    mov ax, GDT64.Data            ; Set the A-register to the data descriptor.
-    mov ds, ax                    ; Set the data segment to the A-register.
-    mov es, ax                    ; Set the extra segment to the A-register.
-    mov fs, ax                    ; Set the F-segment to the A-register.
-    mov gs, ax                    ; Set the G-segment to the A-register.
-    mov ss, ax                    ; Set the stack segment to the A-register.
-    mov rsp, 0x00000500
-    jmp 0x7E00
+  cli                           ; Clear the interrupt flag.
+  mov ax, GDT64.Data            ; Set the A-register to the data descriptor.
+  mov ds, ax                    ; Set the data segment to the A-register.
+  mov es, ax                    ; Set the extra segment to the A-register.
+  mov fs, ax                    ; Set the F-segment to the A-register.
+  mov gs, ax                    ; Set the G-segment to the A-register.
+  mov ss, ax                    ; Set the stack segment to the A-register.
+  mov rsp, 0x00000500
+  jmp 0x7E00
 
 bits 16
 brokenmsg: db "Disk Error",0
