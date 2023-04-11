@@ -1,8 +1,9 @@
 extern void kernel() {
     unsigned char *VGA = (unsigned char *) 0xb8000;
-    VGA[0] = 'h';
-    VGA[1] = 1;
-    VGA[2] = 'i';
-    VGA[3] = 1;
+    char msg[] = "Hello world!";
+    for (int loop=0;loop<30;loop++) {
+        VGA[loop*2] = msg[loop];
+        VGA[(loop*2)+1] = 0x0f;
+    }
     while (1) asm("hlt");
 }
