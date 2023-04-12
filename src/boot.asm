@@ -1,6 +1,12 @@
 bits 16
 org 0x7C00
 
+start:
+; clear screen
+mov ah, 0    ; set function AH=0
+mov al, 3    ; set display mode to 80x25 text mode
+int 10h      ; call BIOS interrupt 10h
+
 ; Initialize disk
 mov dl, 0x80 ; Select disk 0 (change this to the appropriate disk number)
 mov ah, 0x00 ; int13h function 0
@@ -9,9 +15,9 @@ int 0x13     ; Reset disk
 ; Read sector
 mov ax, 0x0000 ; Read mode, use CHS addressing
 mov es, ax     ; Segment for buffer
-mov bx, 0x7E00 ; Offset for buffer
+mov bx, 0x900  ; Offset for buffer
 mov ah, 0x02   ; int13h function 2
-mov al, 0x01   ; Number of sectors to read
+mov al, 2      ; Number of sectors to read
 mov ch, 0x00   ; Cylinder number
 mov cl, 0x02   ; Sector number
 mov dh, 0x00   ; Head number
@@ -75,7 +81,7 @@ longmode:
   mov ss, ax                    ; Set the stack segment to the A-register.
   mov rsp, 0x00007BFF
   mov rbp, rsp
-  jmp 0x7E00+64 ; jump to the memory where our kernel is.
+  jmp 0x900+64 ; jump to the memory where our kernel is and skip the 64 byte elf header
 
 bits 16
 brokenmsg: db "Disk Error",0
@@ -130,26 +136,26 @@ SZ_32         equ 1 << 6
 LONG_MODE     equ 1 << 5
  
 GDT64: ; 64 bit gdt
-    .Null: equ $ - GDT64
-        dq 0
-    .Code: equ $ - GDT64
-        dd 0xFFFF                                   ; Limit & Base (low, bits 0-15)
-        db 0                                        ; Base (mid, bits 16-23)
-        db PRESENT | NOT_SYS | EXEC | RW            ; Access
-        db GRAN_4K | LONG_MODE | 0xF                ; Flags & Limit (high, bits 16-19)
-        db 0                                        ; Base (high, bits 24-31)
-    .Data: equ $ - GDT64
-        dd 0xFFFF                                   ; Limit & Base (low, bits 0-15)
-        db 0                                        ; Base (mid, bits 16-23)
-        db PRESENT | NOT_SYS | RW                   ; Access
-        db GRAN_4K | SZ_32 | 0xF                    ; Flags & Limit (high, bits 16-19)
-        db 0                                        ; Base (high, bits 24-31)
-    .TSS: equ $ - GDT64
-        dd 0x00000068
-        dd 0x00CF8900
-    .Pointer:
-        dw $ - GDT64 - 1
-        dq GDT64
+.Null: equ $ - GDT64
+  dq 0
+.Code: equ $ - GDT64
+  dd 0xFFFF                                   ; Limit & Base (low, bits 0-15)
+  db 0                                        ; Base (mid, bits 16-23)
+  db PRESENT | NOT_SYS | EXEC | RW            ; Access
+  db GRAN_4K | LONG_MODE | 0xF                ; Flags & Limit (high, bits 16-19)
+  db 0                                        ; Base (high, bits 24-31)
+.Data: equ $ - GDT64
+  dd 0xFFFF                                   ; Limit & Base (low, bits 0-15)
+  db 0                                        ; Base (mid, bits 16-23)
+  db PRESENT | NOT_SYS | RW                   ; Access
+  db GRAN_4K | SZ_32 | 0xF                    ; Flags & Limit (high, bits 16-19)
+  db 0                                        ; Base (high, bits 24-31)
+.TSS: equ $ - GDT64
+  dd 0x00000068
+  dd 0x00CF8900
+.Pointer:
+  dw $ - GDT64 - 1
+  dq GDT64
 
 times 510 - ($ - $$) db 0
 dw 0xAA55
