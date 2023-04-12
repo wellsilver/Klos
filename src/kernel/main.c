@@ -1,4 +1,4 @@
-int kernel() {
-
-    return 0;
+extern void entry() {
+    
+    while (1) asm("hlt");
 }
