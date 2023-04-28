@@ -1,6 +1,32 @@
 bits 16
 org 0x7C00
 
+;kfsbootsector:
+;  3 bytes reserved (jmp short x, nop)
+;  offset | description
+;  4  | char3 allways "kfs"
+;  7  | uint64 (8 bytes large) how many sectors the disk holds
+;  15 | uint8 how large a block is in sectors
+;  16 | uint8 usability; 1 = readonly, 2 = normal, 3 = scanrecommended
+;  17 | uint8 version
+;  18 | uint8 how many sectors to skip to reach the first block
+;  19 | char12 disc name
+;  32 | onwards is bootcode (or blank)
+
+jmp short start
+nop
+
+db "kfs"
+dq 1000 ; 1.024 megabyte size
+db 2
+db 2
+db 1
+db 1
+db "Klos"
+times 32 - ($ - $$) db " " ; truncate the disk name string
+
+start:
+
 mov ah, 0
 mov al, 2
 int 10h
@@ -79,7 +105,7 @@ longmode:
   mov ss, ax                    ; Set the stack segment to the A-register.
   mov rsp, 0x00007BFF
   mov rbp, rsp
-  jmp 0x7E00+64 ; jump to the memory where our kernel is.
+  jmp 0x7E00+64 ; jump to the memory where entry.c is
 
 bits 16
 brokenmsg: db "Disk Error",0

@@ -18,6 +18,11 @@ $(out)/kernel.bin:
 	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
 	objcopy --strip-debug $(out)/kernel.bin
 
+$(out)/entry.bin:
+	$(cc) -c $(src)/entry.c -masm=intel -g -o $(out)/entry.bin
+	objcopy --only-keep-debug $(out)/entry.bin $(out)/entry.sym
+	objcopy --strip-debug $(out)/entry.bin
+
 $(out)/bootloader.bin:
 	$(asmc) $(src)/boot.asm -f bin -o $(out)/bootloader.bin
 
