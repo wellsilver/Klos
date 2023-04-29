@@ -1,8 +1,8 @@
 docs on usage stuff
 
 # os
-## userland
-
+## notes
+use registers, kernel stack doesnt expand
 
 ## underground
 ### errors
@@ -13,7 +13,6 @@ bootloader cant read the second sector
 area in memory from ``0x00007E00 ~ 0x0007FFFF`` used to describe the machine, its ram usage, its disc, anything a driver may need, etc.
 
 I made this up, and only klos does this.
-
 
 ### memory usage:
 | start | end | size | desc |

@@ -36,3 +36,32 @@ block:
 note that the first block should be a directory named "/root" which is the first directory. remember to truncate the string to 24 characters
 """
 
+file = open("out/klos.img","wb")
+
+f = open("out/bootloader.bin","rb")
+bootloader = f.read()
+f.close()
+
+f = open("out/entry.bin","rb")
+entry = f.read()
+f.close()
+
+f = open("out/lowkernel.bin","rb")
+lowkernel = f.read()
+f.close()
+
+# THE BOOTLOADER HAS BOOTHEADERS&KFSSTUFF IN IT
+file.write(bootloader) # write the bootloader to the image
+file.write(entry)
+
+# setup root folder
+file.write((10).to_bytes(length=1,byteorder='little',signed=False))
+file.write((2).to_bytes(length=1,byteorder='little',signed=False))
+file.write((0).to_bytes(length=8,byteorder='little',signed=False))
+file.write((0).to_bytes(length=8,byteorder='little',signed=False))
+file.write(bytes("/root","ascii").ljust(24,b' '))
+
+# entry is the kfs driver, its where the one sector we skip is. It loads the (lower) kernel as if its a file (hiddenfile "lowkernel")
+
+# the first step to adding the file is splitting it into 975 byte chunks, which is the size of a block in kfs...
+blockptr = 1 # pointing to /root

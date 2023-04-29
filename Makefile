@@ -6,17 +6,17 @@ src = src
 out = out
 imagesize = 50M
 
-build: $(out) $(out)/kernel.bin $(out)/bootloader.bin $(out)/klos.img
-run: $(out) $(out)/kernel.bin  $(out)/bootloader.bin $(out)/klos.img qemu clean
+build: $(out) $(out)/lowkernel.bin $(out)/entry.bin $(out)/bootloader.bin $(out)/klos.img
+run: $(out) $(out)/lowkernel.bin $(out)/entry.bin $(out)/bootloader.bin $(out)/klos.img qemu clean
 
 $(out):
 	mkdir $(out)
 
 # compile things
-$(out)/kernel.bin:
-	$(cc) -c $(src)/kernel/main.c -masm=intel -g -o $(out)/kernel.bin
-	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
-	objcopy --strip-debug $(out)/kernel.bin
+$(out)/lowkernel.bin:
+	$(cc) -c $(src)/lowkernel/main.c -masm=intel -g -o $(out)/lowkernel.bin
+	objcopy --only-keep-debug $(out)/lowkernel.bin $(out)/lowkernel.sym
+	objcopy --strip-debug $(out)/lowkernel.bin
 
 $(out)/entry.bin:
 	$(cc) -c $(src)/entry.c -masm=intel -g -o $(out)/entry.bin
@@ -26,9 +26,9 @@ $(out)/entry.bin:
 $(out)/bootloader.bin:
 	$(asmc) $(src)/boot.asm -f bin -o $(out)/bootloader.bin
 
+# IF YOU CHANGED $(out) image.py IS WHERE THE ERROR IS
 $(out)/klos.img:
-	cat $(out)/bootloader.bin $(out)/kernel.bin > $(out)/klos.img
-	truncate $(out)/klos.img -s 50M
+	python3 image.py
 
 qemu:
 	echo If wsl does not spawn a gui, switch to a popular distribution on wsl2 and restart until it works, otherwise instructions in https://github.com/microsoft/WSL/issues/4106
