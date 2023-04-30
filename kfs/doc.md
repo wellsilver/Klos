@@ -5,7 +5,7 @@ bootsector:
   offset | description
   4  | char3 allways "kfs"
   7  | uint64 (8 bytes large) how many sectors the disk holds
-  15 | uint8 how large a block is in sectors
+  15 | uint8 how large a block is in sectors. (UNTIL A BETTER IMPLEMENTATION IS MADE, THIS IS ALLWAYS 2)
   16 | uint8 usability; 1 = readonly, 2 = normal, 3 = scanrecommended
   17 | uint8 version
   18 | uint8 how many sectors to skip to reach the first block

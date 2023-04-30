@@ -1,6 +1,7 @@
 # to clean, delete the out folder
 
 asmc = nasm
+# must be x86_64 no_os elf
 cc = /usr/local/x86_64elfgcc/bin/x86_64-elf-gcc
 src = src
 out = out
@@ -14,14 +15,14 @@ $(out):
 
 # compile things
 $(out)/lowkernel.bin:
-	$(cc) -c $(src)/lowkernel/main.c -masm=intel -g -o $(out)/lowkernel.bin
+	$(cc) -c $(src)/lowkernel/main.c -masm=intel -g -Os -o $(out)/lowkernel.bin
 	objcopy --only-keep-debug $(out)/lowkernel.bin $(out)/lowkernel.sym
 	objcopy --strip-debug $(out)/lowkernel.bin
 
 $(out)/entry.bin:
-	$(cc) -c $(src)/entry.c -masm=intel -g -o $(out)/entry.bin
-	objcopy --only-keep-debug $(out)/entry.bin $(out)/entry.sym
-	objcopy --strip-debug $(out)/entry.bin
+	$(asmc) $(src)/entry.asm -f bin -o $(out)/entry.bin
+#	objcopy --only-keep-debug $(out)/entry.bin $(out)/entry.sym
+#	objcopy --strip-debug $(out)/entry.bin
 
 $(out)/bootloader.bin:
 	$(asmc) $(src)/boot.asm -f bin -o $(out)/bootloader.bin

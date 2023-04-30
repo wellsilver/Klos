@@ -105,7 +105,7 @@ longmode:
   mov ss, ax                    ; Set the stack segment to the A-register.
   mov rsp, 0x00007BFF
   mov rbp, rsp
-  jmp 0x7E00+64 ; jump to the memory where entry.c is
+  jmp 0x7E00 ; jump to the memory where entry.c is
 
 bits 16
 brokenmsg: db "Disk Error",0
