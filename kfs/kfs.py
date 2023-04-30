@@ -6,22 +6,18 @@ def makeheader(type,permmisions:int,prevblock:int,nextblock:int,name:str) -> byt
   ret+=nextblock.to_bytes(8,byteorder='little',signed=False)
   ret+=bytes(name,'ascii').ljust(24,b' ')
   return ret
-def insertfile(writeto,file:bytearray):
-  # the first step to adding the file is splitting it into 982 byte chunks, which is the size of a block (ignoring header) in kfs...
-  f, r = divmod(len(file),982)
-  f+=1 # ignore r, we just want to get the size in blocks of lowkernel.bin rounding up.
-
+def insertfile(writeto,file:bytes,name:str):
   blockptr=0
   rangeintofile=0
-  for i in range(f): # assemble the lower kernel
-    b=makeheader(1,10,blockptr,0,"lowkernel")
+  for i in range(file): # assemble the lower kernel
+    b=makeheader(1,10,blockptr,0,name)
     v = bytearray("",'ascii')
-    while rangeintofile<=982*blockptr:
-      if file[rangeintofile] == None:
+    while rangeintofile<=982*(blockptr+1):
+      if rangeintofile >= len(file):
         break
       v.append(file[rangeintofile])
       rangeintofile+=1
-    v = v+b
-    v=v.ljust(1024,b' ')
+    v = b+v # add the headers before the data
+    v=v.ljust(1024,b'\0')
     file.write(v)
     blockptr+=1

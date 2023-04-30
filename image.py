@@ -63,14 +63,14 @@ f.close()
 
 # THE BOOTLOADER HAS BOOTHEADERS&KFSSTUFF IN IT
 file.write(bootloader) # write the bootloader to the image
-file.write(entry.ljust(512,chr(0).encode('ascii'))) # write the kernel loader into memory
+file.write(entry.ljust(512,b'\0')) # write the kernel loader into memory
 
 # setup root folder
 v = bytearray("",'ascii')
 v+=makeheader(2,10,0,0,"/root")
 v+=(1).to_bytes(length=8,byteorder='little',signed=False) # pointer to kernel
 
-file.write(v) # create the "/root" folder
+file.write(v.ljust(1024,b'\0')) # create the "/root" folder
 
 # entry is the kfs driver, its where the one sector we skip is. It loads the (lower) kernel as if its a file (hiddenfile "lowkernel")
 
@@ -83,13 +83,13 @@ rangeintofile=0
 for i in range(f): # assemble the lower kernel
   b=makeheader(1,10,blockptr,0,"lowkernel")
   v = bytearray("",'ascii')
-  while rangeintofile<=982*blockptr:
-    if lowkernel[rangeintofile] == None:
+  while rangeintofile<=982*(blockptr+1):
+    if rangeintofile >= len(lowkernel):
       break
     v.append(lowkernel[rangeintofile])
     rangeintofile+=1
-  v = v+b
-  v=v.ljust(1024,b' ')
+  v = b+v # add the headers before the data
+  v=v.ljust(1024,b'\0')
   file.write(v)
   blockptr+=1
 
