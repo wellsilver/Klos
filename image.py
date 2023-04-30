@@ -81,13 +81,18 @@ f+=1 # ignore r, we just want to get the size in blocks of lowkernel.bin roundin
 blockptr=0
 rangeintofile=0
 for i in range(f): # assemble the lower kernel
-  b=makeheader(1,10,blockptr,0,"lowkernel")
   v = bytearray("",'ascii')
   while rangeintofile<=982*(blockptr+1):
     if rangeintofile >= len(lowkernel):
       break
     v.append(lowkernel[rangeintofile])
     rangeintofile+=1
+  if rangeintofile >= len(lowkernel):
+    b=makeheader(1,10,blockptr,0,"lowkernel")
+    print("c. "+str(b))
+  else:
+    b=makeheader(1,10,blockptr,blockptr+1,"lowkernel")
+    print("v. "+str(b))
   v = b+v # add the headers before the data
   v=v.ljust(1024,b'\0')
   file.write(v)
