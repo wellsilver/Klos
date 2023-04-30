@@ -1,6 +1,3 @@
-# python script to manage the image
-
-"""
 all integers are little endian.
 
 bootsector:
@@ -36,61 +33,3 @@ block:
   if there is no more space for entrys, allocate a new block, setup the header, and put entrys. rinse and repeat.
   if the entrys stop before the block, place a 0.
 note that the first block should be a directory named "/root" which is the first directory. remember to truncate the string to 24 characters
-"""
-
-def makeheader(type,permmisions:int,prevblock:int,nextblock:int,name:str) -> bytearray:
-  ret = bytearray("",'ascii')
-  ret+=permmisions.to_bytes(1,byteorder='little',signed=False)
-  ret+=type.to_bytes(1,byteorder='little',signed=False)
-  ret+=prevblock.to_bytes(8,byteorder='little',signed=False)
-  ret+=nextblock.to_bytes(8,byteorder='little',signed=False)
-  ret+=bytes(name,'ascii').ljust(24,b' ')
-  return ret
-
-file = open("out/klos.img","wb")
-
-f = open("out/bootloader.bin","rb")
-bootloader = f.read()
-f.close()
-
-f = open("out/entry.bin","rb")
-entry = f.read()
-f.close()
-
-f = open("out/lowkernel.bin","rb")
-lowkernel = f.read()
-f.close()
-
-# THE BOOTLOADER HAS BOOTHEADERS&KFSSTUFF IN IT
-file.write(bootloader) # write the bootloader to the image
-file.write(entry.ljust(512,chr(0).encode('ascii'))) # write the kernel loader into memory
-
-# setup root folder
-v = bytearray("",'ascii')
-v+=makeheader(2,10,0,0,"/root")
-v+=(1).to_bytes(length=8,byteorder='little',signed=False) # pointer to kernel
-
-file.write(v) # create the "/root" folder
-
-# entry is the kfs driver, its where the one sector we skip is. It loads the (lower) kernel as if its a file (hiddenfile "lowkernel")
-
-# the first step to adding the file is splitting it into 982 byte chunks, which is the size of a block (ignoring header) in kfs...
-f, r = divmod(len(lowkernel),982)
-f+=1 # ignore r, we just want to get the size in blocks of lowkernel.bin rounding up.
-
-blockptr=0
-rangeintofile=0
-for i in range(f): # assemble the lower kernel
-  b=makeheader(1,10,blockptr,0,"lowkernel")
-  v = bytearray("",'ascii')
-  while rangeintofile<=982*blockptr:
-    if lowkernel[rangeintofile] == None:
-      break
-    v.append(lowkernel[rangeintofile])
-    rangeintofile+=1
-  v = v+b
-  v=v.ljust(1024,b' ')
-  file.write(v)
-  blockptr+=1
-
-file.close()
