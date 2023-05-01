@@ -1,5 +1,6 @@
 bits 64
-jmp err
+org 0x7E00
+
 mov dx, 0x1F6
 mov ah, 0b00100000
 out dx, al          ; LBA setup
@@ -93,21 +94,20 @@ checkerr:
   test al, 1
   jz err
   ret
-discerrmsg: db "Disk error",0
 err:
-  xor rax,rax
-  mov rdi, 0xB8000
-  mov rsi, discerrmsg-1
+  mov rax, 0xb8000
+  mov rdi, discerrmsg-1
 .loop:
-  inc rsi
-  mov ah, [rsi]
-  or ah,ah
-  jz end
-  mov byte [rdi], ah
   inc rdi
-  mov byte [rdi], 7
-  inc rdi
-  jmp .loop
+  mov ch, [rdi]
+  mov byte [rax], ch
+  inc rax
+  mov byte [rax], 7
+  inc rax
+  and ch, 0
+  jz .loop
 end:
   hlt
 jmp end
+
+discerrmsg: db "Disc error",0 ; for "err" function
