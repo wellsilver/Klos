@@ -40,17 +40,32 @@ out dx, al
 call waitfordrive
 
 mov ebx, 2
+next:
 call selectsectorinebx ; read second sector, it should have the first lowkernel block in it
 
 call readsec
+
+call waitfordrive
+
 call checkerr
-; Kernel memory starts from 0x8000. buffer is in 0x00000500
-mov rdi, 0x00000500
+
+; Kernel memory starts from 0x00100000. buffer is in 0x00000500
+mov rdi, 0x00100000
 call readto_rdiaddr
 
+mov rax, qword [rdi+11] ; get the "next ptr" pointer
 
+test rax, 0
+jz startkernel ; if the "next ptr" pointer is 0, start the kernel
 
-jmp end
+; read next sector if there is more kernel to load
+inc rbx
+jmp next
+
+startkernel: ; setup for kernel
+mov rax, qword [0x00100000+24] ; get the position of entry function
+add rax, 0x00100000
+jmp rax
 
 selectsectorinebx:
   mov eax, ebx        ; Set the LBA low register
@@ -79,12 +94,18 @@ readsec:
   ret
 
 waitfordrive:
+  mov rax, 0xB8000
+  mov byte [rax], '*'
+  mov byte [rax+1], 7
   mov dx, 0x1F7
   mov al, 0
   .loop:
     in al, dx
     test al, 0xC0
   jz .loop
+  mov rax, 0xB8000
+  mov byte [rax], ' '
+  mov byte [rax+1], 7
   ret
 
 checkerr:
