@@ -40,6 +40,7 @@ out dx, al
 call waitfordrive
 
 mov ebx, 2
+mov rdi, 0x00100000
 next:
 call selectsectorinebx ; read second sector, it should have the first lowkernel block in it
 
@@ -50,20 +51,30 @@ call waitfordrive
 call checkerr
 
 ; Kernel memory starts from 0x00100000. buffer is in 0x00000500
-mov rdi, 0x00100000
+mov rsi, 0x00000500
+
+mov r9, rdi
+mov rdi, 0x00000500
 call readto_rdiaddr
+mov rdi, r9
+mov ah, byte [rsi+11] ; get the "next ptr" pointer
 
-mov rax, qword [rdi+11] ; get the "next ptr" pointer
+add rsi, 44
+;esi ; Source address
+;edi ; Destination address
+mov ecx, 980 ; Number of bytes to copy
+rep movsb ; Copy data
+add rdi, 980
 
-test rax, 0
+cmp ah, 0
 jz startkernel ; if the "next ptr" pointer is 0, start the kernel
 
 ; read next sector if there is more kernel to load
-inc rbx
+inc ebx
 jmp next
 
 startkernel: ; setup for kernel
-mov rax, qword [0x00100000+24] ; get the position of entry function
+mov rax, qword [0x00100000+12] ; get the position of entry function
 add rax, 0x00100000
 jmp rax
 
@@ -93,19 +104,16 @@ readsec:
   out dx, al
   ret
 
+;.still_going:  in al, dx;
+;    test al, 8           ; the sector buffer requires servicing.
+;    jz .still_going      ; until the sector buffer is ready.
 waitfordrive:
-  mov rax, 0xB8000
-  mov byte [rax], '*'
-  mov byte [rax+1], 7
-  mov dx, 0x1F7
+  mov dx, 0x1F0
   mov al, 0
   .loop:
     in al, dx
-    test al, 0xC0
-  jz .loop
-  mov rax, 0xB8000
-  mov byte [rax], ' '
-  mov byte [rax+1], 7
+    test al, 0x40
+    jz .loop
   ret
 
 checkerr:
