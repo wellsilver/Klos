@@ -17,7 +17,7 @@ call waitready
 call checkerr
 
 mov r9, 0x00100000 ; used memory
-mov rbx, 3 ; first sector with kernel
+mov rbx, 5 ; first sector with kernel
 next:
   call selectsectorinRBX
 
