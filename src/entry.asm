@@ -1,33 +1,9 @@
-bits 64
 org 0x7E00
+bits 64
 
-mov dx, 0x1F6
-mov ah, 0b00100000
-out dx, al          ; LBA setup
+call waitready
 
-call waitfordrive
-
-mov dx, 0x1F0       ; Set the data port address
-mov al, 0xA1        ; Set the command byte (0xA1 is the command code for IDENTIFY PACKET DEVICE)
-out dx, al          ; Send the command byte to the ATAPI device
-
-call waitfordrive
-
-mov dx, 0x1F0 ; Set the data port address
-mov cx, 256   ; Set the count of words to be read (512 bytes / 2 = 256 words)
-mov rdi, 0x00000500 ; some free memory below our stack, we can forget about this later
-cld           ; Set the direction flag to forward (incrementing)
-rep insw      ; Read the data from the data register into memory
-
-mov dx, 0x1F2   ; select the "features" register
-mov al, 0x05    ; allow APM
-out dx, al
-
-mov dx, 0x1F7   ; select the "command/status" register
-mov al, 0xEF    ; send the "SET FEATURES" command
-out dx, al
-
-call waitfordrive
+call reset
 
 mov dx, 0x1F2   ; select the "features" register
 mov al, 0x01    ; allow LBA
@@ -37,82 +13,128 @@ mov dx, 0x1F7   ; select the "command/status" register
 mov al, 0xEF    ; send the "SET FEATURES" command
 out dx, al
 
-call waitfordrive
-
-mov ebx, 2
-mov rdi, 0x00100000
-next:
-call selectsectorinebx ; read second sector, it should have the first lowkernel block in it
-
-call readsec
-
-call waitfordrive
-
+call waitready
 call checkerr
 
-; Kernel memory starts from 0x00100000. buffer is in 0x00000500
-mov rsi, 0x00000500
+mov r9, 0x00100000 ; used memory
+mov rbx, 3 ; first sector with kernel
+next:
+  call selectsectorinRBX
 
-mov r9, rdi
-mov rdi, 0x00000500
-call readto_rdiaddr
-mov rdi, r9
-mov ah, byte [rsi+11] ; get the "next ptr" pointer
+  call read
 
-add rsi, 44
-;esi ; Source address
-;edi ; Destination address
-mov ecx, 980 ; Number of bytes to copy
-rep movsb ; Copy data
-add rdi, 980
+  call waitready
+  call checkerr
+  call waitpoll
 
-cmp ah, 0
-jz startkernel ; if the "next ptr" pointer is 0, start the kernel
+  call readtobuf ; read the kfs block to 0x00000500
 
-; read next sector if there is more kernel to load
-inc ebx
-jmp next
+  call readtomem
 
-startkernel: ; setup for kernel
-mov rax, qword [0x00100000+12] ; get the position of entry function
-add rax, 0x00100000
-jmp rax
+  mov rcx, 0x00000500
+  mov rax, qword [rcx+11]
+  and rax, 0 ; if this is the last kfs block
+  jz startkernel ; if its the last kfs block start the kernel
 
-selectsectorinebx:
+  add rbx, 2
+  jmp next
+
+startkernel:
+  mov rax, 0xB8000
+  mov byte [rax], 'h'
+  mov byte [rax+1], 7
+.loop:
+  hlt
+  jmp .loop
+
+selectsectorinRBX:
+  ; select master drive
+  mov dx, 0x1F6
+  xor al, al
+  or al, 0xE0 + 0b0000 ; or it with 4 blank bits
+  out dx, al
+
+  ; select 2 sectors
+  mov dx, 0x1F2
+  mov al, 2 ; an entire kfs block (2 sectors)
+  out dx, al
+
+  mov dx, 1f2h
   mov eax, ebx        ; Set the LBA low register
   out dx, al
 
+  mov dx, 1f3h
   mov eax, ebx        ; Move ebx into eax
   shr eax, 8          ; Shift eax right by 8 bits to get the LBA mid register
   out dx, al
 
+  mov dx, 1f4h
   mov eax, ebx        ; Move ebx into eax
   shr eax, 16         ; Shift eax right by 16 bits to get the LBA high register
   out dx, al
+
   ret
 
-readto_rdiaddr:
-  mov dx, 0x1F0 ; Set the data port address
-  mov cx, 256   ; Set the count of words to be read (512 bytes / 2 = 256 words)
-  cld           ; Set the direction flag to forward (incrementing)
-  rep insw      ; Read the data from the data register into memory
+readtomem:
+  mov esi, 0x00000500+44 ; source, skips the kfs header
+  mov rdi, r9 ; destination
+  mov ecx, 980
+  cld
+
+  rep movsb
+
+  mov r9, rdi ; save rdi
   ret
 
-readsec:
+readtobuf:
+  mov dx, 0x1F0          ; set up the DX register with the I/O port number
+  mov ecx, 512           ; set up the ECX register with the number of words to read (512 bytes = 256 words) - we are reading 2 sectors
+  mov edi, 0x00000500        ; set up the EDI register with the address of the buffer
+  cld                    ; ensure that the direction flag is cleared
+
+  rep insw               ; perform a repeated string input operation from the I/O port into memory
+
+  ret
+
+reset:
+  mov dx, 0x1F0
+  mov al, 4
+  out dx, al
+  xor eax, eax
+  out dx, al
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+  ret
+
+read:
   mov dx, 0x1F7
-  mov al, 0x20 ; READ SECTORS
+  mov al, 0x20 ; read with retry
   out dx, al
   ret
 
-;.still_going:  in al, dx;
-;    test al, 8           ; the sector buffer requires servicing.
-;    jz .still_going      ; until the sector buffer is ready.
-waitfordrive:
-  mov dx, 0x1F0
-  mov al, 0
-  .loop:
+waitpoll:
+  mov dx, 0x1F7
+.loop:
+  xor al,al
+  in al, dx
+  test al, 1 << 3
+  jz .loop
+  mov rax, 0xB8000
+  mov byte [rax], ' '
+  mov byte [rax+1], 7
+  ret
+
+waitready:
+  mov rax, 0xB8000
+  mov byte [rax], '*'
+  mov byte [rax+1], 7
+  xor al, al
+  mov dx, 0x1F7
+.loop:
     in al, dx
-    test al, 0x40
+    test al, 1 << 6 ; if ready
     jz .loop
   ret
 
@@ -120,11 +142,14 @@ checkerr:
   mov dx, 0x1F7
   mov al, 0
   in al, dx
-  test al, 1
+  test al, 1 << 0
+  jz err
+  test al, 1 << 5
   jz err
   ret
 err:
   mov rax, 0xb8000
+  xor rcx,rcx
   mov rdi, discerrmsg-1
 .loop:
   inc rdi
@@ -135,6 +160,7 @@ err:
   inc rax
   and ch, 0
   jz .loop
+
 end:
   hlt
 jmp end
