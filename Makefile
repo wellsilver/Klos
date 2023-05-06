@@ -7,17 +7,17 @@ src = src
 out = out
 imagesize = 50M
 
-build: $(out) $(out)/lowkernel.bin $(out)/entry.bin $(out)/bootloader.bin $(out)/klos.img
-run: $(out) $(out)/lowkernel.bin $(out)/entry.bin $(out)/bootloader.bin $(out)/klos.img qemu clean
+build: $(out) $(out)/kernel.bin $(out)/entry.bin $(out)/bootloader.bin $(out)/klos.img
+run: $(out) $(out)/kernel.bin $(out)/entry.bin $(out)/bootloader.bin $(out)/klos.img qemu clean
 
 $(out):
 	mkdir $(out)
 
 # compile things
-$(out)/lowkernel.bin:
-	$(cc) -c $(src)/lowkernel/main.c -masm=intel -g -Os -o $(out)/lowkernel.bin
-	objcopy --only-keep-debug $(out)/lowkernel.bin $(out)/lowkernel.sym
-	objcopy --strip-debug $(out)/lowkernel.bin
+$(out)/kernel.bin:
+	$(cc) -c $(src)/kernel/main.c -masm=intel -g -Os -o $(out)/kernel.bin
+	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
+	objcopy --strip-debug $(out)/kernel.bin
 
 $(out)/entry.bin:
 	$(asmc) $(src)/entry.asm -f bin -o $(out)/entry.bin

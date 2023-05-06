@@ -57,7 +57,7 @@ f = open("out/entry.bin","rb")
 entry = f.read()
 f.close()
 
-f = open("out/lowkernel.bin","rb")
+f = open("out/kernel.bin","rb")
 lowkernel = f.read()
 f.close()
 
