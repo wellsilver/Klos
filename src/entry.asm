@@ -49,9 +49,9 @@ startkernel:
 
 selectsectorinRBX:
   ; select master drive
-  mov dx, 0x1F6
-  xor al, al
-  or al, 0xE0 + 0b0000 ; or it with 4 blank bits
+  mov edx, 0x01F6      ; Port to send drive and bit 24 - 27 of LBA
+  shr eax, 24          ; Get bit 24 - 27 in al
+  or al, 11100000b     ; Set bit 6 in al for LBA mode
   out dx, al
 
   ; select 2 sectors
@@ -143,26 +143,42 @@ checkerr:
   mov al, 0
   in al, dx
   test al, 1 << 0
-  jz err
+  jz err_er
   test al, 1 << 5
-  jz err
+  jz err_df
   ret
-err:
-  mov rax, 0xb8000
-  xor rcx,rcx
+err_er:
+  mov rax, 0xB8000
   mov rdi, discerrmsg-1
-.loop:
+  call printrditorax
+  mov byte [rax], 'E'
+  mov byte [rax+1], 7
+  add rax,2
+  mov byte [rax], 'R'
+  mov byte [rax+1], 7
+  jmp end
+err_df:
+  mov rax, 0xB8000
+  mov rdi, discerrmsg-1
+  call printrditorax
+  mov byte [rax], 'D'
+  mov byte [rax+1], 7
+  add rax,2
+  mov byte [rax], 'F'
+  mov byte [rax+1], 7
+  jmp end
+printrditorax:
   inc rdi
   mov ch, [rdi]
   mov byte [rax], ch
   inc rax
   mov byte [rax], 7
   inc rax
-  and ch, 0
-  jz .loop
-
+  cmp ch, 0
+  jnz printrditorax
+  ret
 end:
   hlt
 jmp end
 
-discerrmsg: db "Disc error",0 ; for "err" function
+discerrmsg: db "Disc error:",0 ; for "err" function

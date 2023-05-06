@@ -78,7 +78,7 @@ file.write(v.ljust(1024,b'\0')) # create the "/root" folder
 f, r = divmod(len(lowkernel),982)
 f+=1 # ignore r, we just want to get the size in blocks of lowkernel.bin rounding up.
 
-blockptr=0
+blockptr=1
 rangeintofile=0
 for i in range(f): # assemble the lower kernel
   v = bytearray("",'ascii')
