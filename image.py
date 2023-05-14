@@ -7,7 +7,7 @@ bootsector:
   3 bytes reserved (jmp short x, nop)
   offset | description
   4  | char3 allways "kfs"
-  7  | uint64 (8 bytes large) how many sectors the disk holds
+  7  | uint64 (8 bytes large) how many sectors the disk holds (0 to autoscan)
   15 | uint8 how large a block is in sectors
   16 | uint8 usability; 1 = readonly, 2 = normal, 3 = scanrecommended
   17 | uint8 version
@@ -53,17 +53,12 @@ f = open("out/bootloader.bin","rb")
 bootloader = f.read()
 f.close()
 
-f = open("out/entry.bin","rb")
-entry = f.read()
-f.close()
-
 f = open("out/kernel.bin","rb")
 lowkernel = f.read()
 f.close()
 
 # THE BOOTLOADER HAS BOOTHEADERS&KFSSTUFF IN IT
 file.write(bootloader) # write the bootloader to the image
-file.write(entry.ljust(512,b'\0')) # write the kernel loader into memory
 
 # setup root folder
 v = bytearray("",'ascii')
@@ -78,7 +73,27 @@ file.write(v.ljust(1024,b'\0')) # create the "/root" folder
 f, r = divmod(len(lowkernel),982)
 f+=1 # ignore r, we just want to get the size in blocks of lowkernel.bin rounding up.
 
-blockptr=1
+blockptr=2
+prevblock=0
+rangeintofile=0
+for i in range(f):
+  v = bytearray("",'ascii')
+  if rangeintofile+1024 >= len(lowkernel):
+    hd=makeheader(1,10,prevblock,0,"kernel")
+  else:
+    hd=makeheader(1,10,prevblock,blockptr+1,"kernel")
+  v += hd
+  while len(v) <= 1024:
+    if rangeintofile > len(lowkernel):
+      break
+    v += bytearray(lowkernel[rangeintofile])
+    rangeintofile+=1
+  prevblock = blockptr
+  blockptr+=1
+  v.ljust(1024,b"\0") # fill remaining portion of the block with null
+  file.write(v)
+
+"""blockptr=1
 rangeintofile=0
 for i in range(f): # assemble the lower kernel
   v = bytearray("",'ascii')
@@ -94,6 +109,6 @@ for i in range(f): # assemble the lower kernel
   v = b+v # add the headers before the data
   v=v.ljust(1024,b'\0')
   file.write(v)
-  blockptr+=1
+  blockptr+=1"""
 
 file.close()

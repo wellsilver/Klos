@@ -20,4 +20,4 @@ I made this up, and only klos does this.
 | 0x00000000 | 0x000004FF |  | unusable |
 | 0x00000500 | 0x00007BFF | 30kb | stack (at top) and buffers (at bottom), simply dont use too much of the stack |
 | 0x00007BFF | 0x00007DFF | 512b | unusable, bootsector |
-| 0x00007E00 | 0x0007FFFF | 480.5kb | used randomly |
+| 0x00007E00 | 0x0007FFFF | 480.5kb | kernel |
