@@ -1,29 +1,10 @@
 bits 16
 org 0x7C00
 
-;kfsbootsector:
-;  3 bytes reserved (jmp short x, nop)
-;  offset | description
-;  4  | char3 allways "kfs"
-;  7  | uint64 (8 bytes large) how many sectors the disk holds
-;  15 | uint8 how large a block is in sectors
-;  16 | uint8 usability; 1 = readonly, 2 = normal, 3 = scanrecommended
-;  17 | uint8 version
-;  18 | uint8 how many sectors to skip to reach the first block
-;  19 | char12 disc name
-;  32 | onwards is bootcode (or blank)
-
 jmp short start
 nop
 
-db "kfs"
-dq 0 ; uknown size
-db 2
-db 2
-db 1
-db 0
-db "Klos"
-times 32 - ($ - $$) db " " ; truncate the disk name string
+; kfs headers here, later
 
 start:
 mov ah, 0
@@ -35,6 +16,17 @@ mov dl, 0x80 ; Select disk 0 (change this to the appropriate disk number)
 mov ah, 0x00 ; int13h function 0
 int 0x13     ; Reset disk
 jz brokendisc    ; jump to error label if carry flag is set (error occurred)
+
+mov ax, 0x0000 ; Read mode, use CHS addressing
+mov es, ax     ; Segment for buffer
+mov bx, 0x7E00 ; Offset for buffer
+mov ah, 0x02   ; int13h function 2
+mov al, byte [Stage2size]   ; Number of sectors to read
+mov ch, 0x00   ; Cylinder number
+mov cl, 0x02   ; Sector number
+mov dh, 0x00   ; Head number
+int 0x13       ; Read sector
+jz brokendisc
 
 switch32:
 cli
@@ -94,68 +86,7 @@ longmode:
   mov rsp, 0x00007BFF
   mov rbp, rsp
 
-  jmp loadkernel
-
-loadkernel:
-  mov rax, 2
-  mov cl, 1
-  mov rdi, 0x00EFFFFF
-.loop:
-  call ataLBAread
-  mov dl, byte [rdi]
-  cmp dl, 0
-  jz .loop
-
-jumpkernel:
-  jmp $
-
-; @param EAX Logical Block Address of sector
-; @param CL  Number of sectors to read
-; @param RDI The address of buffer to put data obtained from disk
-ataLBAread:
-  mov rbx, rax         ; Save LBA in RBX
-
-  mov edx, 0x01F6      ; Port to send drive and bit 24 - 27 of LBA
-  shr eax, 24          ; Get bit 24 - 27 in al
-  or al, 11100000b     ; Set bit 6 in al for LBA mode
-  out dx, al
-
-  mov edx, 0x01F2      ; Port to send number of sectors
-  mov al, cl           ; Get number of sectors from CL
-  out dx, al
-
-  mov edx, 0x1F3       ; Port to send bit 0 - 7 of LBA
-  mov eax, ebx         ; Get LBA from EBX
-  out dx, al
-
-  mov edx, 0x1F4       ; Port to send bit 8 - 15 of LBA
-  mov eax, ebx         ; Get LBA from EBX
-  shr eax, 8           ; Get bit 8 - 15 in AL
-  out dx, al
-
-
-  mov edx, 0x1F5       ; Port to send bit 16 - 23 of LBA
-  mov eax, ebx         ; Get LBA from EBX
-  shr eax, 16          ; Get bit 16 - 23 in AL
-  out dx, al
-
-  mov edx, 0x1F7       ; Command port
-  mov al, 0x20         ; Read with retry.
-  out dx, al
- 
-.still_going:  
-  in al, dx
-  test al, 8           ; the sector buffer requires servicing.
-  jz .still_going      ; until the sector buffer is ready.
-
-  mov rax, 256         ; to read 256 words = 1 sector
-  xor bx, bx
-  mov bl, cl           ; read CL sectors
-  mul bx
-  mov rcx, rax         ; RCX is counter for INSW
-  mov rdx, 0x1F0       ; Data port, in and out
-  rep insw             ; in to [RDI]
- 
+  jmp 7E00h+64
 
 bits 16
 brokenmsg: db "Unsupported disk",0
@@ -231,5 +162,6 @@ GDT64: ; 64 bit gdt
     dw $ - GDT64 - 1
     dq GDT64
 
-times 510 - ($ - $$) db 0
+times 509 - ($ - $$) db 0
+Stage2size: db 1 ; Modified by image.py at build time.
 dw 0xAA55

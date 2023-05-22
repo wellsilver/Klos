@@ -7,8 +7,8 @@ src = src
 out = out
 imagesize = 50M
 
-build: $(out) $(out)/kernel.bin $(out)/bootloader.bin $(out)/klos.img
-run: $(out) $(out)/kernel.bin $(out)/bootloader.bin $(out)/klos.img qemu clean
+build: $(out) $(out)/kernel.bin $(out)/entry.bin $(out)/bootloader.bin $(out)/klos.img 
+run: $(out) $(out)/kernel.bin $(out)/entry.bin $(out)/bootloader.bin $(out)/klos.img  qemu clean
 
 $(out):
 	mkdir $(out)
@@ -20,7 +20,12 @@ $(out)/kernel.bin:
 	objcopy --strip-debug $(out)/kernel.bin
 
 $(out)/bootloader.bin:
-	$(asmc) $(src)/boot.asm -f bin -o $(out)/bootloader.bin
+	$(asmc) $(src)/boot.asm -o $(out)/bootloader.bin
+
+$(out)/entry.bin:
+	$(cc) -c $(src)/entry.c -masm=intel -g -Os -o $(out)/entry.bin
+	objcopy --only-keep-debug $(out)/entry.bin $(out)/entry.sym
+	objcopy --strip-debug $(out)/entry.bin
 
 # IF YOU CHANGED $(out) image.py IS WHERE THE ERROR IS
 $(out)/klos.img:

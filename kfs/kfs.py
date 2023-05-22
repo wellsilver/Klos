@@ -1,23 +1,41 @@
-def makeheader(type,permmisions:int,prevblock:int,nextblock:int,name:str) -> bytearray:
-  ret = bytearray("",'ascii')
-  ret+=permmisions.to_bytes(1,byteorder='little',signed=False)
-  ret+=type.to_bytes(1,byteorder='little',signed=False)
-  ret+=prevblock.to_bytes(8,byteorder='little',signed=False)
-  ret+=nextblock.to_bytes(8,byteorder='little',signed=False)
-  ret+=bytes(name,'ascii').ljust(24,b' ')
-  return ret
-def insertfile(writeto,file:bytes,name:str):
-  blockptr=0
-  rangeintofile=0
-  for i in range(file): # assemble the lower kernel
-    b=makeheader(1,10,blockptr,0,name)
-    v = bytearray("",'ascii')
-    while rangeintofile<=982*(blockptr+1):
-      if rangeintofile >= len(file):
-        break
-      v.append(file[rangeintofile])
-      rangeintofile+=1
-    v = b+v # add the headers before the data
-    v=v.ljust(1024,b'\0')
-    file.write(v)
-    blockptr+=1
+"""
+KFS DOC
+
+- KFS
+  - bootsector
+    3 bytes reserved (jmp short x, nop)
+    offset | description
+    4  | char3 allways "kfs"
+    7  | char12 disc name
+    19 | uint8 version
+    20 | uint8 how many sectors to skip to reach the first block
+    21 | onwards is bootcode (or blank)
+  - block
+    A block is a kilobyte (1024 byte) large storage area
+    - addressing blocks
+      a blockaddr is a uint64_t which starts from 1, 0 is a magic number which means that the address does not exist
+"""
+
+class kfs:
+  def __init__(self):
+    self.buffer = bytearray("","utf-8")
+
+  def save(self) -> bytearray:
+    return self.buffer
+  def save(self) -> str:
+    return str(self.buffer)
+  def load(self,data:bytearray):
+    self.buffer = data
+  def load(self,data:str):
+    self.buffer = bytearray(data)
+  
+  """
+  create a new kfs "drive" thats size sectors large 
+  512*sectors to get size in bytes
+  """
+  def create(self,size:int):
+    self.buffer = bytearray("","utf-8")
+  def addfile(self,name:str,buffer:bytearray):
+    pass
+  def addfile(self,name:str,buffer:str):
+    pass

@@ -38,77 +38,26 @@ block:
 note that the first block should be a directory named "/root" which is the first directory. remember to truncate the string to 24 characters
 """
 
-def makeheader(type,permmisions:int,prevblock:int,nextblock:int,name:str) -> bytearray:
-  ret = bytearray("",'ascii')
-  ret+=permmisions.to_bytes(1,byteorder='little',signed=False)
-  ret+=type.to_bytes(1,byteorder='little',signed=False)
-  ret+=prevblock.to_bytes(8,byteorder='little',signed=False)
-  ret+=nextblock.to_bytes(8,byteorder='little',signed=False)
-  ret+=bytes(name,'ascii').ljust(24,b' ')
-  return ret
-
 file = open("out/klos.img","wb")
 
 f = open("out/bootloader.bin","rb")
-bootloader = f.read()
+bootloader = bytearray(f.read())
 f.close()
 
 f = open("out/kernel.bin","rb")
-lowkernel = f.read()
+kernel = bytearray(f.read())
 f.close()
 
-# THE BOOTLOADER HAS BOOTHEADERS&KFSSTUFF IN IT
-file.write(bootloader) # write the bootloader to the image
+f = open("out/entry.bin","rb")
+entry = bytearray(f.read())
+f.close()
 
-# setup root folder
-v = bytearray("",'ascii')
-v+=makeheader(2,10,0,0,"/root")
-v+=(1).to_bytes(length=8,byteorder='little',signed=False) # pointer to kernel
+bootloader[len(bootloader)-3] = divmod(len(entry),512)[0] # calculate size in sectors of entry.bin and tell the bootloader.
 
-file.write(v.ljust(1024,b'\0')) # create the "/root" folder
+file.write(bootloader)
 
-# entry is the kfs driver, its where the one sector we skip is. It loads the (lower) kernel as if its a file (hiddenfile "lowkernel")
+file.write(entry)
 
-# the first step to adding the file is splitting it into 982 byte chunks, which is the size of a block (ignoring header) in kfs...
-f, r = divmod(len(lowkernel),982)
-f+=1 # ignore r, we just want to get the size in blocks of lowkernel.bin rounding up.
-
-blockptr=2
-prevblock=0
-rangeintofile=0
-for i in range(f):
-  v = bytearray("",'ascii')
-  if rangeintofile+1024 >= len(lowkernel):
-    hd=makeheader(1,10,prevblock,0,"kernel")
-  else:
-    hd=makeheader(1,10,prevblock,blockptr+1,"kernel")
-  v += hd
-  while len(v) <= 1024:
-    if rangeintofile > len(lowkernel):
-      break
-    v += bytearray(lowkernel[rangeintofile])
-    rangeintofile+=1
-  prevblock = blockptr
-  blockptr+=1
-  v.ljust(1024,b"\0") # fill remaining portion of the block with null
-  file.write(v)
-
-"""blockptr=1
-rangeintofile=0
-for i in range(f): # assemble the lower kernel
-  v = bytearray("",'ascii')
-  while rangeintofile<=982*(blockptr+1):
-    if rangeintofile >= len(lowkernel):
-      break
-    v.append(lowkernel[rangeintofile])
-    rangeintofile+=1
-  if rangeintofile >= len(lowkernel):
-    b=makeheader(1,10,blockptr,0,"lowkernel")
-  else:
-    b=makeheader(1,10,blockptr,blockptr+1,"lowkernel")
-  v = b+v # add the headers before the data
-  v=v.ljust(1024,b'\0')
-  file.write(v)
-  blockptr+=1"""
+file.write(kernel)
 
 file.close()
