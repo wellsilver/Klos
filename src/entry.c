@@ -1,7 +1,7 @@
-void main() { // btw this should NEVER return, thankyou for listening to my tedtalk.
+void main() { // bootloader loads this file!!!!!!! This is meant to setup everything the kernel needs
   unsigned char *VGA = (unsigned char *) 0xB8000;
   unsigned char msg[] = "Hello World";
-  for (int loop=0;loop!=13;loop++) {
+  for (int loop=0;loop!=12;loop++) {
     VGA[loop*2] = msg[loop];
     VGA[loop*2+1] = 7;
   }
