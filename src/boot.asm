@@ -86,7 +86,10 @@ longmode:
   mov rsp, 0x00007BFF
   mov rbp, rsp
 
-  jmp 7E00h+64
+  mov rax, qword [7E00h+0x18]
+  add rax, 7E00h ; add the offset to the memory location
+  add rax, 64 ; skip the ELF header
+  jmp rax
 
 bits 16
 brokenmsg: db "Unsupported disk",0
