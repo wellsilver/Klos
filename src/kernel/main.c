@@ -1,4 +1,4 @@
-char *msg = "Hello world!";
+char *msg = "Hello world";
 
 int main() { // dont return
   unsigned char *VGA = (unsigned char *) 0xB8000;
