@@ -8,6 +8,6 @@ sudo apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev
 # just realized all distributions dont have apt 🤦‍♂️
 mkdir build
 cd build
-../binutils-2.41/configure --target=x86_64-none-elf --with-sysroot --disable-nls --disable-werror
+../binutils-2.41/configure --target=x86_64-elf --with-sysroot --disable-nls --disable-werror
 make -j 4
 make install -j 4
