@@ -1,8 +1,12 @@
 # build
 all platforms: (made on wsl:debian)
 
-```make run```  starts with qemu
+```sudo make run```  starts with qemu
 
-needs ``nasm``, ``qemu-system-x86_64``, ``make``, ``gcc``, ``cat``, ``truncate``, ``objcopy``
+needs ``nasm``, ``qemu-system-x86_64``, ``make``, ``gcc``, ``cat``, ``truncate``, ``objcopy``, ``wget``
 
 should work on all modern 64 bit computers
+
+run make with sudo
+
+installs x86_64-none-elf binutils and gcc if doesnt exist
