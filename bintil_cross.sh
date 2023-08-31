@@ -5,6 +5,7 @@ tar -xf binutils-2.41.tar.gz
 # below breaks alot, should reinstall it
 sudo apt -y remove build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 sudo apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
+# just realized all distributions dont have apt 🤦‍♂️
 mkdir build
 cd build
 ../binutils-2.41/configure --target=x86_64-none-elf --with-sysroot --disable-nls --disable-werror
