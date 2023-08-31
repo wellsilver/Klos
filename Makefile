@@ -32,7 +32,7 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	x86_64-none-elf-gcc $(src)/kernel/main.c -o $(out)/kernel.bin
+	x86_64-none-elf-gcc $(src)/kernel/main.c -ffreestanding -o $(out)/kernel.bin
 
 # IF YOU CHANGED $(out) kfs.py IS WHERE THE ERROR IS
 $(out)/klos.img:
