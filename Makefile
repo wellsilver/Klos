@@ -8,27 +8,31 @@ elfbin = $(out)/gcc
 bintilbin = $(out)/binutil
 imagesize = 50M
 
-build: $(out) $(out)/binutil $(out)/gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img 
-run: $(out) $(out)/binutil $(out)/gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img qemu clean
+build: $(out) x86_64-none-elf-objcopy x86_64-none-elf-gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img 
+run: $(out) x86_64-none-elf-objcopy x86_64-none-elf-gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img qemu clean
 
 $(out):
 	mkdir $(out)
 
-$(out)/binutil:
+x86_64-none-elf-objcopy:
 	mkdir $(bintilbin)
-	bash bintil_cross.sh $(bintilbin)
+	
+	@if ! command -v x86_64-none-elf-objcopy > /dev/null; then \
+		bash bintil_cross.sh $(bintilbin); \
+	fi
 
-$(out)/gcc:
+x86_64-none-elf-gcc:
 	mkdir $(elfbin)
-	bash gcc_cross.sh $(elfbin)
+	@if ! command -v x86_64-none-elf-gcc > /dev/null; then \
+		bash gcc_cross.sh $(elfbin); \
+	fi
 
-# compile things
 $(out)/boot.bin:
 	nasm $(src)/boot.asm -f bin -o $(out)/boot.bin
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	
+	amd64-none-elf-gcc $(src)/kernel/main.c -o $(out)/kernel.bin
 
 # IF YOU CHANGED $(out) kfs.py IS WHERE THE ERROR IS
 $(out)/klos.img:

@@ -7,7 +7,7 @@ sudo apt -y remove build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev 
 sudo apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 mkdir build
 cd build
-../gcc-13.2.0/configure --target=amd64-none-elf --disable-nls --enable-languages=c,c++ --without-headers
+../gcc-13.2.0/configure --target=x86_64-none-elf --disable-nls --enable-languages=c,c++ --without-headers
 make all-gcc -j 4
 make all-target-libgcc -j 4
 make install-gcc -j 4

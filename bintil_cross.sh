@@ -7,6 +7,6 @@ sudo apt -y remove build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev 
 sudo apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 mkdir build
 cd build
-../binutils-2.41/configure --target=amd64-none-elf --with-sysroot --disable-nls --disable-werror
+../binutils-2.41/configure --target=x86_64-none-elf --with-sysroot --disable-nls --disable-werror
 make -j 4
 make install -j 4
