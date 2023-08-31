@@ -2,20 +2,30 @@
 
 asmc = nasm
 # must be x86_64 no_os elf
-elfbin = /usr/local/x86_64elfgcc/bin
 src = src
 out = out
+elfbin = $(out)/gcc
+bintilbin = $(out)/binutil
 imagesize = 50M
 
-build: $(out) $(out)/boot.bin $(out)/kernel.efi $(out)/klos.img 
-run: $(out) $(out)/boot.bin $(out)/kernel.efi $(out)/klos.img qemu clean
+build: $(out) $(out)/binutil $(out)/gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img 
+run: $(out) $(out)/binutil $(out)/gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img qemu clean
 
 $(out):
 	mkdir $(out)
 
+$(out)/binutil:
+	mkdir $(bintilbin)
+	bash bintil_cross.sh $(bintilbin)
+
+$(out)/gcc:
+	mkdir $(elfbin)
+	bash gcc_cross.sh $(elfbin)
+
 # compile things
 $(out)/boot.bin:
-	nasm $(src)/boot.asm --target=x86_64-none $(out)/boot.bin
+	nasm $(src)/boot.asm -f bin -o $(out)/boot.bin
+	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
 	
@@ -24,7 +34,7 @@ $(out)/kernel.bin:
 $(out)/klos.img:
 	python kfs.py
 	dd if=$(out)/boot.bin of=$(out)/klos.img
-	truncate $(out)/klos.img -s 5M
+	truncate $(out)/klos.img -s $(imagesize)
 
 qemu:
 	echo If wsl does not spawn a gui, switch to a popular distribution on wsl2 and restart until it works, otherwise instructions in https://github.com/microsoft/WSL/issues/4106
