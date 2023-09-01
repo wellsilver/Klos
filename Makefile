@@ -17,13 +17,13 @@ $(out):
 x86_64-none-elf-objcopy:
 	mkdir $(bintilbin)
 	
-	@if ! command -v x86_64-none-elf-objcopy > /dev/null; then \
+	@if ! command -v x86_64-elf-objcopy > /dev/null; then \
 		bash bintil_cross.sh $(bintilbin); \
 	fi
 
 x86_64-none-elf-gcc:
 	mkdir $(elfbin)
-	@if ! command -v x86_64-none-elf-gcc > /dev/null; then \
+	@if ! command -v x86_64-elf-gcc > /dev/null; then \
 		bash gcc_cross.sh $(elfbin); \
 	fi
 
@@ -32,13 +32,13 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	x86_64-none-elf-gcc $(src)/kernel/main.c -o $(out)/kernel.bin -masm=intel -g -Os
+	x86_64-elf-gcc -c $(src)/kernel/main.c -o $(out)/kernel.bin -masm=intel -g -Os
 	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
 	objcopy --strip-debug $(out)/kernel.bin
 
 # IF YOU CHANGED $(out) kfs.py IS WHERE THE ERROR IS
 $(out)/klos.img:
-	python kfs.py
+	python3 kfs.py
 	dd if=$(out)/boot.bin of=$(out)/klos.img
 	truncate $(out)/klos.img -s $(imagesize)
 
