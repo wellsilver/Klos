@@ -18,13 +18,13 @@ cld
 mov ah, 00h
 mov al, 02h
 int 10h
-jz print
 
 ; reset boot disk
 xor ah,ah
-xor dl,dl
+mov dl, 0x80
 int 13h
-jz print
+cmp ah, 0
+jnz driveerr
 
 ; read the rest of the bootloader
 mov ah, 2h
@@ -36,9 +36,10 @@ mov dl, 0x80 ; boot disk
 mov es:bx, byte 32256
 ;mov bx,  ; first byte in mem of next sector
 int 13h
+jmp haltloop
 
-print:
-  mov bx, string-1
+driveerr:
+  mov bx, .string - 1
   mov ah, 0xE
 .strl:
   inc bx
@@ -50,8 +51,12 @@ print:
 .loop:
   hlt
   jmp .loop
+.string: db "broken at drive",0
 
-string: db "broken",0
+haltloop:
+  hlt
+  jmp haltloop
+
 times 510-($-$$) db 0
 db 0x55
 db 0xAA
