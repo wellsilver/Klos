@@ -11,9 +11,33 @@ db "kfs"
 db 0
 
 code:
-  mov ah, 00h
-  mov al, 02h
-  int 10h
+
+cld
+
+; reset vga
+mov ah, 00h
+mov al, 02h
+int 10h
+jz print
+
+; reset boot disk
+xor ah,ah
+xor dl,dl
+int 13h
+jz print
+
+; read the rest of the bootloader
+mov ah, 2h
+mov al, 2
+mov ch, 0 & 0xff
+mov cl, 2
+mov dh, 0
+mov dl, 0x80 ; boot disk
+mov es:bx, byte 32256
+;mov bx,  ; first byte in mem of next sector
+int 13h
+
+print:
   mov bx, string-1
   mov ah, 0xE
 .strl:
@@ -23,13 +47,11 @@ code:
   jz .loop
   int 10h
   jmp .strl
-  
 .loop:
   hlt
   jmp .loop
 
-
-string: db "bootloader",0
+string: db "broken",0
 times 510-($-$$) db 0
 db 0x55
 db 0xAA
