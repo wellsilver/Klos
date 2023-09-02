@@ -9,4 +9,4 @@ should work on all modern 64 bit computers
 
 run make with sudo
 
-installs x86_64-none-elf binutils and gcc if doesnt exist
+installs x86_64-elf toolchain and downloads prerequisites with apt if doesnt exist
