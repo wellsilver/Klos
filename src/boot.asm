@@ -36,7 +36,14 @@ mov dl, 0x80 ; boot disk
 mov es:bx, byte 32256
 ;mov bx,  ; first byte in mem of next sector
 int 13h
-jmp haltloop
+
+; switch to 64 bit mode
+mov ax, EC00h
+mov bl, 2
+int 15h
+; ^ amd says to do this
+
+
 
 driveerr:
   mov bx, .string - 1
@@ -52,10 +59,6 @@ driveerr:
   hlt
   jmp .loop
 .string: db "broken at drive",0
-
-haltloop:
-  hlt
-  jmp haltloop
 
 times 510-($-$$) db 0
 db 0x55
