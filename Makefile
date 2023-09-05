@@ -12,17 +12,17 @@ build: $(out) x86_64-none-elf-objcopy x86_64-none-elf-gcc $(out)/boot.bin $(out)
 run: $(out) x86_64-none-elf-objcopy x86_64-none-elf-gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img qemu clean
 
 $(out):
-	mkdir $(out)
+	mkdir -p $(out)
 
 x86_64-none-elf-objcopy:
-	mkdir $(bintilbin)
+	mkdir -p $(bintilbin)
 	
 	@if ! command -v x86_64-elf-objcopy > /dev/null; then \
 		bash bintil_cross.sh $(bintilbin); \
 	fi
 
 x86_64-none-elf-gcc:
-	mkdir $(elfbin)
+	mkdir -p $(elfbin)
 	@if ! command -v x86_64-elf-gcc > /dev/null; then \
 		bash gcc_cross.sh $(elfbin); \
 	fi

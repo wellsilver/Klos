@@ -2,7 +2,7 @@ char *msg = "Hello world";
 
 #define outb(port, data8) asm volatile ("outb")
 
-void main() { // dont return
+void _main() {
   
   
   while (1) asm("hlt");
