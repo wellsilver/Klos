@@ -183,54 +183,14 @@ driveerr:
 
 times 510-($-$$) db 0
 dw 0xAA55
-bits 32
-gdtfail:
-  mov eax, 8B000h
-  mov byte [eax], 'f'
-  inc eax
-  mov byte [eax], 7
-  inc eax
-  mov byte [eax], 'a'
-  inc eax
-  mov byte [eax], 7
-  inc eax
-  mov byte [eax], 'i'
-  inc eax
-  mov byte [eax], 7
-  inc eax
-  mov byte [eax], 'l'
-  inc eax
-  mov byte [eax], 7
-.loop:
-  hlt
-  jmp .loop
-
-makegdt:
-  mov di, 0x8004          ; Set di to 0x8004. Otherwise this code will get stuck in `int 0x15` after some entries are fetched 
-	xor ebx, ebx		; ebx must be 0 to start
-	xor bp, bp		; keep an entry count in bp
-	mov edx, 0x0534D4150	; Place "SMAP" into edx
-	mov eax, 0xe820
-	mov [es:di + 20], dword 1	; force a valid ACPI 3.X entry
-	mov ecx, 24		; ask for 24 bytes
-
-	int 0x15
-  
-;  mov edx, 0x0534D4150
-;  cmp eax, edx
-;  jne gdtfail
-  jmp protected32.aftergdt
-
 bits 64
 ; load kernel
 bootloader:
+  
 
 .loop:
   hlt
   jmp .loop
-
-_GDT64: ; 64 bit gdt
-  nop
 
 
 times 1024-($-$$) db 0
