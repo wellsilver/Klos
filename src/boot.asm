@@ -56,8 +56,8 @@ jmp CODE_SEG:protected32
 
 bits 32
 protected32: ; switch straight to long mode
-  jmp makegpt
-.aftergpt:
+  jmp makegdt
+.aftergdt:
   mov edi, 0x1000              ; Set the destination index to 0x1000.
   mov cr3, edi                 ; Set control register 3 to the destination index.
   xor eax, eax                 ; Nullify the A-register.
@@ -184,7 +184,7 @@ driveerr:
 times 510-($-$$) db 0
 dw 0xAA55
 bits 32
-gptfail:
+gdtfail:
   mov eax, 8B000h
   mov byte [eax], 'f'
   inc eax
@@ -205,7 +205,7 @@ gptfail:
   hlt
   jmp .loop
 
-makegpt:
+makegdt:
   mov di, 0x8004          ; Set di to 0x8004. Otherwise this code will get stuck in `int 0x15` after some entries are fetched 
 	xor ebx, ebx		; ebx must be 0 to start
 	xor bp, bp		; keep an entry count in bp
@@ -218,8 +218,8 @@ makegpt:
   
 ;  mov edx, 0x0534D4150
 ;  cmp eax, edx
-;  jne gptfail
-  jmp protected32.aftergpt
+;  jne gdtfail
+  jmp protected32.aftergdt
 
 bits 64
 ; load kernel
