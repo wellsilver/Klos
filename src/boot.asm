@@ -140,7 +140,7 @@ ACCESSED       equ 1 << 0
 GRAN_4K       equ 1 << 7
 SZ_32         equ 1 << 6
 LONG_MODE     equ 1 << 5
- 
+
 GDT64: ; 64 bit gdt
   .Null: equ $ - GDT64
     dq 0
@@ -181,19 +181,33 @@ driveerr:
 
 times 510-($-$$) db 0
 dw 0xAA55
+bits 32
+makegpt:
+  mov di, 0x8004 ; where to put memory map
+  xor ebx, ebx
+  xor bp, bp
+
+  mov rax, 0xE820
+  int 0x15
+
+  mov edx, 0x0534D4150
+  cmp eax, edx
+  jne fail
+
 bits 64
 
-; load kernel
-bootloader:
-  mov rax, 0xB8000
+fail:
+.loop:
+  hlt
+  jmp .loop
 
-  mov byte [rax], 'h'
-  mov byte [rax+1], 7
-  mov byte [rax+2], 'i'
-  mov byte [rax+3], 7
+; make gdt then load kernel
+bootloader:
 
 .loop
   hlt
   jmp .loop
+
+_GDT64: ; 64 bit gdt
 
 times 1024-($-$$) db 0
