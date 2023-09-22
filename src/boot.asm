@@ -56,8 +56,6 @@ jmp CODE_SEG:protected32
 
 bits 32
 protected32: ; switch straight to long mode
-  jmp makegdt
-.aftergdt:
   mov edi, 0x1000              ; Set the destination index to 0x1000.
   mov cr3, edi                 ; Set control register 3 to the destination index.
   xor eax, eax                 ; Nullify the A-register.

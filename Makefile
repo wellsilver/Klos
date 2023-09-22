@@ -38,9 +38,8 @@ $(out)/kernel.bin:
 
 # IF YOU CHANGED $(out) kfs.py IS WHERE THE ERROR IS
 $(out)/klos.img:
-	python3 kfs.py
-	dd if=$(out)/boot.bin of=$(out)/klos.img
-	truncate $(out)/klos.img -s $(imagesize)
+	python3 kfs.py -s $(imagesize) -boot $(out)/boot.bin -f "kernel" $(out)/kernel.bin
+	
 
 qemu:
 	echo If wsl does not spawn a gui, switch to a popular distribution on wsl2 and restart until it works, otherwise instructions in https://github.com/microsoft/WSL/issues/4106
