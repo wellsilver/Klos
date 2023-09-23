@@ -68,7 +68,7 @@ for i in files:
   for v in range(sectordist,fsize):
     sectors[v] = [i[1], v-sectordist]
   
-  folder += ( (3).to_bytes(length=1,byteorder='little') + sectordist.to_bytes(length=8,byteorder='little') + (sectordist+fsize).to_bytes(length=8,byteorder='little') + id.to_bytes(length=2,byteorder='little')).ljust(32,b'\0')
+  folder += ( (3).to_bytes(length=1,byteorder='little') + (sectordist+11).to_bytes(length=8,byteorder='little') + ((sectordist+fsize)+11).to_bytes(length=8,byteorder='little') + id.to_bytes(length=2,byteorder='little')).ljust(32,b'\0')
 
 
 out.write(bootsec + extender + folder + b''.ljust(512 * 2, b'\0'))
