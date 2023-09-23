@@ -1,4 +1,5 @@
 import sys
+import time
 
 files = []
 bootfile = None
@@ -30,3 +31,15 @@ if bootfile:
 else:
   bootsec = b"\0\0\0kfs\0".ljust(512 * 5,b'\0')
 
+extender = b'\xac'.ljust(512, b'\0') # blank
+
+folder = b'\1'.ljust(32,b'\0') # fill in descriptor
+
+data = b''
+
+id = 1
+for i in files:
+  # add the first file descriptor
+  folder += ((2).to_bytes(length=1,byteorder='little') + id.to_bytes(length=2,byteorder='little') + b'\0\0' + int(time.time()).to_bytes(length=8,byteorder='little') + int(time.time()).to_bytes(length=8,byteorder='little')).ljust(32,b'\0')
+  # add the file name
+  folder += ((4).to_bytes(length=1,byteorder='little') + id.to_bytes(length=2,byteorder='little') + i[:28]).ljust(32,b'\0')

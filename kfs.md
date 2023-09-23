@@ -90,7 +90,7 @@ filedata - gives a range of sectors associated with a file through a fileID
 | 21    | 28  | u64  | the number of ``filedata`` entrys for this file before this entry |
 | 25    | 31  | ?    | unused |
 
-file
+filedesc
 | start | end | type | desc |
 | ----- | --- | ---- | ---- |
 | 1     | 2   | u16  | fileID, only needs to be unique inside a single directory |
@@ -98,7 +98,7 @@ file
 | 4     | 4   | u8   | compression method|
 | 5     | 13  | u64  | epoch of creation |
 | 14    | 22  | u64  | epoch of last modification |
-| 14    | 31  | ?    | unsued |
+| 14    | 31  | ?    | unused |
 
 filename
 | start | end | type | desc |
