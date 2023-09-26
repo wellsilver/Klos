@@ -1,3 +1,12 @@
+# -boot <file> add a .bin file to add to the bootsector
+# -f <name> <file> add a file to root TODO: add folders
+# -s <sizemegabytes>M choose size in megabytes, will ignore M at the end if you suffix it TODO: gigabyte sizes
+# -o <file> output file TODO: support writing to exterior drives?
+
+# minimum disc size is 10 sectors, to hold any files the drive will need to be as large as those files plus a few sectors give or take
+
+# TODO: fix the ANNOYING ASS FUCKING TYPECHECK PIECE OF SHIT THAT IS FUCKING GIVING ERRORS TO INTELLISENSE
+
 import sys
 import time
 import io
