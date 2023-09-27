@@ -18,13 +18,13 @@ x86_64-none-elf-objcopy:
 	mkdir -p $(bintilbin)
 	
 	@if ! command -v x86_64-elf-objcopy > /dev/null; then \
-		bash bintil_cross.sh $(bintilbin); \
+		$(error run bintil_cross.sh [debian] will install bintil x86_64-elf-none target) \
 	fi
 
 x86_64-none-elf-gcc:
 	mkdir -p $(elfbin)
 	@if ! command -v x86_64-elf-gcc > /dev/null; then \
-		bash gcc_cross.sh $(elfbin); \
+		$(error run gcc_cross.sh [debian] will install gcc x86_64-elf-none target) \
 	fi
 
 $(out)/boot.bin:
@@ -32,6 +32,7 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
+	echo if it fails here run gcc_cross.sh (debian)
 	x86_64-elf-gcc -c $(src)/kernel/main.c -o $(out)/kernel.bin -masm=intel -g -Os
 	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
 	objcopy --strip-debug $(out)/kernel.bin
