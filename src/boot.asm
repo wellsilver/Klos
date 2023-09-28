@@ -14,7 +14,7 @@ code:
 
 cld
 
-; reset vga
+; reset vga (debugging bootsector)
 mov ah, 00h
 mov al, 02h
 int 10h
@@ -184,7 +184,19 @@ dw 0xAA55
 bits 64
 ; load kernel
 bootloader:
-  
+
+  ; read the /root folder into temp
+  mov eax, 7
+  mov cl, 1
+  mov rdi, tempsector
+  call ata_lba_read
+
+  ; pray to god that it worked
+  mov rax, 49
+  mov rbx, 69
+  ; ^ praying to god
+
+  ; scan for 
 
 .loop:
   hlt
