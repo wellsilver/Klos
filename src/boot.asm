@@ -182,6 +182,20 @@ driveerr:
 times 510-($-$$) db 0
 dw 0xAA55
 bits 64
+
+; .call. find a type for a kfs folder entry
+; rdi=pointertofolder al=typetofind
+; returns ebx (the entry) rdi (pointer to entry in folder)
+loopfindtype:
+  mov ebx, dword [rdi]
+  cmp al, bl
+  jz .end
+  add rdi, 32
+  jnz loopfindtype
+.end:
+  ret
+  
+
 ; load kernel
 bootloader:
 
@@ -196,7 +210,11 @@ bootloader:
   mov rbx, 69
   ; ^ praying to god
 
-  ; scan for 
+  ; scan the entrys
+  mov rdi, tempsector
+  mov al, 4
+  call loopfindtype
+  
 
 .loop:
   hlt
