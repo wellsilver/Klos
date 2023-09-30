@@ -185,16 +185,17 @@ bits 64
 
 ; .call. find a type for a kfs folder entry
 ; rdi=pointertofolder al=typetofind
-; returns ebx (the entry) rdi (pointer to entry in folder)
+; returns rdi (pointer to entry in folder)
 loopfindtype:
-  mov ebx, dword [rdi]
+  mov bl, byte [rdi]
   cmp al, bl
   jz .end
   add rdi, 32
   jnz loopfindtype
 .end:
   ret
-  
+
+filename: "kernel",0
 
 ; load kernel
 bootloader:
@@ -211,9 +212,12 @@ bootloader:
   ; ^ praying to god
 
   ; scan the entrys
+.nextfile:
   mov rdi, tempsector
   mov al, 4
   call loopfindtype
+  mov r8, word [rdi] ; save the id
+
   
 
 .loop:
