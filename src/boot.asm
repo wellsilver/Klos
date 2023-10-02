@@ -185,7 +185,7 @@ bits 64
 
 ; .call. find a type for a kfs folder entry
 ; rdi=pointertofolder al=typetofind
-; returns rdi (pointer to entry in folder)
+; returns rdi (pointer to entry in folder) garbage:bl
 loopfindtype:
   mov bl, byte [rdi]
   cmp al, bl
@@ -195,11 +195,10 @@ loopfindtype:
 .end:
   ret
 
-filename: "kernel",0
+filename: db "kernel",0
 
 ; load kernel
 bootloader:
-
   ; read the /root folder into temp
   mov eax, 7
   mov cl, 1
@@ -211,14 +210,31 @@ bootloader:
   mov rbx, 69
   ; ^ praying to god
 
+  xor r9, r9
   ; scan the entrys
-.nextfile:
   mov rdi, tempsector
   mov al, 4
   call loopfindtype
-  mov r8, word [rdi] ; save the id
+  xor r8, r8
+  mov r8w, word [rdi+1] ; save the id
+  mov r9, qword [rdi+1+2]
+  mov qword [filenamedump], r9
 
-  
+  mov rax, 0xB8000
+  xor rbx, rbx
+  mov rcx, filenamedump
+.nextc:
+  mov bl, byte [rcx]
+  inc rcx
+  mov byte [rax], bl
+  inc rax
+  mov byte [rax], 7
+  inc rax
+  cmp bl, 0
+  je .nextc.end
+  jmp .nextc
+
+.nextc.end:
 
 .loop:
   hlt
@@ -294,6 +310,10 @@ ata_lba_read:
   ret
 
 tempsector:
-  times 512 db 0
+  times 512 db 0 ; data
+
+filenamedump:
+  times 28 db 0 ; str
+  db 0 ; \0
 
 times 2560-($-$$) db 0
