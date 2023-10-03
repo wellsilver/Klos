@@ -188,7 +188,7 @@ bits 64
 ; returns rdi (pointer to entry in folder) garbage:bl
 loopfindtype:
   mov bl, byte [rdi]
-  cmp al, bl
+  cmp bl, al
   jnz .end
   add rdi, 32
   jmp loopfindtype
@@ -216,7 +216,7 @@ prints:
 ; load kernel
 bootloader:
   ; read the /root folder into temp
-  mov eax, 7
+  mov eax, 6
   mov cl, 1
   mov rdi, tempsector
   call ata_lba_read
@@ -231,11 +231,8 @@ bootloader:
   mov rdi, tempsector
   mov al, 4
   call loopfindtype
-
-  mov r9, qword [rdi+3]
-  mov qword [filenamedump], r9
   
-  mov rdi, filenamedump
+  mov rdi, tempsector+1+1+1+1
   call prints
   
 .nextc.end:
@@ -313,11 +310,16 @@ ata_lba_read:
   popfq
   ret
 
+db "tempsector:" ; for ram dump debugging
 tempsector:
   times 512 db 0 ; data
 
+db "filenamedump:" ; for ram dump debugging
 filenamedump:
   times 28 db 0 ; str
   db 0 ; \0
+
+
+db "bootloader end |" ; for ram dump debugging
 
 times 2560-($-$$) db 0
