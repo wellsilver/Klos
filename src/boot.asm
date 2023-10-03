@@ -14,7 +14,7 @@ code:
 
 cld
 
-; reset vga (debugging bootsector)
+; reset vga (debug only)
 mov ah, 00h
 mov al, 02h
 int 10h
@@ -189,13 +189,29 @@ bits 64
 loopfindtype:
   mov bl, byte [rdi]
   cmp al, bl
-  jz .end
+  jnz .end
   add rdi, 32
-  jnz loopfindtype
+  jmp loopfindtype
 .end:
   ret
 
-filename: db "kernel",0
+filename: db "kernel",0,0 ; super conveniently 8 bytes
+
+; print str vga, for debug only. garbage=rax,rbx rdi=pointertostring. string is null terminated
+prints:
+  mov rax, 0xb8000
+  xor rbx, rbx
+  dec rdi
+.loop:
+  inc rdi
+  mov ch, byte [rdi]
+  mov byte [rax], ch
+  inc rax
+  mov byte [rax], 7
+  inc rax
+  cmp ch, 0
+  jnz .loop
+  ret
 
 ; load kernel
 bootloader:
@@ -215,25 +231,13 @@ bootloader:
   mov rdi, tempsector
   mov al, 4
   call loopfindtype
-  xor r8, r8
-  mov r8w, word [rdi+1] ; save the id
-  mov r9, qword [rdi+1+2]
+
+  mov r9, qword [rdi+3]
   mov qword [filenamedump], r9
-
-  mov rax, 0xB8000
-  xor rbx, rbx
-  mov rcx, filenamedump
-.nextc:
-  mov bl, byte [rcx]
-  inc rcx
-  mov byte [rax], bl
-  inc rax
-  mov byte [rax], 7
-  inc rax
-  cmp bl, 0
-  je .nextc.end
-  jmp .nextc
-
+  
+  mov rdi, filenamedump
+  call prints
+  
 .nextc.end:
 
 .loop:

@@ -41,6 +41,6 @@ $(out)/klos.img:
 	
 qemu:
 	echo If wsl does not spawn a gui, switch to a popular distribution on wsl2 and restart until it works, otherwise instructions in https://github.com/microsoft/WSL/issues/4106
-	qemu-system-x86_64 -drive file=$(out)/klos.img -m 4G
+	qemu-system-x86_64 -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 4G
 clean:
 	rm -r $(out)
