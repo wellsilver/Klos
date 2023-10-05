@@ -213,6 +213,18 @@ prints:
   jnz .loop
   ret
 
+; memory copy.
+; rax = from, rbx = to, rcx = how many bytes to transfer. garbage rdx
+memcpy:
+  mov dl, byte [rax]
+  mov byte [rbx], dl
+  inc rax
+  inc rbx
+  dec rcx
+  cmp rcx, 0
+  jnz memcpy
+  ret
+
 ; load kernel
 bootloader:
   ; read the /root folder into temp
@@ -233,6 +245,12 @@ bootloader:
   call loopfindtype
 
   add rdi, 3
+  mov rax, rdi
+  mov rbx, filenamedump
+  mov rcx, 28
+
+  call memcpy
+  mov rdi, filenamedump
   call prints
   
 .nextc.end:
