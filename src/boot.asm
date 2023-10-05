@@ -248,8 +248,8 @@ bootloader:
   mov rax, rdi
   mov rbx, filenamedump
   mov rcx, 28
-
   call memcpy
+  
   mov rdi, filenamedump
   call prints
   
