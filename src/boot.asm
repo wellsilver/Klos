@@ -189,7 +189,7 @@ bits 64
 loopfindtype:
   mov bl, byte [rdi]
   cmp bl, al
-  jnz .end
+  jz .end
   add rdi, 32
   jmp loopfindtype
 .end:
@@ -231,8 +231,8 @@ bootloader:
   mov rdi, tempsector
   mov al, 4
   call loopfindtype
-  
-  mov rdi, tempsector+1+1+1+1
+
+  add rdi, 3
   call prints
   
 .nextc.end:
