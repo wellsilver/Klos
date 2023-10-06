@@ -225,6 +225,30 @@ memcpy:
   jnz memcpy
   ret
 
+; 8 bytes from rdi into rax, trashes rcx
+stringtorax:
+  xor rcx, rcx
+.next:
+  mov al, byte [rdi]
+  shr al, 8
+  inc rdi
+  inc rcx
+  cmp rcx, 8
+  jnz .next
+  ret
+
+; 8 bytes from rdi into rbx, trashes rcx,rdx
+stringtorbx:
+  xor rcx, rcx
+.next:
+  mov bl, byte [rdi]
+  shr bl, 8
+  inc rdi
+  inc rcx
+  cmp rcx, 8
+  jnz .next
+  ret
+
 ; load kernel
 bootloader:
   ; read the /root folder into temp
@@ -257,12 +281,26 @@ bootloader:
   call memcpy
   
   mov rdi, filenamedump
-  call prints
+  call stringtorax
+
+  mov rdi, filename
+  call stringtorbx
+  
+  ud2
+  
+  cmp rax, rbx
+  jz didntfail
   
   pop ax
-.loop:
+
+haltloop:
   hlt
-  jmp .loop
+  jmp haltloop
+
+didntfail:
+  mov rdi, filename
+  call prints
+  jmp haltloop
 
 ; from osdev
 ;=============================================================================
