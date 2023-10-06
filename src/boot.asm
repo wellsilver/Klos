@@ -248,6 +248,8 @@ bootloader:
   mov ax, word [rdi+1]
   push ax
 
+  mov byte [rdi], 0 ; clear type byte as we have read it
+
   add rdi, 3
   mov rax, rdi
   mov rbx, filenamedump
@@ -257,7 +259,7 @@ bootloader:
   mov rdi, filenamedump
   call prints
   
-  
+  pop ax
 .loop:
   hlt
   jmp .loop
