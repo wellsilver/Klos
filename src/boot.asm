@@ -244,6 +244,10 @@ bootloader:
   mov al, 4
   call loopfindtype
 
+  ; save file ID
+  mov ax, word [rdi+1]
+  push ax
+
   add rdi, 3
   mov rax, rdi
   mov rbx, filenamedump
@@ -253,8 +257,7 @@ bootloader:
   mov rdi, filenamedump
   call prints
   
-.nextc.end:
-
+  
 .loop:
   hlt
   jmp .loop
