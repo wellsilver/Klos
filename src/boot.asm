@@ -185,14 +185,25 @@ bits 64
 
 ; .call. find a type for a kfs folder entry
 ; rdi=pointertofolder al=typetofind
-; returns rdi (pointer to entry in folder) garbage:bl
+; returns rdi (pointer to entry in folder) garbage:bl,cl
 loopfindtype:
+  xor cl, cl
+.next:
   mov bl, byte [rdi]
   cmp bl, al
   jz .end
+  inc cl
+  cmp cl, 16
+  jz .endmissing
   add rdi, 32
-  jmp loopfindtype
+  jmp .next
 .end:
+  mov cl,5
+  cmp cl , 0 ; clear z flag
+  ret
+.endmissing:
+  mov cl, 5
+  cmp cl , 5 ; set z flag
   ret
 
 filename: db "kernel",0,0 ; super conveniently 8 bytes
@@ -230,7 +241,7 @@ stringtorax:
   xor rcx, rcx
 .next:
   mov al, byte [rdi]
-  shr al, 8
+  shl rax, 8
   inc rdi
   inc rcx
   cmp rcx, 8
@@ -242,7 +253,7 @@ stringtorbx:
   xor rcx, rcx
 .next:
   mov bl, byte [rdi]
-  shr bl, 8
+  shl rbx, 8
   inc rdi
   inc rcx
   cmp rcx, 8
@@ -251,7 +262,7 @@ stringtorbx:
 
 ; load kernel
 bootloader:
-  ; read the /root folder into temp
+  ; read the / folder into temp
   mov eax, 6
   mov cl, 1
   mov rdi, tempsector
@@ -262,6 +273,7 @@ bootloader:
   mov rbx, 69
   ; ^ praying to god
 
+.nextf:
   xor r9, r9
   ; scan the entrys
   mov rdi, tempsector
@@ -269,8 +281,7 @@ bootloader:
   call loopfindtype
 
   ; save file ID
-  mov ax, word [rdi+1]
-  push ax
+  mov r9w, word [rdi+1]
 
   mov byte [rdi], 0 ; clear type byte as we have read it
 
@@ -285,21 +296,39 @@ bootloader:
 
   mov rdi, filename
   call stringtorbx
-  
-  ud2
-  
-  cmp rax, rbx
-  jz didntfail
-  
-  pop ax
+
+  cmp rax, rbx ; check if "kernel" and rax are the same
+  jnz .nextf ; if this is not the kernel file go back
+
+  mov rax, 99
+  push rax
+
+.getnext:
+  mov rdi, tempsector
+  mov al, 3
+  call loopfindtype
+
+  jz .getnext.end ; if loopfindtype didnt cross
+
+  mov byte [rdi], 0 ; dont accidently loop back to this
+
+  mov r10w, word [rdi+1+8+8]
+  cmp r9w, r10w ; same ID?
+  jnz .getnext
+
+  add rdi, 9
+  call stringtorax
+
+  add rdi, 8
+  call stringtorbx
+
+  push rax
+  push rbx
+  jmp .getnext
+.getnext.end:
 
 haltloop:
   hlt
-  jmp haltloop
-
-didntfail:
-  mov rdi, filename
-  call prints
   jmp haltloop
 
 ; from osdev
@@ -379,7 +408,6 @@ db "filenamedump:" ; for ram dump debugging
 filenamedump:
   times 28 db 0 ; str
   db 0 ; \0
-
 
 db "bootloader end |" ; for ram dump debugging
 
