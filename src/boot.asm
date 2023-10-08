@@ -300,7 +300,9 @@ bootloader:
   cmp rax, rbx ; check if "kernel" and rax are the same
   jnz .nextf ; if this is not the kernel file go back
 
-  mov rax, 99
+  mov rax, 0
+  push rax
+  mov rax, 0
   push rax
 
 .getnext:
@@ -308,24 +310,41 @@ bootloader:
   mov al, 3
   call loopfindtype
 
-  jz .getnext.end ; if loopfindtype didnt cross
+  jz .load ; if loopfindtype didnt cross
 
   mov byte [rdi], 0 ; dont accidently loop back to this
 
   mov r10w, word [rdi+1+8+8]
-  cmp r9w, r10w ; same ID?
+  cmp r9w, r10w ; same ID? 
   jnz .getnext
 
-  add rdi, 9
+  add rdi, 1
   call stringtorax
+  push rax
 
   add rdi, 8
-  call stringtorbx
-
+  call stringtorax
   push rax
-  push rbx
+  
   jmp .getnext
-.getnext.end:
+.load:
+  mov rdi, kernelfilestart
+.load.loopu:
+  pop rbx
+  pop rax
+
+  cmp rax, 0
+  jz .run
+
+  mov rcx, rax
+  sub rcx, rbx
+  call ata_lba_read
+  
+  jmp .load.loopu
+
+.run:
+  mov rdi, kernelfilestart
+  call prints
 
 haltloop:
   hlt
@@ -412,3 +431,4 @@ filenamedump:
 db "bootloader end |" ; for ram dump debugging
 
 times 2560-($-$$) db 0
+kernelfilestart:
