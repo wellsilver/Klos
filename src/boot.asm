@@ -430,4 +430,4 @@ filenamedump:
 
 db "bootloader end |" ; for ram dump debugging
 
-times 3584-($-$$) db 0
+times 2560-($-$$) db 0
