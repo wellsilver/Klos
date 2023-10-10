@@ -428,6 +428,10 @@ filenamedump:
   times 28 db 0 ; str
   db 0 ; \0
 
+db "stack:" ; for ram dump debugging
+stack:
+  times 128 db 0
+
 db "bootloader end |" ; for ram dump debugging
 
 times 2560-($-$$) db 0
