@@ -48,9 +48,9 @@ except:
   quit()
 
 if bootfile:
-  bootsec = bootfile.read().ljust(512 * 5,b'\0')
+  bootsec = bootfile.read().ljust(512 * 7,b'\0')
 else:
-  bootsec = b"\0\0\0kfs\0".ljust(512 * 5,b'\0')
+  bootsec = b"\0\0\0kfs\0".ljust(512 * 7,b'\0')
 
 extender = (254).to_bytes(byteorder='little').ljust(512, b'\0') # blank
 

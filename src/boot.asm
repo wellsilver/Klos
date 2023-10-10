@@ -98,7 +98,7 @@ longmode:
   mov fs, ax                    ; Set the F-segment to the A-register.
   mov gs, ax                    ; Set the G-segment to the A-register.
   mov ss, ax                    ; Set the stack segment to the A-register.
-  mov rsp, 0x00007BFF
+  mov rsp, 0x00000500	
   mov rbp, rsp
 
   jmp bootloader
@@ -328,7 +328,7 @@ bootloader:
   
   jmp .getnext
 .load:
-  mov rdi, kernelfilestart
+  mov rdi, 0x00100000
 .load.loopu:
   pop rbx
   pop rax
@@ -343,7 +343,7 @@ bootloader:
   jmp .load.loopu
 
 .run:
-  mov rdi, kernelfilestart
+  mov rdi, 0x00100000
   call prints
 
 haltloop:
@@ -428,11 +428,6 @@ filenamedump:
   times 28 db 0 ; str
   db 0 ; \0
 
-db "stack:" ; for ram dump debugging
-stack:
-  times 128 db 0
-
 db "bootloader end |" ; for ram dump debugging
 
-times 2560-($-$$) db 0
-kernelfilestart:
+times 3584-($-$$) db 0

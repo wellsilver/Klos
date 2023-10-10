@@ -14,10 +14,10 @@ btw dont trust the tables in here, trust the structures in ``kfs.h`` lol
 LBA
 | start | end | desc |
 | ----- | ----- | - |
-| 1 | 5 | 5 sectors of 2.56 kilobytes for bootloader |
-| 6 | 6 | fs extender |
-| 7 | 7 | "/" or first folder |
-| 8 | 10| reserved |
+| 1 | 7 | 7 sectors of 2.56 kilobytes for bootloader |
+| 8 | 8 | fs extender |
+| 9 | 9 | "/" or first folder |
+| 10 | 10| reserved |
 | 11 | ? | data |
 
 a driver would be keeping the first 10 sectors in memory
