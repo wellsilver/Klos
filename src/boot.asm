@@ -328,7 +328,7 @@ bootloader:
   
   jmp .getnext
 .load:
-  mov rdi, 0x00100000
+  mov rdi, 0x00010000
 .load.loopu:
   pop rbx
   pop rax
@@ -343,8 +343,9 @@ bootloader:
   jmp .load.loopu
 
 .run:
-  mov rdi, 0x00100000
+  mov rdi, 0x00010000+1
   call prints
+  mov rdi, filename
 
 haltloop:
   hlt
@@ -419,10 +420,6 @@ ata_lba_read:
   popfq
   ret
 
-db "tempsector:" ; for ram dump debugging
-tempsector:
-  times 512 db 0 ; data
-
 db "filenamedump:" ; for ram dump debugging
 filenamedump:
   times 28 db 0 ; str
@@ -431,3 +428,4 @@ filenamedump:
 db "bootloader end |" ; for ram dump debugging
 
 times 2560-($-$$) db 0
+tempsector:
