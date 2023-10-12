@@ -304,12 +304,14 @@ bootloader:
   push rax
   mov rax, 0
   push rax
+  
+  mov r11, 0xB8000
 
 .getnext:
   mov rdi, tempsector
   mov al, 3
   call loopfindtype
-
+  
   jz .load ; if loopfindtype didnt cross
 
   mov byte [rdi], 0 ; dont accidently loop back to this
@@ -317,7 +319,7 @@ bootloader:
   mov r10w, word [rdi+1+8+8]
   cmp r9w, r10w ; same ID? 
   jnz .getnext
-
+  
   add rdi, 1
   call stringtorax
   push rax
@@ -331,9 +333,9 @@ bootloader:
   mov rdi, 0x00010000
 .load.loopu:
   pop rbx
-  pop rax
+  pop rax ; error is here, for some reason the stack isnt working?
 
-  cmp rax, 0
+  cmp rax, 0 
   jz .run
 
   mov rcx, rax
@@ -428,4 +430,4 @@ filenamedump:
 db "bootloader end |" ; for ram dump debugging
 
 times 2560-($-$$) db 0
-tempsector:
+tempsector: ; free until 0x00010000
