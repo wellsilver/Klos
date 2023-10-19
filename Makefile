@@ -31,9 +31,10 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	x86_64-elf-gcc -c $(src)/kernel/main.c -o $(out)/kernel.bin -masm=intel -g -Os
+	x86_64-elf-gcc -c $(src)/kernel/main.c -o $(out)/kernel.bin -masm=intel -g -Os -Wl,--oformat=binary
 	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
 	objcopy --strip-debug $(out)/kernel.bin
+	objcopy -O binary -j .text $(out)/kernel.bin $(out)/kernel.bin
 
 $(out)/klos.img:
 # kfs.py may fuck up the build if you change it or its parameters, check boot.asm

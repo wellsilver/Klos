@@ -295,7 +295,10 @@ bootloader:
   add rdi, 512
   dec rdx
   cmp rdx, 0
-  jnz .readloop
+  jnz .readloop 
+
+; jump to kernel
+  jmp tempsector
 
 haltloop:
   hlt
