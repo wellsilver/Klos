@@ -177,7 +177,7 @@ driveerr:
 .loop:
   hlt
   jmp .loop
-.string: db "broken drive",0
+.string: db "check drive",0
 
 times 510-($-$$) db 0
 dw 0xAA55
@@ -268,86 +268,34 @@ bootloader:
   mov rdi, tempsector
   call ata_lba_read
 
+  ; find data
+  mov rdi, tempsector
+  mov al, 3
+  call loopfindtype
+  
   ; pray to god that it worked
   mov rax, 49
   mov rbx, 69
   ; ^ praying to god
 
-.nextf:
-  xor r9, r9
-  ; scan the entrys
-  mov rdi, tempsector
-  mov al, 4
-  call loopfindtype
-
-  ; save file ID
-  mov r9w, word [rdi+1]
-
-  mov byte [rdi], 0 ; clear type byte as we have read it
-
-  add rdi, 3
-  mov rax, rdi
-  mov rbx, filenamedump
-  mov rcx, 28
-  call memcpy
-  
-  mov rdi, filenamedump
-  call stringtorax
-
-  mov rdi, filename
-  call stringtorbx
-
-  cmp rax, rbx ; check if "kernel" and rax are the same
-  jnz .nextf ; if this is not the kernel file go back
-
-  mov rax, 0
-  push rax
-  mov rax, 0
-  push rax
-  
-  mov r11, 0xB8000
-
-.getnext:
-  mov rdi, tempsector
-  mov al, 3
-  call loopfindtype
-  
-  jz .load ; if loopfindtype didnt cross
-
-  mov byte [rdi], 0 ; dont accidently loop back to this
-
-  mov r10w, word [rdi+1+8+8]
-  cmp r9w, r10w ; same ID? 
-  jnz .getnext
-  
-  add rdi, 1
-  call stringtorax
-  push rax
-
+  inc rdi
+  mov rax, qword [rdi]
   add rdi, 8
-  call stringtorax
-  push rax
-  
-  jmp .getnext
-.load:
-  mov rdi, 0x00010000
-.load.loopu:
-  pop rbx
-  pop rax ; error is here, for some reason the stack isnt working?
+  mov rbx, qword [rdi]
 
-  cmp rax, 0 
-  jz .run
+  mov rdx, rbx
+  sub rdx, rax ; get ammount of sectors to read
 
-  mov rcx, rax
-  sub rcx, rbx
+  mov cl, 1
+
+  mov rdi, tempsector
+.readloop:
   call ata_lba_read
-  
-  jmp .load.loopu
-
-.run:
-  mov rdi, 0x00010000+1
-  call prints
-  mov rdi, filename
+  inc rax
+  add rdi, 512
+  dec rdx
+  cmp rdx, 0
+  jnz .readloop
 
 haltloop:
   hlt
@@ -430,4 +378,5 @@ filenamedump:
 db "bootloader end |" ; for ram dump debugging
 
 times 2560-($-$$) db 0
-tempsector: ; free until 0x00010000
+tempsector: 
+; free until 0x00010000

@@ -35,12 +35,12 @@ $(out)/kernel.bin:
 	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
 	objcopy --strip-debug $(out)/kernel.bin
 
-# IF YOU CHANGED $(out) kfs.py IS WHERE THE ERROR IS
 $(out)/klos.img:
+# kfs.py may fuck up the build if you change it or its parameters, check boot.asm
 	python3 kfs.py -s $(imagesize) -boot $(out)/boot.bin -f "kernel" $(out)/kernel.bin -o $(out)/klos.img
 	
 qemu:
 	echo If wsl does not spawn a gui, switch to a popular distribution on wsl2 and restart until it works, otherwise instructions in https://github.com/microsoft/WSL/issues/4106
-	qemu-system-x86_64 -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 4G
+	qemu-system-x86_64 -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 1G
 clean:
 	rm -r $(out)
