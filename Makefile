@@ -10,6 +10,7 @@ imagesize = 50M
 
 build: $(out) x86_64-none-elf-objcopy x86_64-none-elf-gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img 
 run: $(out) x86_64-none-elf-objcopy x86_64-none-elf-gcc $(out)/boot.bin $(out)/kernel.bin $(out)/klos.img qemu clean
+debug: build qemudebug clean
 
 $(out):
 	mkdir -p $(out)
@@ -31,10 +32,8 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	x86_64-elf-gcc -c $(src)/kernel/main.c -o $(out)/kernel.bin -masm=intel -g -Os -Wl,--oformat=binary
-	objcopy --only-keep-debug $(out)/kernel.bin $(out)/kernel.sym
-	objcopy --strip-debug $(out)/kernel.bin
-	objcopy -O binary -j .text $(out)/kernel.bin $(out)/kernel.bin
+	x86_64-elf-gcc -c $(src)/kernel/main.c -o $(out)/kernel.elf -masm=intel -g -Os
+	objcopy -O binary -j .text $(out)/kernel.elf $(out)/kernel.bin
 
 $(out)/klos.img:
 # kfs.py may fuck up the build if you change it or its parameters, check boot.asm
@@ -43,5 +42,8 @@ $(out)/klos.img:
 qemu:
 	echo If wsl does not spawn a gui, switch to a popular distribution on wsl2 and restart until it works, otherwise instructions in https://github.com/microsoft/WSL/issues/4106
 	qemu-system-x86_64 -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 1G
+qemudebug:
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 1G
+
 clean:
 	rm -r $(out)
