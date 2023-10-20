@@ -288,7 +288,7 @@ bootloader:
 
   mov cl, 1
 
-  mov rdi, tempsector
+  mov rdi, 0x00010000
 .readloop:
   call ata_lba_read
   inc rax
@@ -298,7 +298,7 @@ bootloader:
   jnz .readloop 
 
 ; jump to kernel
-  jmp tempsector
+  jmp 0x00010000
 
 haltloop:
   hlt

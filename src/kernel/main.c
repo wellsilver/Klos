@@ -1,3 +1,5 @@
+asm(".org 0x00010000");
+
 #define outb(port, data8) asm volatile ("outb")
 
 void _main() {
