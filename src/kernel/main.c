@@ -7,7 +7,6 @@ void _entry() {
 
 #include "mem.h"
 
-
 void kernel() {
 asm("kernel:");
   unsigned char *vga = (unsigned char *) 0xb8000;

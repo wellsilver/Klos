@@ -8,14 +8,8 @@ struct e820_entry {
   uint32_t type;
 } __attribute__((packed));
 
-struct e820_entry entries[128];
-
-void mscan() {
-
-}
-
 void memory_init() {
-  mscan();
+  
 }
 
 // low level unrestricted allocation
@@ -30,6 +24,10 @@ void memfree(void *ptr) {
 
 // allocate specific page
 void *selectpage(int page) {
+
+}
+
+void freepage(int page) {
 
 }
 
