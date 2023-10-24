@@ -18,5 +18,5 @@ asm("kernel:");
 
   memory_init();
 
-  while (1) {asm("hlt");}
+  while (1) asm("hlt");
 }
