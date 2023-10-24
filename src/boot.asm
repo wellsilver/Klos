@@ -21,17 +21,6 @@ int 10h
 mov sp, 0x00000500	
 mov bp, sp
 
-; get memory map, I dont know how to get out of protected mode for E820 so
-xor cx, cx
-xor dx, dx
-
-mov ah, 0xE801
-int 0x15
-jc err
-
-mov word [0x00000600], cx
-mov word [0x00000600+2], dx
-
 ; reset boot disk
 xor ah,ah
 mov dl, 0x80
