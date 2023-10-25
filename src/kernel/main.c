@@ -8,15 +8,12 @@ void _entry() {
 #include "mem.h"
 
 void kernel() {
-asm("kernel:");
   unsigned char *vga = (unsigned char *) 0xb8000;
 
-  vga[1] = 15;
-  vga[0] = 'h';
-  vga[3] = 15;
-  vga[2] = 'i';
-
   memory_init();
+
+  vga[1] = 15;
+  vga[0] = 97+mmaplen;
 
   while (1) asm("hlt");
 }

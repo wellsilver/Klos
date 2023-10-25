@@ -13,7 +13,8 @@ uint16_t mmaplen;
 struct e820_entry *mmap;
 
 void memory_init() {
-  
+  mmaplen = *((uint16_t *) 0x700-3);
+  mmap = (struct e820_entry *) 0x700;
 }
 
 // low level unrestricted allocation
