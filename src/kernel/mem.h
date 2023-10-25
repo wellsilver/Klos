@@ -9,6 +9,9 @@ struct e820_entry {
   uint32_t acpi;
 } __attribute__((packed));
 
+uint16_t mmaplen;
+struct e820_entry *mmap;
+
 void memory_init() {
   
 }

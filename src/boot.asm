@@ -18,7 +18,7 @@ mov ah, 00h
 mov al, 02h
 int 10h
 
-mov sp, 0x00000500	
+mov sp, 0x00001000	
 mov bp, sp
 
 ; reset boot disk
@@ -384,7 +384,7 @@ bits 16
 ;       The consequence of overwriting the BIOS code will lead to problems like getting stuck in `int 0x15`
 ; inputs: es:di -> destination buffer for 24 byte entries
 ; outputs: bp = entry count, trashes all registers except esi
-mmap_ent equ 0x600             ; the number of entries will be stored at 0x8000
+mmap_ent equ 0x800             ; the number of entries will be stored at 0x8000
 do_e820:
   mov di, 0x8004          ; Set di to 0x8004. Otherwise this code will get stuck in `int 0x15` after some entries are fetched 
 	xor ebx, ebx		; ebx must be 0 to start
