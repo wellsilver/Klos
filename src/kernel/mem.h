@@ -12,6 +12,21 @@ struct e820_entry {
 uint16_t mmaplen;
 struct e820_entry *mmap;
 
+unsigned int freepages;
+unsigned int highestmem;
+
+/*
+memory allocation:
+
+mem_process struct stores
+
+*/
+
+// memory process
+struct mem_process {
+  // enum _ perms
+};
+
 void memory_init() {
   mmaplen = *((uint16_t *) 0x700-3);
   mmap = (struct e820_entry *) 0x700;
