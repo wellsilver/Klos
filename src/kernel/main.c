@@ -10,7 +10,10 @@ void _entry() {
 void kernel() {
   unsigned char *vga = (unsigned char *) 0xb8000;
 
-  memory_init();
+  uint16_t mmaplen;
+  struct e820_entry *mmap;
+
+  memory_init(&mmaplen,mmap);
 
   vga[1] = 15;
   vga[0] = 97+mmaplen;
