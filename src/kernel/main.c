@@ -16,7 +16,7 @@ void kernel() {
   memory_init(&mmaplen,mmap);
 
   vga[1] = 15;
-  vga[0] = 97+mmaplen;
+  vga[0] = 97; // a
 
   while (1) asm("hlt");
 }

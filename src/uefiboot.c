@@ -1,1 +1,2 @@
-// nothing I try doesnt hang on hello world...
+// I dont want to do this
+

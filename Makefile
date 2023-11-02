@@ -33,6 +33,7 @@ $(out)/boot.bin:
 
 $(out)/kernel.bin:
 	x86_64-elf-gcc -c $(src)/kernel/main.c -o $(out)/kernel.elf -masm=intel -g -Os
+	ld -T $(src)/kernel/kernel.ld $(out)/kernel.elf -o $(out)/kernel.bin
 	objcopy -O binary -j .text $(out)/kernel.elf $(out)/kernel.bin
 
 $(out)/klos.img:
