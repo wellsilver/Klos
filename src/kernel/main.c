@@ -1,9 +1,10 @@
 asm(".org 0x00010000");
 
-void _entry() {
+void _start() {
   asm("jmp kernel");
 }
-// _entry() calls the kernel or else the proccessor will go right into one of the headers and triple fault
+// _start() calls the kernel or else the proccessor will go right into one of the headers and triple fault
+// the linker script says to enter at kernel but it doesnt for some reason
 
 #include "mem.h"
 
@@ -14,9 +15,9 @@ void kernel() {
   struct e820_entry *mmap;
 
   memory_init(&mmaplen,mmap);
-
+  
   vga[1] = 15;
-  vga[0] = 97; // a
+  vga[0] = 97+mmaplen; // a
 
   while (1) asm("hlt");
 }

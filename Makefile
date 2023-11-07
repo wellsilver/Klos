@@ -32,10 +32,8 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	x86_64-elf-gcc -c $(src)/kernel/main.c -o $(out)/kernel.elf -masm=intel -g -Os
-# figure out how to use ld
-#	ld  $(out)/kernel.elf -o $(out)/kernel.bin
-	objcopy -O binary -j .text $(out)/kernel.elf $(out)/kernel.bin
+	x86_64-elf-gcc -nostdlib -T $(src)/kernel/linker.ld $(src)/kernel/main.c -masm=intel -g -Os -o $(out)/kernel.bin
+#	objcopy -O binary $(out)/kernel.bin
 
 $(out)/klos.img:
 # kfs.py may fuck up the build if you change it or its parameters, check boot.asm
