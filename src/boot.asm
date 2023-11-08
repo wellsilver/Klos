@@ -13,11 +13,6 @@ db 0
 code:
 cld
 
-; reset vga (debug only)
-mov ah, 00h
-mov al, 02h
-int 10h
-
 mov sp, 0x00001000	
 mov bp, sp
 
@@ -184,7 +179,8 @@ err:
 .loop:
   hlt
   jmp .loop
-.string: db "check bios",0
+.string: db "Unsupported.",0
+; ^ more playful message?
 
 times 510-($-$$) db 0
 dw 0xAA55
@@ -384,11 +380,20 @@ ata_lba_read:
 bits 16
 ; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
 ; http://www.uruk.org/orig-grub/mem64mb.html
-mmapsizeptr equ 0x7BFF-130
-mmap        equ 0x7BFF-128
-mmapbufsize equ 128
+mmapsizeptr equ 0x7b0f-2
+mmap        equ 0x7b0f
 do_e820:
-  
+  xor ebx, ebx
+  mov edx, dword 'smap'
+  mov ax, 0x7b0f
+  mov es, ax
+  xor di, di
+  mov ecx, 20
+  mov eax, 0xe820
+  int 0x15
+  jc err
+.end:
+  ret
 bits 64
 
 db "filenamedump:" ; for ram dump debugging
