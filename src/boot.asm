@@ -383,13 +383,15 @@ bits 16
 mmapsizeptr equ 0x7b0f-2
 mmap        equ 0x7b0f
 do_e820:
-  xor ebx, ebx
-  mov edx, dword 'smap'
-  mov ax, 0x7b0f
-  mov es, ax
-  xor di, di
-  mov ecx, 20
   mov eax, 0xe820
+  mov ebx, 0
+
+  xor di, di
+  mov es, di
+  mov di, mmap
+  
+  mov ecx, 24
+  mov edx, 'SMAP'
   int 0x15
   jc err
 .end:
