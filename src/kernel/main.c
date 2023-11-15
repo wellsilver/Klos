@@ -9,15 +9,13 @@ void _start() {
 #include "mem.h"
 
 void kernel() {
-  unsigned char *vga = (unsigned char *) 0xb8000;
+  unsigned register char *vga = (unsigned char *) 0xb8000;
 
-  uint16_t mmaplen;
-  struct e820_entry *mmap;
+  uint16_t mmaplen = *(uint16_t *) 0x7b0d;
+  struct e820_entry *mmap = (struct e820_entry *) 0x7b0f;
 
-  memory_init(&mmaplen,mmap);
-  
-  vga[1] = 15;
-  vga[0] = 97+mmaplen; // a
+  vga[0] = 'a' + mmaplen;
+  vga[1] = 7;
 
   while (1) asm("hlt");
 }

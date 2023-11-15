@@ -21,11 +21,6 @@ struct mem_process {
   // enum _ perms
 };
 
-void memory_init(uint16_t *mmaplen, struct e820_entry *mmap) {
-  mmaplen = ((uint16_t *) 0xA00-3);
-  mmap = (struct e820_entry *) 0xA00;
-}
-
 // low level unrestricted allocation
 void *memmalloc(unsigned int size) {
 

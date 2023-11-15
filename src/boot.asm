@@ -13,8 +13,9 @@ db 0
 code:
 cld
 
-mov sp, 0x00001000	
-mov bp, sp
+xor ax, ax 
+mov ss, ax     ; setup stack
+mov sp, 0x7b0f-2 ; stack grows downwards from 0x7C00
 
 ; reset boot disk
 xor ah,ah
@@ -34,16 +35,9 @@ mov bx, 32256
 ;mov bx,  ; first byte in mem of next sector
 int 13h
 
-mov di, 0
-mov es, di
-mov di, 0x7BFF-128
-call do_e820
+jmp do_e820
+frome820:
 
-; switch to 64 bit mode
-mov ax, 0xEC00
-mov bl, 2
-int 15h
-; ^ amd says to do this
 
 switch32:
 cli
@@ -380,22 +374,32 @@ ata_lba_read:
 bits 16
 ; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
 ; http://www.uruk.org/orig-grub/mem64mb.html
-mmapsizeptr equ 0x7b0f-2
+mmapsize    equ 0x7b0d
 mmap        equ 0x7b0f
 do_e820:
-  mov eax, 0xe820
   mov ebx, 0
+  mov word [0x7b0d], 0
+.loopu:
+  inc word [0x7b0d]
+
+  imul di, ax, 20
+  mov es, di
 
   xor di, di
-  mov es, di
-  mov di, mmap
+
+  mov ecx, 20
+  mov edx, 534D4150h
+  mov eax, 0xe820
   
-  mov ecx, 24
-  mov edx, 'SMAP'
   int 0x15
   jc err
+
+  cmp ebx, 0
+  jz .end
+
+  jmp .loopu
 .end:
-  ret
+  jmp frome820
 bits 64
 
 db "filenamedump:" ; for ram dump debugging
