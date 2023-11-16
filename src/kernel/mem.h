@@ -4,9 +4,8 @@
 
 struct e820_entry {
   uint64_t base;
-  uint64_t size;
+  uint64_t length;
   uint32_t type;
-  uint32_t acpi;
 } __attribute__((packed));
 
 /*

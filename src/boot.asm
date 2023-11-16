@@ -379,13 +379,13 @@ mmap        equ 0x7b0f
 do_e820:
   mov ebx, 0
   mov word [0x7b0d], 0
+  mov di, 0
+  mov es, di
+  mov di, mmap-20
 .loopu:
   inc word [0x7b0d]
 
-  imul di, ax, 20
-  mov es, di
-
-  xor di, di
+  add di, 20
 
   mov ecx, 20
   mov edx, 534D4150h
