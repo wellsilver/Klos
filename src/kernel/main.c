@@ -1,4 +1,4 @@
-asm(".org 0x00010000");
+//asm(".org 0x00010000"); // done by LD
 
 unsigned char *vgacursor;
 
