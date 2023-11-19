@@ -14,10 +14,10 @@ void initfrome820() {
   uint16_t mmaplen = *(uint16_t *) 0x7b0d;
   struct e820_entry *mmap = (struct e820_entry *) 0x7b0f;
 
-  int memsize = 0;
+  long memsize = 0;
 
-  int startslength=0;
-  int start=0;
+  long startslength=0;
+  long start=0;
   // find the biggest memory area to store the memory map, get the size of available memory
   for (int loop=0;loop<mmaplen;loop++) {
     memsize += mmap[loop].length;
@@ -35,6 +35,7 @@ void initfrome820() {
   blank.type = 1; // not free
 
   memory_map = (struct memory_map_entry *) start;
+
   // initialize the map
   for (int loop=0;loop<memsize;loop++) {
     memory_map[loop] = blank;
