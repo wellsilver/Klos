@@ -2,10 +2,7 @@
 #define klos_mem
 #include "util/int.h"
 #include "inite820.h"
-
-struct memory_map_entry {
-  char type;
-};
+#include "memory/types.h"
 
 long memoryfreeblocks;
 long memorysizeblocks;
