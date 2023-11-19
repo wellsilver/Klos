@@ -1,24 +1,28 @@
 #ifndef klos_mem
 #define klos_mem
 #include "util/int.h"
+#include "inite820.h"
 
-struct e820_entry {
-  uint64_t base;
-  uint64_t length;
-  uint32_t type;
-} __attribute__((packed));
+struct memory_map_entry {
+  char type;
+};
+
+long memoryfreeblocks;
+long memorysizeblocks;
+struct memory_map_entry *memory_map;
 
 /*
 memory allocation:
 
-mem_process struct stores
+blocks: 40960 size
+stored in a memory map which is fully allocated
 
 */
 
-// memory process
-struct mem_process {
-  // enum _ perms
-};
+void memory_init() {
+  // code to check if its e820 or some other method here
+  initfrome820();
+}
 
 // low level unrestricted allocation
 void *memmalloc(unsigned int size) {

@@ -32,7 +32,7 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	x86_64-elf-gcc -nostdlib -T $(src)/kernel/linker.ld $(src)/kernel/main.c -masm=intel -g -Os -o $(out)/kernel.bin
+	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(src)/kernel/main.c -masm=intel -g -Os -o $(out)/kernel.bin
 #	objcopy -O binary $(out)/kernel.bin
 
 $(out)/klos.img:
@@ -41,9 +41,9 @@ $(out)/klos.img:
 	
 qemu:
 	echo If wsl does not spawn a gui, switch to a popular distribution on wsl2 and restart until it works, otherwise instructions in https://github.com/microsoft/WSL/issues/4106
-	qemu-system-x86_64 -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 1G
+	qemu-system-x86_64 -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 4G
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 1G
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 4G
 
 clean:
 	rm -r $(out)
