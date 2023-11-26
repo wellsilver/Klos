@@ -56,7 +56,7 @@ void initfrome820() {
   // allocate the memory map to the memory map
   for (int loop=0;loop < (memsize*sizeof(struct memory_map_entry));loop++) {
     memoryfreeblocks--;
-    memory_map[(start+loop) % 40960].type = 1; // allocate
+    memory_map[(start+loop) / 40960].type = 1; // allocate
   }
 }
 
