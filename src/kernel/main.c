@@ -23,12 +23,5 @@ void kernel() {
     buf[loop] = 0;
   }
 
-  itoa(memoryfreeblocks, buf, 8);
-
-  for (int loop=0;buf[loop/2]!=0;loop+=2) {
-    vgacursor[loop] = buf[loop/2];
-    vgacursor[loop+1] = 7;
-  }
-
   while (1) asm("hlt");
 }
