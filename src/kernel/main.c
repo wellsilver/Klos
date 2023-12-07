@@ -17,11 +17,8 @@ extern long memoryfreeblocks; // mem.h:10
 
 void kernel() {
   memory_init();
-
-  char buf[8];
-  for (int loop=0;loop<8;loop++) {
-    buf[loop] = 0;
-  }
+  
+  
 
   while (1) asm("hlt");
 }
