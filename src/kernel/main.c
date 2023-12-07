@@ -17,6 +17,7 @@ extern long memoryfreeblocks; // mem.h:10
 #include "util/str.h"
 
 void kernel() {
+  kernel:
   memory_init();
   
   display_init();
