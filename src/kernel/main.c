@@ -13,6 +13,7 @@ void _start() {
 #include "memory/mem.h"
 extern long memoryfreeblocks; // mem.h:10
 #include "display/display.h"
+#include "pci.h"
 
 #include "util/str.h"
 
@@ -20,7 +21,7 @@ void kernel() {
   kernel:
   memory_init();
   
-  display_init();
+  
 
   while (1) asm("hlt");
 }
