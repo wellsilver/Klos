@@ -1,5 +1,5 @@
-elfbin="$1"
-cd $elfbin
+mkdir /tmp/gccbuild
+cd /tmp/gccbuild
 wget http://mirror.koddos.net/gcc/releases/gcc-13.2.0/gcc-13.2.0.tar.gz
 tar -xf gcc-13.2.0.tar.gz
 # below breaks alot, should reinstall it
@@ -9,7 +9,7 @@ sudo apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev
 mkdir build
 cd build
 ../gcc-13.2.0/configure --target=x86_64-elf --disable-nls --enable-languages=c,c++ --without-headers
-make all-gcc -j 4
-make all-target-libgcc -j 4
-make install-gcc -j 4
-make install-target-libgcc -j 4
+make all-gcc -j 6
+make all-target-libgcc -j 6
+make install-gcc -j 6
+make install-target-libgcc -j 6

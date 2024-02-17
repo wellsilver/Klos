@@ -1,12 +1,10 @@
 # build
 all platforms: (made on wsl:debian)
 
-```sudo make run```  starts with qemu
+```make run``` compiles then starts with qemu
 
-needs ``nasm``, ``qemu-system-x86_64``, ``make``, ``gcc``, ``cat``, ``truncate``, ``objcopy``, ``wget``
+needs ``nasm``, ``qemu-system-x86``, ``make``, ``truncate``, ``wget``
 
-should work on all modern 64 bit computers
+run (has apt, sudo) bintil_cross.sh to install crosscompile binutil
 
-run make with sudo
-
-installs x86_64-elf toolchain and downloads prerequisites with apt if doesnt exist
+run (has apt, sudo) gcc_cross.sh to install crosscompile gcc
