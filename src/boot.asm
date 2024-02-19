@@ -94,7 +94,7 @@ longmode:
   mov fs, ax                    ; Set the F-segment to the A-register.
   mov gs, ax                    ; Set the G-segment to the A-register.
   mov ss, ax                    ; Set the stack segment to the A-register.
-  mov rsp, 0x00000500	
+  mov rsp, 0x00000500
   mov rbp, rsp
 
   jmp bootloader
@@ -183,16 +183,16 @@ bits 64
 ; .call. find a type for a kfs folder entry
 ; rdi=pointertofolder al=typetofind
 ; returns rdi (pointer to entry in folder) garbage:bl,cl
-loopfindtype:
+loopdirfindtype:
   xor cl, cl
 .next:
   mov bl, byte [rdi]
   cmp bl, al
   jz .end
   inc cl
-  cmp cl, 16
+  cmp cl, 20
   jz .endmissing
-  add rdi, 32
+  add rdi, 25
   jmp .next
 .end:
   mov cl,5
@@ -257,43 +257,17 @@ stringtorbx:
   jnz .next
   ret
 
-; load kernel
+; load kernel (assuming it is the first file that appears)
 bootloader:
-  ; read the / folder into temp
-  mov eax, 6
-  mov cl, 1
-  mov rdi, tempsector
-  call ata_lba_read
-
-  ; find data
-  mov rdi, tempsector
-  mov al, 3
-  call loopfindtype
-  
-  ; pray to god that it worked
+  ; pray to god that this is correct
   mov rax, 49
   mov rbx, 69
   ; ^ praying to god
 
-  inc rdi
-  mov rax, qword [rdi]
-  add rdi, 8
-  mov rbx, qword [rdi]
-
-  mov rdx, rbx
-  sub rdx, rax ; get ammount of sectors to read
-
+  mov rax, 13 ; get sector of file descriptor
   mov cl, 1
-
-  mov rdi, 0x00010000
-.readloop:
+  mov rdi, tempsector
   call ata_lba_read
-  inc rax
-  add rdi, 512
-  dec rdx
-  cmp rdx, 0
-  jnz .readloop
-  
 
 ; jump to kernel
   jmp 0x00010000
@@ -402,12 +376,11 @@ do_e820:
   jmp frome820
 bits 64
 
-db "filenamedump:" ; for ram dump debugging
 filenamedump:
   times 28 db 0 ; str
   db 0 ; \0
 
-db "bootloader end |" ; for ram dump debugging
+db "boot end |" ; for ram dump debugging
 
 times 2560-($-$$) db 0
 tempsector: 
