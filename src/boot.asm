@@ -8,7 +8,8 @@ jmp code
 nop
 
 db "kfs"
-db 0
+dw 2 ; version
+highlighted: dq 0
 
 code:
 cld
