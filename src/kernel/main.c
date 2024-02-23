@@ -21,7 +21,7 @@ void kernel() {
   kernel:
   memory_init();
   
-  
+  vgacursor[0] = 'h';
 
   while (1) asm("hlt");
 }

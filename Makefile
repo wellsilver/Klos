@@ -28,9 +28,9 @@ $(out)/klos.img:
 	python3 kfs/format.py $(out)/klos.img $(imagesize) $(out)/boot.bin $(out)/kernel.bin
 	
 qemu:
-	qemu-system-x86_64 -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 4G
+	qemu-system-x86_64 -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 2G
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 4G
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -d cpu_reset -drive file=$(out)/klos.img -m 2G
 
 clean:
 	rm -rf $(out)

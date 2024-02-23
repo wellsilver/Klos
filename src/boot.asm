@@ -9,7 +9,7 @@ nop
 
 db "kfs"
 dw 2 ; version
-highlighted: dq 0
+highlighted: dq 12 ; kernel is at 12 I hope lol
 
 code:
 cld
@@ -265,9 +265,17 @@ bootloader:
   mov rbx, 69
   ; ^ praying to god
 
-  mov rax, 13 ; get sector of file descriptor
+  mov rax, 12 ; get sector of file descriptor from kfs
   mov cl, 1
   mov rdi, tempsector
+  call ata_lba_read
+
+  mov rdi, tempsector
+  mov rax, qword [tempsector+74]   ; mov start to rax
+  mov rcx, qword [tempsector+74+8] ; mov end   to rcx
+
+  sub rcx, rax ; get sector count to read by subtracting the end-start
+  mov rdi, 0x00010000
   call ata_lba_read
 
 ; jump to kernel
