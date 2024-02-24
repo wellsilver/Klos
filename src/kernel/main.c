@@ -1,9 +1,6 @@
 //asm(".org 0x00010000"); // done by LD
 
-unsigned char *vgacursor;
-
 void _start() {
-  vgacursor = (unsigned char *) 0xb8000;
   asm("jmp kernel");
 }
 
@@ -11,6 +8,7 @@ void _start() {
 // the linker script says to enter at kernel but it doesnt for some reason
 
 #include "memory/mem.h"
+#include "process.h"
 extern long memoryfreeblocks; // mem.h:10
 #include "display/display.h"
 #include "pci.h"
@@ -20,8 +18,7 @@ extern long memoryfreeblocks; // mem.h:10
 void kernel() {
   kernel:
   memory_init();
-  
-  vgacursor[0] = 'h';
+  process_init();
 
   while (1) asm("hlt");
 }

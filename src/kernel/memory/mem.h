@@ -21,13 +21,8 @@ void memory_init() {
   initfrome820();
 }
 
-// low level unrestricted allocation
-void *memmalloc(unsigned int size) {
-
-}
-
-// low level unrestricted freeing
-void memfree(void *ptr) {
+// get any page
+void *mempage() {
 
 }
 
