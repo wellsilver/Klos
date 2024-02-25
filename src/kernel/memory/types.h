@@ -3,14 +3,14 @@
 
 #include "util/int.h"
 
+enum memory_map_style {
+  mm_free = 0,
+  mm_allocated = 1,
+  mm_system = 2
+};
+
 struct memory_map_entry {
   char type;
 };
-
-struct e820_entry {
-  uint64_t base;
-  uint64_t length;
-  uint32_t type;
-} __attribute__((packed));
 
 #endif

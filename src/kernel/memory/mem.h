@@ -11,18 +11,18 @@ struct memory_map_entry *memory_map;
 /*
 memory allocation:
 
-blocks: 40960 size
-stored in a memory map which is fully allocated
+stored in memory_map which describes each page, enum memory_map_style
+memory_map is assembled at memory_init
 
 */
 
 void memory_init() {
-  // code to check if its e820 or some other method here
+  // TODO code to check if its e820 or some other method here
   initfrome820();
 }
 
-// get any page
-void *mempage() {
+// get ammount of pages (and resize)
+void *mempage(int pages) {
 
 }
 
