@@ -21,10 +21,22 @@ void memory_init() {
   initfrome820();
 }
 
-// get ammount of pages (and resize)
-void *mempage(int pages) {
-
+// get x pages (and resize)
+static void *mempage(int pages) {
+  uint64_t loop=0;
+  void *start;
+  int allocated = 0;
+  do {
+    if (memory_map[loop].type==0 && (uint64_t) start == 0) // set start to the first free block in path
+      start = (void *) (loop*4096);
+    if (memory_map[loop].type==0) allocated++; // check if the next block is free
+    else {start = (void *) 0;allocated = 0;}   // if the next block si not free, reset start and allocated
+    
+    loop++;
+  } while (loop < memorysizeblocks && allocated != pages); // until goal, or out of memory
+  
 }
+
 
 // allocate specific page
 void *selectpage(int page) {

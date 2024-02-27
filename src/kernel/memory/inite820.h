@@ -9,6 +9,12 @@ extern long memoryfreeblocks; // mem.h:10
 extern long memorysizeblocks; // mem.h:11
 extern struct memory_map_entry *memory_map; // mem.h:12
 
+struct e820_entry {
+  uint64_t base;
+  uint64_t length;
+  uint32_t type;
+} __attribute__((packed));
+
 void initfrome820() {
   uint16_t mmaplen = *(uint16_t *) 0x7b0d;
   struct e820_entry *mmap = (struct e820_entry *) 0x7b0f;

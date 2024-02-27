@@ -5,7 +5,7 @@
           "name": "Debug",
           "type": "cppdbg",
           "request": "launch",
-          "program": "${workspaceRoot}/out/kernel.elf",
+          "program": "${workspaceRoot}/out/kernel.bin",
           "args": [],
           "stopAtEntry": true,
           "cwd": "${workspaceFolder}",

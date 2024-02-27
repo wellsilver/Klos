@@ -14,7 +14,7 @@ struct process {
   } gdt;
 
   void *allocated;
-}
+};
 
 int current;
 struct process *processes;
