@@ -34,7 +34,8 @@ static void *mempage(int pages) {
     
     loop++;
   } while (loop < memorysizeblocks && allocated != pages); // until goal, or out of memory
-  
+  if (allocated != pages) start = (void *) 0;
+  return start;
 }
 
 

@@ -1,10 +1,9 @@
-OUTPUT_FORMAT("binary")
+OUTPUT_FORMAT("elf64-x86-64")
 
-ENTRY("_start")
+ENTRY("kernel")
 
 SECTIONS {
-  . = 0x00010000;
-  .text : {
-    *(.text)
-  }
+  .stack = 0x00000500;
+  . = 0x10000;
+
 }

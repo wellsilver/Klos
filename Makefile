@@ -21,8 +21,8 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(src)/kernel/main.c -masm=intel -g -Os -o $(out)/kernel.bin
-#	objcopy -O binary $(out)/kernel.bin
+	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(src)/kernel/main.c -masm=intel -g -Os -o $(out)/kernel.elf
+	objcopy -O binary $(out)/kernel.elf $(out)/kernel.bin
 
 $(out)/klos.img:
 	python3 kfs/format.py $(out)/klos.img $(imagesize) $(out)/boot.bin $(out)/kernel.bin

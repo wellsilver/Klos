@@ -19,10 +19,10 @@ void kernel() {
   kernel:
   memory_init();
   process_init();
-  void *kernel = mempage(1);
-
   
 
   (*(char *) 0xB8000) = 'h';
+
+
   while (1) asm("hlt");
 }
