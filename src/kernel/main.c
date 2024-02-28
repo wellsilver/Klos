@@ -20,7 +20,7 @@ void kernel() {
   memory_init();
   process_init();
   
-
+  void *newpage = mempage(1);
   (*(char *) 0xB8000) = 'h';
 
 

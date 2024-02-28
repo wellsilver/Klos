@@ -278,6 +278,9 @@ bootloader:
   mov rdi, 0x00010000
   call ata_lba_read
 
+  mov rsp, 0x7C00; stack grows downwards from 0x7C00
+  mov rbp, rsp
+
   mov byte [0xB8000], 'b'
   
 ; jump to kernel
