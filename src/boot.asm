@@ -14,6 +14,8 @@ highlighted: dq 12 ; kernel is at 12 I hope lol
 code:
 cld
 
+mov byte [0xB8000], 'b'
+
 xor ax, ax 
 mov ss, ax     ; setup stack
 mov sp, 0x7b0f-2 ; stack grows downwards from 0x7C00
@@ -278,10 +280,10 @@ bootloader:
   mov rdi, 0x00010000
   call ata_lba_read
 
-  mov rsp, 0x7C00; stack grows downwards from 0x7C00
+  mov rsp, 0x1000 ; stack grows downwards from first page
   mov rbp, rsp
 
-  mov byte [0xB8000], 'b'
+  mov byte [0xB8000], 's'
   
 ; jump to kernel
   jmp 0x00010000

@@ -1,6 +1,8 @@
 #ifndef ioh
 #define ioh
 
+#include "util/int.h"
+
 uint8_t inb(uint16_t port) {
   uint8_t out;
   asm("inb %0, %1": "=a"(out) : "d"(port));
