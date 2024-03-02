@@ -20,9 +20,9 @@ void kernel() {
   memory_init();
   process_init();
   
-  void *newpage = mempage(1);
-  (*(char *) 0xB8000) = 'h';
+  char *newpage = (char *) mempage(1);
 
+  for (int loop=0;loop<1;loop++) ((char *) 0xB8000)[loop] = newpage[loop];
 
   while (1) asm("hlt");
 }

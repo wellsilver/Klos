@@ -23,6 +23,7 @@ $(out)/boot.bin:
 $(out)/kernel.bin:
 	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(src)/kernel/main.c -masm=intel -g -Os -o $(out)/kernel.elf
 	objcopy -O binary $(out)/kernel.elf $(out)/kernel.bin
+	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
 
 $(out)/klos.img:
 	python3 kfs/format.py $(out)/klos.img $(imagesize) $(out)/boot.bin $(out)/kernel.bin

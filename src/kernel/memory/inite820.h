@@ -15,7 +15,7 @@ struct e820_entry {
   uint32_t type;
 } __attribute__((packed));
 
-void initfrome820() {
+static void initfrome820() {
   uint16_t mmaplen = *(uint16_t *) 0x7b0d;
   struct e820_entry *mmap = (struct e820_entry *) 0x7b0f;
 
