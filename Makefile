@@ -21,7 +21,7 @@ $(out)/boot.bin:
 	truncate $(out)/boot.bin -s 1536
 
 $(out)/kernel.bin:
-	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(src)/kernel/main.c -masm=intel -g -Os -o $(out)/kernel.elf
+	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(src)/kernel/main.c -masm=intel -g -O0 -o $(out)/kernel.elf
 	objcopy -O binary $(out)/kernel.elf $(out)/kernel.bin
 	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
 
