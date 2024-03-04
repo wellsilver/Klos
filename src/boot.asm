@@ -14,7 +14,6 @@ highlighted: dq 12 ; kernel is at 12 I hope lol
 code:
 cld
 
-mov byte [0xB8000], 'b'
 
 xor ax, ax 
 mov ss, ax     ; setup stack
@@ -262,10 +261,7 @@ stringtorbx:
 
 ; load kernel (assuming it is the first file that appears)
 bootloader:
-  ; pray to god that this is correct
-  mov rax, 49
-  mov rbx, 69
-  ; ^ praying to god
+  mov byte [0xB8000], 's'
 
   mov rax, 12 ; get sector of file descriptor from kfs
   mov cl, 1
@@ -280,13 +276,11 @@ bootloader:
   mov rdi, 0x00010000
   call ata_lba_read
 
-  mov rsp, 0x1000 ; stack grows downwards from first page
+  mov rsp, 0x1000 ; first page
   mov rbp, rsp
 
-  mov byte [0xB8000], 's'
-  
 ; jump to kernel
-  jmp 0x00010000
+  jmp 0x10000
 
 haltloop:
   hlt
