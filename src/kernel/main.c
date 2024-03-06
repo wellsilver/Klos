@@ -2,11 +2,15 @@ void _start() {
   asm("jmp kernel");
 }
 
+#include "memory/mem.h"
+
 void kernel() {
   kernel:
   
-  // clear the entire page, apparently it takes the whole thing?
-  for (int loop=0;loop<4096;loop++) ((char *) 0xB8000)[loop] = 0;
+  
+  (*(char *) 0xB8000) = 'k';
+
+  memory_init();
 
   while (1) asm("hlt");
 }

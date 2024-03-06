@@ -205,8 +205,6 @@ loopdirfindtype:
   cmp cl , 5 ; set z flag
   ret
 
-filename: db "kernel",0,0 ; super conveniently 8 bytes
-
 ; print str vga, for debug only. garbage=rax,rbx rdi=pointertostring. string is null terminated
 prints:
   mov rax, 0xb8000
@@ -261,7 +259,7 @@ stringtorbx:
 
 ; load kernel (assuming it is the first file that appears)
 bootloader:
-  mov byte [0xB8000], 's'
+  mov byte [0xB8000], 'b'
 
   mov rax, 12 ; get sector of file descriptor from kfs
   mov cl, 1
