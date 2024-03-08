@@ -175,8 +175,10 @@ err:
 .loop:
   hlt
   jmp .loop
-.string: db "Unsupported.",0
+.string: db "Unsupported",0
 ; ^ more playful message?
+
+type: db 0
 
 times 510-($-$$) db 0
 dw 0xAA55
@@ -224,8 +226,8 @@ prints:
 ; memory copy.
 ; rax = from, rbx = to, rcx = how many bytes to transfer. garbage rdx
 memcpy:
-  mov dl, byte [rax]
-  mov byte [rbx], dl
+  mov dx, word [rax]
+  mov word [rbx], dx
   inc rax
   inc rbx
   dec rcx
@@ -274,7 +276,7 @@ bootloader:
   mov rdi, 0x00010000
   call ata_lba_read
 
-  mov rsp, 0x1000 ; first page
+  mov rsp, 0xFF00 ; everything below the kernel and a table is free
   mov rbp, rsp
 
 ; jump to kernel
@@ -356,16 +358,17 @@ ata_lba_read:
 bits 16
 ; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
 ; http://www.uruk.org/orig-grub/mem64mb.html
-mmapsize    equ 0x7b0d
-mmap        equ 0x7b0f
+mmapsize   equ 0x7b0d
+mmap       equ 0x7b0f
 do_e820:
+  mov byte [0xFFFF], 2 ; tell kernel memory map=e820
   mov ebx, 0
-  mov word [0x7b0d], 0
+  mov word [mmapsize], 0
   mov di, 0
   mov es, di
   mov di, mmap-20
 .loopu:
-  inc word [0x7b0d]
+  inc word [mmapsize]
 
   add di, 20
 
@@ -392,4 +395,5 @@ db "boot end |" ; for ram dump debugging
 
 times 2560-($-$$) db 0
 tempsector: 
-; free until 0x00010000
+; free until 0xFF00
+;            0x7C00
