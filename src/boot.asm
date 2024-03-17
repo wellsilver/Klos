@@ -144,16 +144,16 @@ GDT64: ; 64 bit gdt
     dq 0
   .Code: equ $ - GDT64
     dd 0xFFFF                                   ; Limit & Base (low, bits 0-15)
-    db 0                                        ; Base (mid, bits 16-23)
+    db 0xFF                                        ; Base (mid, bits 16-23)
     db PRESENT | NOT_SYS | EXEC | RW            ; Access
     db GRAN_4K | LONG_MODE | 0xF                ; Flags & Limit (high, bits 16-19)
-    db 0                                        ; Base (high, bits 24-31)
+    db 0xFF                                        ; Base (high, bits 24-31)
   .Data: equ $ - GDT64
     dd 0xFFFF                                   ; Limit & Base (low, bits 0-15)
-    db 0                                        ; Base (mid, bits 16-23)
+    db 0xFF                                     ; Base (mid, bits 16-23)
     db PRESENT | NOT_SYS | RW                   ; Access
     db GRAN_4K | SZ_32 | 0xF                    ; Flags & Limit (high, bits 16-19)
-    db 0                                        ; Base (high, bits 24-31)
+    db 0xFF                                     ; Base (high, bits 24-31)
   .TSS: equ $ - GDT64
     dd 0x00000068
     dd 0x00CF8900

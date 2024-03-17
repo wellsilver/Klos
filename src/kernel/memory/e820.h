@@ -27,7 +27,13 @@ struct memory_map *memory_init_e820() {
       freebytes+=map[loop].length;
     } else allocatedbytes+=map[loop].length;
   }
-  lengthoflargest=0;
+
+  // create the (native) map
+  for (int loop=0;loop<(freebytes+allocatedbytes)/4096;loop++) {
+    a[loop].type = 1; // start with all allocated
+  }
+
+  return a;
 }
 
 #endif
