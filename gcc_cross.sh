@@ -9,7 +9,7 @@ sudo apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev
 mkdir build
 cd build
 ../gcc-13.2.0/configure --target=x86_64-elf --disable-nls --enable-languages=c,c++ --without-headers
-make all-gcc -j 6
-make all-target-libgcc -j 6
-make install-gcc -j 6
-make install-target-libgcc -j 6
+make all-gcc -j 12
+make all-target-libgcc -j 12
+make install-gcc -j 12
+make install-target-libgcc -j 12
