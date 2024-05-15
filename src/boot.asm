@@ -261,7 +261,10 @@ stringtorbx:
 
 ; load kernel (assuming it is the first file that appears)
 bootloader:
-  mov byte [0xB8000], 'b'
+  mov word [0xB8000],   0x0762
+  mov word [0xB8000+2], 0x076f
+  mov word [0xB8000+4], 0x076F
+  mov word [0xB8000+6], 0x0774
 
   mov rax, 12 ; get sector of file descriptor from kfs
   mov cl, 1

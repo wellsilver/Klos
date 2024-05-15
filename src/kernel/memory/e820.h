@@ -17,9 +17,7 @@ struct memory_map *memory_init_e820() {
   uint64_t freebytes=0;
   uint64_t allocatedbytes=0;
 
-  
-
-  return a;
+  return map;
 }
 
 #endif
