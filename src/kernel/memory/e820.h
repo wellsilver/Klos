@@ -17,6 +17,14 @@ struct memory_map *memory_init_e820() {
   uint64_t freebytes=0;
   uint64_t allocatedbytes=0;
 
+  for (int loop=0;loop<map_size;loop++) {
+    if (biosmap->type == 1) {
+      freebytes += biosmap->length;
+    }
+  }
+
+  allocatedbytes++;
+
   return map;
 }
 
