@@ -2,49 +2,16 @@
   "version": "0.2.0",
   "configurations": [
     {
-        "type": "gdb",
-        "request": "attach",
-        "name": "Attach to gdbserver",
-        "executable": "${workspaceRoot}/out/kernel.elf",
-        "target": ":1234",
-        "remote": true,
-        "cwd": "${workspaceRoot}",
-        "valuesFormatting": "parseText"
+      "type": "gdb",
+      "request": "attach",
+      "name": "Attach to gdbserver",
+      "executable": "./out/kernel.elf",
+      "target": ":1234",
+      "remote": true,
+      "cwd": "${workspaceRoot}",
+      "valuesFormatting": "parseText"
     }
-    /*
-      {
-          "name": "Debug",
-          "type": "cppdbg",
-          "request": "launch",
-          "program": "${workspaceRoot}/out/kernel.elf",
-          "args": [],
-          "stopAtEntry": true,
-          "cwd": "${workspaceFolder}",
-          "environment": [],
-          "externalConsole": false,
-          "MIMode": "gdb",
-          "setupCommands": [
-              {
-                  "description": "Enable pretty-printing for gdb",
-                  "text": "-enable-pretty-printing",
-                  "ignoreFailures": true
-              }
-          ],
-          "miDebuggerPath": "/usr/bin/gdb",
-          "miDebuggerArgs": "",
-          "targetArchitecture": "x86_64",
-          "customLaunchSetupCommands": [
-              {
-                  "text": "target remote localhost:1234",
-                  "description": "Connect to QEMU remote debugger"
-              },
-              {
-                  "text": "symbol-file ${workspaceRoot}/out/kernel.elf",
-                  "description": "Get kernel symbols"
-              }
-          ],
-          "avoidWindowsConsoleRedirection": true
-      }
-    */
+    
+
   ]
 }
