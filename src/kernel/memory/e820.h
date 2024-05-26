@@ -20,6 +20,8 @@ struct memory_map *memory_init_e820() {
   for (int loop=0;loop<map_size;loop++) {
     if (biosmap->type == 1) {
       freebytes += biosmap->length;
+    } else {
+      allocatedbytes += biosmap->length;
     }
   }
 
