@@ -9,7 +9,7 @@ struct e820_s {
   uint32_t type;
 };
 
-struct memory_map *memory_init_e820() {
+struct memory_map *memoryinit_e820() {
   struct e820_s *biosmap = (struct e820_s *) 0x7b0f;
   uint16_t map_size  = *(uint16_t *) 0x7b0d;
 

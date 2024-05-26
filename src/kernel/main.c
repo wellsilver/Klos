@@ -11,7 +11,7 @@ void kernel() {
   (*(uint16_t *) (0xB8000+6))= 0x0772;
   (*(uint16_t *) (0xB8000+8))= 0x0774;
 
-  struct memory_map *memory = memory_init();
+  struct memory_map *memory = memoryinit();
 
   while (1) asm("hlt");
 }
