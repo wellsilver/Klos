@@ -4,7 +4,8 @@ asm("jmp kernel"); // cpu jumps to here
 
 void kernel() {
   kernel:
-  //this displays start if stuck before any display driver init
+
+  //this displays start via vga just incase if stuck before any display driver init
   (*(uint16_t *) 0xB8000)    = 0x0773;
   (*(uint16_t *) (0xB8000+2))= 0x0774;
   (*(uint16_t *) (0xB8000+4))= 0x0761;
