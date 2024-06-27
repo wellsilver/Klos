@@ -12,7 +12,9 @@ void kernel() {
   (*(uint16_t *) (0xB8000+6))= 0x0772;
   (*(uint16_t *) (0xB8000+8))= 0x0774;
 
-  struct memory_map *memory = memoryinit();
+  // put it in the stack so we dont haved to deal with the gdt until later. for some reason the gdt is only allowing the first like 8 megabytes
+  struct memory_map memory[memoryinit_size()];
+  memoryinit(memory);
 
   while (1) asm("hlt");
 }

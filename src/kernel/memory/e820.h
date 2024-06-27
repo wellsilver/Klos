@@ -9,11 +9,15 @@ struct e820_s {
   uint32_t type;
 };
 
-struct memory_map *memoryinit_e820() {
+int memoryinit_e820_size() {
+  uint16_t map_size  = *(uint16_t *) 0x7b0d;
+  return map_size;
+}
+
+struct memory_map *memoryinit_e820(struct memory_map *map) {
   struct e820_s *biosmap = (struct e820_s *) 0x7b0f;
   uint16_t map_size  = *(uint16_t *) 0x7b0d;
 
-  struct memory_map *map;
   uint64_t freebytes=0;
   uint64_t allocatedbytes=0;
 
