@@ -1,13 +1,13 @@
 # build
-all platforms: (made on wsl:debian)
+all platforms: (made on debian linux)
+
+there are submodules
 
 ```make run``` compiles then starts with qemu
 
 needs ``nasm``, ``qemu-system-x86``, ``make``, ``truncate``, ``wget``
 
-run (has apt, sudo) bintil_cross.sh to install crosscompile binutil
-
-run (has apt, sudo) gcc_cross.sh to install crosscompile gcc
+run (has apt, run as sudo) ``bash ./installtools.sh`` to install everything needed
 
 ### boot
 
