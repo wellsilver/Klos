@@ -3,9 +3,9 @@ cd /tmp/gccbuild
 wget http://mirror.koddos.net/gcc/releases/gcc-13.2.0/gcc-13.2.0.tar.gz
 tar -xf gcc-13.2.0.tar.gz
 # below breaks alot, should reinstall it
-sudo apt -y update
-sudo apt -y remove build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
-sudo apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
+apt -y update
+apt -y remove build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
+apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 # just realized all distributions dont have apt 🤦‍♂️
 mkdir build
 cd build
