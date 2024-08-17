@@ -5,5 +5,4 @@ extern kernel
 global start
 
 start:
-  
   jmp kernel

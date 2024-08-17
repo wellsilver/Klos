@@ -1,4 +1,4 @@
-//asm("jmp kernel"); // cpu jumps to here, removed with main.asm
+//asm("jmp kernel"); // cpu jumps to here, replaced with main.asm
 
 #include "memory/mem.h"
 
