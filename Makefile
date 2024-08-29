@@ -21,7 +21,7 @@ $(out)/biosboot.bin:
 	truncate $(out)/biosboot.bin -s 1536
 
 $(out)/kernel.bin:
-	nasm $(src)/kernel/main.x86.S -f elf64 -o $(out)/main.x86.S.bin
+	nasm $(src)/kernel/x86/main.x86.S -f elf64 -o $(out)/main.x86.S.bin
 	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(out)/main.x86.S.bin $(src)/kernel/main.c -masm=intel -g -O0 -o $(out)/kernel.elf
 	objcopy -O binary $(out)/kernel.elf $(out)/kernel.bin
 	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
