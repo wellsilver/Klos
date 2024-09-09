@@ -7,4 +7,4 @@ global start
 start:
   jmp kernel
 
-; gdt sorting here
+; gdt sorting and everything else here

@@ -7,24 +7,19 @@ struct memory_map {
 };
 
 #include "util/int.h"
-#include "memory/e820.h"
 
-int memoryinit_size() {
-  int ret;
+uint memoryinit_size(uint type) {
+  uint ret;
 
-  switch (*(uint8_t *)0xFFFF) {
-    case 2:
-      ret = memoryinit_e820_size();
+  switch (type) {
     break;
   }
 
   return ret;
 }
 
-void memoryinit(struct memory_map *ret) {
-  switch (*(uint8_t *)0xFFFF) {
-    case 2:
-      memoryinit_e820(ret);
+void memoryinit(struct memory_map *ret, uint type) {
+  switch (type) {
     break;
   }
 }

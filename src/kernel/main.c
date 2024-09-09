@@ -4,10 +4,10 @@
 
 void kernel() {
   kernel:
-
+  uint type;
   // put it in the stack so we dont haved to deal with the gdt until later. for some reason the gdt is only allowing the first like 8 megabytes
-  struct memory_map memory[memoryinit_size()];
-  memoryinit(memory);
+  struct memory_map memory[memoryinit_size(type)];
+  memoryinit(memory, type);
 
 
 
