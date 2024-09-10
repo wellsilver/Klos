@@ -6,8 +6,6 @@ src = src
 out = out
 elfbin = $(out)/gcc
 bintilbin = $(out)/binutil
-# 50 megabytes
-imagesize = 97656
 
 build: $(out) $(out)/kernel.bin $(out)/klos.img 
 run: $(out) $(out)/kernel.bin $(out)/klos.img qemu clean
@@ -23,18 +21,20 @@ $(out)/kernel.bin:
 
 $(out)/klos.img:
 	truncate $(out)/disc.img -s 1024M
+	truncate $(out)/efi.img -s 24M
 	parted $(out)/disc.img --script mklabel gpt
 # EFI
-	parted $(out)/disc.img --script mkpart logical fat32 0% 24M
+	parted $(out)/disc.img --script mkpart logical FAT32 0 20M
 # KFS
-	parted $(out)/disc.img --script mkpart logical 24M 100%
-# format the kfs fs
-	python3 kfs/format.py $(out)/klos.img $(imagesize) /dev/null $(out)/kernel.elf
+	parted $(out)/disc.img --script mkpart logical 20M 100%
+# format the kfs fs 1000 megabytes
+	python3 kfs/format.py $(out)/klos.img 1000 /dev/null $(out)/kernel.elf
+	
 	
 qemu:
-	qemu-system-x86_64 -D ./qemulog.txt -drive file=$(out)/klos.img -m 4G -d int -no-reboot
+	qemu-system-x86_64 -D ./qemulog.txt -drive file=$(out)/disc.img -m 4G -d int -no-reboot
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -drive file=$(out)/klos.img -m 4G -d int -no-reboot
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -drive file=$(out)/disc.img -m 4G -d int -no-reboot
 
 clean:
 	rm -rf $(out)
