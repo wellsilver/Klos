@@ -28,13 +28,23 @@ $(out)/klos.img:
 	python3 kfs/format.py $(out)/klos.img 1000 /dev/null $(out)/kernel.elf
 
 # format the efi fs
-	mkfs.fat -C -F 16 $(out)/efi.img 20480
+#	mkfs.fat -C -F 32 $(out)/efi.img 20480
+	truncate $(out)/efi.img -s 12M
+	mformat -i $(out)/efi.img
+	mmd -i $(out)/efi.img ::/EFI ::/EFI/BOOT ::/boot ::/boot/limine
+
+# Copy limine
+	mcopy -i $(out)/efi.img limine.conf limine/limine-bios.sys ::/boot/limine
+	mcopy -i $(out)/efi.img limine/BOOTX64.EFI ::/EFI/BOOT
+	mcopy -i $(out)/efi.img limine/BOOTIA32.EFI ::/EFI/BOOT
 
 # assemble the efi and kfs images into one
 	truncate $(out)/image.img -s 1024M
 	parted $(out)/image.img --script mklabel gpt
 	parted $(out)/image.img --script mkpart primary 2M 12M
 	parted $(out)/image.img --script mkpart primary 13M 1000M
+
+	./limine/limine bios-install $(out)/image.img
 
 	parted $(out)/image.img --script p
 	dd if=$(out)/efi.img of=$(out)/image.img bs=1M seek=2 conv=notrunc
