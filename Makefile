@@ -33,8 +33,8 @@ $(out)/klos.img:
 # assemble the efi and kfs images into one
 	truncate $(out)/image.img -s 1024M
 	parted $(out)/image.img --script mklabel gpt
-	parted $(out)/image.img --script mkpart primary 2M 11M
-	parted $(out)/image.img --script mkpart primary 12M 1000M
+	parted $(out)/image.img --script mkpart primary 2M 12M
+	parted $(out)/image.img --script mkpart primary 13M 1000M
 
 	parted $(out)/image.img --script p
 	dd if=$(out)/efi.img of=$(out)/image.img bs=1M seek=2 conv=notrunc
