@@ -7,13 +7,16 @@ out = out
 elfbin = $(out)/gcc
 bintilbin = $(out)/binutil
 
-build: $(out) limine $(out)/kernel.elf $(out)/klos.img 
-run: $(out) limine $(out)/kernel.elf $(out)/klos.img qemu clean
+build: $(out) limine $(out)/kloslimineboot $(out)/kernel.elf $(out)/klos.img 
+run: $(out) limine $(out)/kloslimineboot $(out)/kernel.elf $(out)/klos.img qemu clean
 debug: build qemudebug clean
 
 limine:
 	git clone https://github.com/limine-bootloader/limine --branch=v8.x-binary
 	cd limine && make
+
+$(out)/kloslimineboot:
+	x86_64-elf-gcc -nostdlib $(src)/limineboot.c -o $(out)/kloslimineboot -I limine -I $(src)/kernel/util -T $(src)/limineboot.ld
 
 $(out):
 	mkdir -p $(out)
@@ -33,12 +36,13 @@ $(out)/klos.img:
 	mformat -i $(out)/efi.img
 	mmd -i $(out)/efi.img ::/EFI ::/EFI/BOOT ::/boot ::/boot/limine
 
-# Copy limine
+# Copy limine to efi.img
 	mcopy -i $(out)/efi.img limine.conf limine/limine-bios.sys ::/boot/limine
+	mcopy -i $(out)/efi.img $(out)/kloslimineboot ::/boot
 	mcopy -i $(out)/efi.img limine/BOOTX64.EFI ::/EFI/BOOT
 	mcopy -i $(out)/efi.img limine/BOOTIA32.EFI ::/EFI/BOOT
 
-# assemble the efi and kfs images into one
+# create the disc image with a efi and kfs partition
 	truncate $(out)/image.img -s 1024M
 	parted $(out)/image.img --script mklabel gpt
 	parted $(out)/image.img --script mkpart primary 2M 12M
@@ -46,10 +50,9 @@ $(out)/klos.img:
 
 	./limine/limine bios-install $(out)/image.img
 
-	parted $(out)/image.img --script p
+# assemble the partitions
 	dd if=$(out)/efi.img of=$(out)/image.img bs=1M seek=2 conv=notrunc
 	dd if=$(out)/klos.img of=$(out)/image.img bs=1M seek=12 conv=notrunc
-	parted $(out)/image.img --script p
 
 qemu:
 	qemu-system-x86_64 -D ./qemulog.txt -drive file=$(out)/image.img -m 4G -d int -no-reboot

@@ -1,7 +1,7 @@
 // from bingai
 
 #ifndef _STDINT_H
-#define _STDINT_H
+#define _STDINT_H 1
 
 typedef unsigned int uint;
 
@@ -19,6 +19,7 @@ typedef unsigned long long uint64_t;
 
 #define INT8_MIN (-128)
 #define INT16_MIN (-32768)
+
 #define INT32_MIN (-2147483647 - 1)
 #define INT64_MIN (-9223372036854775807LL - 1)
 
