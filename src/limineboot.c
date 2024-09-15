@@ -52,10 +52,12 @@ void kmain(void) {
   if (memmap_request.response != NULL) {
     for (int loop=0;loop<memmap_request.response->entry_count;loop++) {
       struct limine_memmap_entry *i = memmap_request.response->entries[loop];
+
       if (i->type == LIMINE_MEMMAP_USABLE) {
         if (i->length > largestfree.length) {
           largestfree = *i;
         }
+        if (i->base + i->length > highest) highest = i->base+i->length;
       }
     }
   }
