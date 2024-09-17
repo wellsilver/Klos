@@ -4,8 +4,18 @@
     {
       "type": "gdb",
       "request": "attach",
-      "name": "Attach to gdbserver",
+      "name": "Attach to gdbserver (klos)",
       "executable": "./out/kernel.elf",
+      "target": ":1234",
+      "remote": true,
+      "cwd": "${workspaceRoot}",
+      "valuesFormatting": "parseText"
+    },
+    {
+      "type": "gdb",
+      "request": "attach",
+      "name": "Attach to gdbserver (limineboot.c)",
+      "executable": "./out/kloslimineboot",
       "target": ":1234",
       "remote": true,
       "cwd": "${workspaceRoot}",
