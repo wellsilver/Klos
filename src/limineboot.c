@@ -62,6 +62,7 @@ void kmain(void) {
     }
   }
 
+  numpages = highest/4096;
 
   while (1) asm("hlt");
   return;
