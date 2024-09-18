@@ -42,14 +42,14 @@ void kmain(void) {
   // Ensure the bootloader actually understands our base revision (see spec).
   if (LIMINE_BASE_REVISION_SUPPORTED == 0)
     return;
-  
-  struct limine_memmap_entry largestfree;
-  largestfree.base = 0;
-  largestfree.length = 0;
-  uint64_t highest;
-  uint64_t numpages;
 
-  if (memmap_request.response != NULL) {
+  if (memmap_request.response != NULL) { // If we have a memory map that should be good enough to start klos, else just catch fire
+    struct limine_memmap_entry largestfree;
+    largestfree.base = 0;
+    largestfree.length = 0;
+    uint64_t highest;
+    uint64_t numpages;
+
     for (int loop=0;loop<memmap_request.response->entry_count;loop++) {
       struct limine_memmap_entry *i = memmap_request.response->entries[loop];
 
@@ -60,9 +60,9 @@ void kmain(void) {
         if (i->base + i->length > highest) highest = i->base+i->length;
       }
     }
-  }
 
-  numpages = highest/4096;
+    numpages = highest/4096;
+  }
 
   while (1) asm("hlt");
   return;
