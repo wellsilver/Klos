@@ -1,5 +1,6 @@
 // find klos and boot it
 #include "int.h"
+#include "io.h"
 #include <limine.h>
 #define NULL 0
 
@@ -62,6 +63,15 @@ void kmain(void) {
     }
 
     numpages = highest/4096;
+
+    // pray that its the correct drive
+    asm("mov rax, 69");
+
+    {
+      char cache[512];
+      
+    }
+
   }
 
   while (1) asm("hlt");
