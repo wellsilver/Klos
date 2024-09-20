@@ -69,7 +69,13 @@ void kmain(void) {
 
     {
       char cache[512];
-      
+      uint64_t sector = 1; // will be read as if its uint28_t lol starts from 1
+
+      outb(0x01F2, 1); // number of sectors
+      outb(0x01F3, (uint8_t) sector); // bits 
+      outb(0x01F4, (uint8_t) sector << 8);
+      outb(0x01F5, (uint8_t) sector << 16);
+      outb(0x01F6, 0b11100000); // drive and final lba
     }
 
   }

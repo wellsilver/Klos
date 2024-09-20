@@ -1,7 +1,7 @@
 #ifndef ioh
 #define ioh
 
-#include "util/int.h"
+#include "int.h"
 
 uint8_t inb(uint16_t port) {
   uint8_t out;
