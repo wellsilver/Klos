@@ -35,7 +35,7 @@ static volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
-void ata_read(uint64_t sector, uint16_t sectors, void *to) {
+void ata_read(uint64_t sector, uint16_t sectors, uint16_t *to) {
   // 48 bit PIO. I wodner why its backwards? I hope its not because of some big-little endian thing, I just wish everything was little endian as a irrequivable rule
   outb(0x01f6, 0x50); // master drive
   outb(0x01f2, ((uint8_t *) &sectors)[1]); // higher byte of sectors
@@ -49,6 +49,9 @@ void ata_read(uint64_t sector, uint16_t sectors, void *to) {
   outb(0x01f3, ((uint8_t *) &sector)[0]); // fourth lba byte
   outb(0x1F7, 0x24); // READ SECTORS EXT
   
+  for (char loop=0;loop<=255;loop++) {
+    to[loop] = inw(0x0f0);
+  }
 }
 
 // The following will be our kernel's entry point.
