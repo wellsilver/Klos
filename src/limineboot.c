@@ -35,6 +35,21 @@ static volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
+void ata_read(uint64_t sector, uint16_t sectors, void *to) {
+  // 48 bit PIO. I wodner why its backwards? I hope its not because of some big-little endian thing, I just wish everything was little endian as a irrequivable rule
+  outb(0x01f6, 0x50); // master drive
+  outb(0x01f2, ((uint8_t *) &sectors)[1]); // higher byte of sectors
+  outb(0x01f3, ((uint8_t *) &sector)[5]); // sixth lba byte
+  outb(0x01f3, ((uint8_t *) &sector)[4]); // fifth lba byte
+  outb(0x01f3, ((uint8_t *) &sector)[3]); // fourth lba byte
+  // lower bytes
+  outb(0x01f2, ((uint8_t *) &sectors)[0]); // higher byte of sectors
+  outb(0x01f3, ((uint8_t *) &sector)[2]); // sixth lba byte
+  outb(0x01f3, ((uint8_t *) &sector)[1]); // fifth lba byte
+  outb(0x01f3, ((uint8_t *) &sector)[0]); // fourth lba byte
+  outb(0x1F7, 0x24); // READ SECTORS EXT
+  
+}
 
 // The following will be our kernel's entry point.
 // If renaming kmain() to something else, make sure to change the
@@ -64,19 +79,18 @@ void kmain(void) {
 
     numpages = highest/4096;
 
-    // pray that its the correct drive
-    asm("mov rax, 69");
-
-    {
-      char cache[512];
-      uint64_t sector = 1; // will be read as if its uint28_t lol starts from 1
-
-      outb(0x01F2, 1); // number of sectors
-      outb(0x01F3, (uint8_t) sector); // bits 
-      outb(0x01F4, (uint8_t) sector << 8);
-      outb(0x01F5, (uint8_t) sector << 16);
-      outb(0x01F6, 0b11100000); // drive and final lba
+    // find the sector with kfs on it
+    uint64_t currentsect = 1;
+    char cache[512];
+    for (uint64_t currentsect = 1;1;currentsect++) {
+      ata_read(currentsect, 1, cache);
+      if (cache[3] == 'k') {// good enough
+        break;
+      }
     }
+    uint64_t kfs_start = currentsect;
+    currentsect = 1;
+    // find and read the elf file
 
   }
 
