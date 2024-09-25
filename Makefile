@@ -16,7 +16,7 @@ limine:
 	cd limine && make
 
 $(out)/kloslimineboot:
-	x86_64-elf-gcc -nostdlib $(src)/limineboot.c -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -T $(src)/limineboot.ld -masm=intel
+	x86_64-elf-gcc -nostdlib $(src)/limineboot.c -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -T $(src)/limineboot.ld -masm=intel -O0
 
 $(out):
 	mkdir -p $(out)

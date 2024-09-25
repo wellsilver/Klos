@@ -49,7 +49,7 @@ void ata_read(uint64_t sector, uint16_t sectors, uint16_t *to) {
   outb(0x01f3, ((uint8_t *) &sector)[0]); // fourth lba byte
   outb(0x1F7, 0x24); // READ SECTORS EXT
   
-  for (char loop=0;loop<=255;loop++) {
+  for (int loop=0;loop<256;loop++) {
     to[loop] = inw(0x0f0);
   }
 }
@@ -83,18 +83,14 @@ void kmain(void) {
     numpages = highest/4096;
 
     // find the sector with kfs on it
-    uint64_t currentsect = 1;
-    char cache[512];
-    for (uint64_t currentsect = 1;1;currentsect++) {
-      ata_read(currentsect, 1, cache);
-      if (cache[3] == 'k') {// good enough
-        break;
-      }
-    }
-    uint64_t kfs_start = currentsect;
-    currentsect = 1;
-    // find and read the elf file
+    uint64_t currentsect = 2;
+    uint16_t cache[256];
+    for (int loop=0;loop<256;loop++) cache[0] = 0;
 
+    ata_read(currentsect, 1, cache);
+    if (*(uint64_t *) cache != 5641124985470729451) {// if first characters is limine
+      return;
+    }
   }
 
   while (1) asm("hlt");
