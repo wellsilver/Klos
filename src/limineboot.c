@@ -47,8 +47,11 @@ void ata_read(uint64_t sector, uint16_t sectors, uint16_t *to) {
   outb(0x01f3, ((uint8_t *) &sector)[2]); // sixth lba byte
   outb(0x01f3, ((uint8_t *) &sector)[1]); // fifth lba byte
   outb(0x01f3, ((uint8_t *) &sector)[0]); // fourth lba byte
-  outb(0x1F7, 0x24); // READ SECTORS EXT
+  outb(0x01F7, 0x24); // READ SECTORS EXT
   
+  // poll until ready
+  for (char p=0;p != 8;p=inb(0x0f7));
+
   for (int loop=0;loop<256;loop++) {
     to[loop] = inw(0x0f0);
   }
