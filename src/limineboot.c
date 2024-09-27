@@ -2,6 +2,8 @@
 #include "int.h"
 #include "io.h"
 #include <limine.h>
+#include <../disc/disc.h>
+
 #define NULL 0
 
 __attribute__((used, section(".requests")))
@@ -62,7 +64,20 @@ void kmain(void) {
     }
 
     numpages = highest/4096;
+
+    uint16_t cache[256];
+    atapio_read(0, 1, 1, cache);
+    char *str = cache;
+    char tmp = cache[0];
+    /*
+    struct drive d = atapio_hasdrive();
+    if (d.drives == 0) return;
+    uint8_t cache[512];
+    d.readsector(0, 1, 1, cache);
+    if (cache[3] == 'L') return;
+    */
   }
+  
 
   while (1) asm("hlt");
   return;
