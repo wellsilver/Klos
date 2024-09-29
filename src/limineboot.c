@@ -65,10 +65,9 @@ void kmain(void) {
 
     numpages = highest/4096;
 
-    uint16_t cache[256];
-    atapio_read(0, 1, 1, cache);
-    char *str = cache;
-    char tmp = cache[0];
+    uint8_t cache[512];
+    atapio_read(0, 0, 1, cache);
+    
     /*
     struct drive d = atapio_hasdrive();
     if (d.drives == 0) return;

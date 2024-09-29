@@ -10,8 +10,7 @@ void atapio_read(uint drive, uint64_t lba, uint sectors, uint16_t *ptr) {
   if (b == 0xFF) return; // error?
   if (b == 0x80) return;
 
-  outb(0x1F6, 0x40); // master
-  outb(0x1F1, 0x00); // write 0x00 to the FEATURES register
+  outb(0x1F6, 0xE0  | ((lba >> 24) & 0x0F)); // master and upper 4 bits
   outb(0x1F2, 0x01); // write 0x01 to the Sector Count register
   outb(0x1F3, (unsigned char) lba); // Sector number or LBA Low, most likely LBA Low (but see comments below)
   outb(0x1F4, (unsigned char)(lba >> 8)); // Cyl Low number or LBA Mid

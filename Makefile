@@ -55,9 +55,9 @@ $(out)/klos.img:
 	dd if=$(out)/klos.img of=$(out)/image.img bs=1M seek=12 conv=notrunc
 
 qemu:
-	qemu-system-x86_64 -D ./qemulog.txt -drive file=$(out)/image.img -m 4G -d int -no-reboot
+	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -m 4G -d int -no-reboot
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -drive file=$(out)/image.img -m 4G -d int -no-reboot
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -m 4G -d int -no-reboot
 
 clean:
 	rm -rf $(out)

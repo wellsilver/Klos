@@ -5,7 +5,7 @@
 
 struct drive {
   uint drives; // 0=nodrive 1=onedrive
-  void (*readsector)(uint drive, uint64_t lba, uint sectors, void *to);
+  void (*readsector)(uint drive, uint64_t lba, uint sectors, uint16_t *ptr);
 };
 
 #include "atapio.h"
