@@ -16,9 +16,10 @@ uint atapio_read48(uint drive, uint64_t lba, uint sectors, void *ptr) {
   outb(0x1F4, (unsigned char)(lba >> 8)); // Cyl Low number or LBA Mid
   outb(0x1F5, (unsigned char)(lba >> 16)); // Cyl High number or LBA High
   outb(0x1F7, 0x20); // Send command, See note [2] below
-
-  for (status = 80;status == 80;status=inb(0x1F7));
-  if (status != 88) return 1; // error
+  
+  for (status = 80;status == 80;status=inb(0x1F7)); // wait until reading
+  if (status != 208) return 1; // error
+  for (status = 80;status != 88;status=inb(0x1F7)); // wait until ready to recv
 
 
   for (uint loop=0;loop<256;loop++) {
