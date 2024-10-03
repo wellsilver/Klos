@@ -74,7 +74,7 @@ void kmain(void) {
 
     err = drives[0].read(0, 1, 1, (uint16_t *) cache);
     if (err == 1) return;
-    if (cache[0] == 'e' || cache[2] == 'e') { // good enough to find gpt descriptor lol. Sometimes theres some padding infront of "efi part", idk why
+    if (cache[0] == 'E' || cache[2] == 'E') { // good enough to find gpt descriptor lol. Sometimes theres some padding infront of "efi part", idk why
 
     } else return;
     
