@@ -4,6 +4,7 @@
 #define _STDINT_H 1
 
 typedef unsigned int uint;
+typedef unsigned long long ulong;
 
 typedef signed char int8_t;
 typedef short int16_t;
