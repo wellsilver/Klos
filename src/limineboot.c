@@ -66,20 +66,18 @@ void kmain(void) {
     numpages = highest/4096;
 
     uint8_t cache[512];
-    // find the gpt so we can read kfs
-    atapio_read(0, 1, 1, (void *) cache);
-    char *str = cache;
-    if (*((uint64_t *) cache) == 6075990659671082565) { // magic number, first 8 bytes are "EFI PART"
-      
-    } else return; // dont know what to do
- 
-    /*
-    struct drive d = atapio_hasdrive();
-    if (d.drives == 0) return;
-    uint8_t cache[512];
-    d.readsector(0, 1, 1, cache);
-    if (cache[3] == 'L') return;
-    */
+    struct drive drives[16];
+    uint err;
+
+    uint lendrives = all_drives(drives); //replace with disc_alldrives() when its implemented
+    if (lendrives == 0) return;
+
+    err = drives[0].read(0, 1, 1, (uint16_t *) cache);
+    if (err == 1) return;
+    if (cache[0] == 'e' || cache[2] == 'e') { // good enough to find gpt descriptor lol. Sometimes theres some padding infront of "efi part", idk why
+
+    } else return;
+    
   }
   
 
