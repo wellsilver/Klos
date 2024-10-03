@@ -22,7 +22,6 @@ void atapio_read(uint drive, uint64_t lba, uint sectors, uint16_t *ptr) {
   for (uint loop=0;loop<256;loop++) {
     ptr[loop] = inw(0x1F0);
   }
-  lba = 0;
 }
 
 // should be able to be included by a bootloader and called

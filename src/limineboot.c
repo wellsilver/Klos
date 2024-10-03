@@ -66,8 +66,13 @@ void kmain(void) {
     numpages = highest/4096;
 
     uint8_t cache[512];
-    atapio_read(0, 0, 1, cache);
-    
+    // find the gpt so we can read kfs
+    atapio_read(0, 1, 1, (void *) cache);
+    char *str = cache;
+    if (*((uint64_t *) cache) == 6075990659671082565) { // magic number, first 8 bytes are "EFI PART"
+      
+    } else return; // dont know what to do
+ 
     /*
     struct drive d = atapio_hasdrive();
     if (d.drives == 0) return;
