@@ -7,8 +7,8 @@ out = out
 elfbin = $(out)/gcc
 bintilbin = $(out)/binutil
 
-build: $(out) limine $(out)/kloslimineboot $(out)/kernel.elf $(out)/klos.img 
-run: $(out) limine $(out)/kloslimineboot $(out)/kernel.elf $(out)/klos.img qemu clean
+build: $(out) limine $(out)/kloslimineboot $(out)/biosboot.bin $(out)/kernel.elf $(out)/klos.img 
+run: $(out) limine $(out)/kloslimineboot $(out)/biosboot.bin $(out)/kernel.elf $(out)/klos.img qemu clean
 debug: build qemudebug clean
 
 limine:
@@ -17,6 +17,10 @@ limine:
 
 $(out)/kloslimineboot:
 	x86_64-elf-gcc -nostdlib $(src)/limineboot.c -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -T $(src)/limineboot.ld -masm=intel -O0
+
+$(out)/biosboot.bin:
+	nasm $(src)/boot.x86.S -f bin -o $(out)/biosboot.bin
+	truncate $(out)/biosboot.bin -s 1536
 
 $(out):
 	mkdir -p $(out)
@@ -28,7 +32,7 @@ $(out)/kernel.elf:
 
 $(out)/klos.img:
 # format kfs 1000 megabytes
-	python3 kfs/format.py $(out)/klos.img 1000 /dev/null $(out)/kernel.elf
+	python3 kfs/format.py $(out)/klos.img 1000 $(out)/biosboot.bin $(out)/kernel.elf
 
 # format the efi fs
 #	mkfs.fat -C -F 32 $(out)/efi.img 20480
