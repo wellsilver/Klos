@@ -7,7 +7,7 @@ org 0x7C00
 jmp code
 nop
 
-db "kfs"
+db "KFS"
 dw 2 ; version
 highlighted: dq 12 ; kernel is at 12 I hope lol
 

@@ -67,7 +67,7 @@ ulong findkfslba(struct drive drv) {
       ulong a = gptcache[loop].startlba;
       if (err == 1) return 0; // bad
 
-      if (cache[3] == 'k' && cache[4] == 'f') return gptcache[loop].startlba; // FOUND IT!!!
+      if (cache[3] == 'K' && cache[4] == 'F') return gptcache[loop].startlba; // FOUND IT!!!
     }
   } else return 0;
 }
