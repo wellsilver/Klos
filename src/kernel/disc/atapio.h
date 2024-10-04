@@ -18,9 +18,8 @@ uint atapio_read48(uint drive, uint64_t lba, uint sectors, void *ptr) {
   outb(0x1F7, 0x20); // Send command, See note [2] below
   
   for (status = 80;status == 80;status=inb(0x1F7)); // wait until reading
-  if (status != 208) return 1; // error
+  if (status != 208 && status != 88) return 1; // error
   for (status = 80;status != 88;status=inb(0x1F7)); // wait until ready to recv
-
 
   for (uint loop=0;loop<256;loop++) {
     ((uint16_t *) ptr)[loop] = inw(0x1F0);

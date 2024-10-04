@@ -37,6 +37,41 @@ static volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
+struct gpt_entry {
+  uint8_t partguid[16];
+  uint8_t uniqueguid[16];
+  uint64_t startlba;
+  uint64_t endlba;
+  uint64_t attributes;
+  char name[72];
+};
+
+ulong findkfslba(struct drive drv) {
+  uint64_t cache[64];
+  struct gpt_entry gptcache[4];
+  uint err;
+
+  err = drv.read(0, 1, 1, cache);
+  if (err == 1) return 0; // bad
+
+  if (cache[0] == 6075990659671082565) { // good enough to find gpt descriptor lol. Sometimes theres some padding infront of "efi part", idk why but qemu understands it so
+    err = drv.read(0, cache[9], 1, gptcache);
+    if (err == 1) return 0; // bad
+
+    // loop through the entire partition list in first lba and look for kfs magic
+    uint64_t sectors[4];
+    for (uint loop=0;loop<4;loop++) {
+      //if (gptcache[loop].partguid[0] == 0) continue; // lets assume its unused
+
+      err = drv.read(0, gptcache[loop].startlba, 1, cache);
+      ulong a = gptcache[loop].startlba;
+      if (err == 1) return 0; // bad
+
+      if (cache[3] == 'k' && cache[4] == 'f') return gptcache[loop].startlba; // FOUND IT!!!
+    }
+  } else return 0;
+}
+
 // The following will be our kernel's entry point.
 // If renaming kmain() to something else, make sure to change the
 // linker script accordingly.
@@ -72,12 +107,9 @@ void kmain(void) {
     uint lendrives = all_drives(drives); //replace with disc_alldrives() when its implemented
     if (lendrives == 0) return;
 
-    err = drives[0].read(0, 1, 1, (uint16_t *) cache);
-    if (err == 1) return;
-    if (cache[0] == 'E' || cache[2] == 'E') { // good enough to find gpt descriptor lol. Sometimes theres some padding infront of "efi part", idk why
-      
-    } else return;
-    
+    ulong l = findkfslba(drives[0]);
+    if (l == 0) return;
+
   }
   
 
