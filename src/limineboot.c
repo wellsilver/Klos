@@ -104,7 +104,7 @@ void kmain(void) {
     struct drive drives[16];
     uint err;
 
-    uint lendrives = all_drives(drives); //replace with disc_alldrives() when its implemented
+    uint lendrives = all_drives(drives);
     if (lendrives == 0) return;
 
     ulong l = findkfslba(drives[0]);
