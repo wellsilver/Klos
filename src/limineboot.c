@@ -99,7 +99,7 @@ void kmain(void) {
     }
 
     numpages = highest/4096;
-
+    
     uint8_t cache[512];
     struct drive drives[16];
     uint err;
@@ -107,9 +107,11 @@ void kmain(void) {
     uint lendrives = all_drives(drives);
     if (lendrives == 0) return;
 
+    // TODO make it so it polls every drive
     ulong l = findkfslba(drives[0]);
     if (l == 0) return;
-
+    drives[0].read(0, l, 1, cache); // we gotta find the highlighted file, which is hopefully the kernel
+    drives[0].read(0, *((uint64_t *) (cache+9)) - 1, 1, cache); // read the highlighted file, which should be the kernel
   }
   
 
