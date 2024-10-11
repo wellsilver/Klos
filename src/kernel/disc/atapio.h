@@ -6,6 +6,8 @@
 #include "disc.h"
 
 uint atapio_read48(uint drive, uint64_t lba, uint sectors, void *ptr) {
+  if (sectors != 1) return 1;
+  
   uint8_t status = inb(0x1F7);
   if (status == 0xFF) return 1; // error?
   if (status == 0x80) return 1; // drive is busy

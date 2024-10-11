@@ -46,8 +46,7 @@ struct gpt_entry {
   char name[72];
 };
 
-ulong findkfslba(struct drive drv) {
-  uint64_t cache[64];
+ulong findkfslba(struct drive drv, uint64_t *cache) {
   struct gpt_entry gptcache[4];
   uint err;
 
@@ -107,11 +106,17 @@ void kmain(void) {
     uint lendrives = all_drives(drives);
     if (lendrives == 0) return;
 
-    // TODO make it so it polls every drive
-    ulong l = findkfslba(drives[0]);
-    if (l == 0) return;
-    drives[0].read(0, l, 1, cache); // we gotta find the highlighted file, which is hopefully the kernel
-    drives[0].read(0, *((uint64_t *) (cache+9)) - 1, 1, cache); // read the highlighted file, which should be the kernel
+    // TODO make it so it polls every drive, and reads the kernel correctly
+
+    ulong beginlba = findkfslba(drives[0], (uint64_t *) cache);
+    if (beginlba == 0) return;
+    ulong kernelloc = (*(cache+8)) + beginlba;
+    err = drives[0].read(0, kernelloc, 1, cache); // read the highlighted file, which should be the kernel
+    char kernelcache[512*(*(cache+74+8) - *(cache+74))];
+    // blindly trust that its the kernel, and that it only makes up one range of sectors
+    for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
+      drives[0].read(0, *(cache+74) + beginlba + sectors, 1, kernelcache+(sectors*512));
+    
   }
   
 
