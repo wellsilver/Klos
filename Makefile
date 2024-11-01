@@ -16,7 +16,8 @@ limine:
 	cd limine && make
 
 $(out)/kloslimineboot:
-	x86_64-elf-gcc -nostdlib $(src)/limineboot.c -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -T $(src)/limineboot.ld -masm=intel -O0
+	x86_64-elf-gcc -nostdlib $(src)/limineboot.c -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -T $(src)/limineboot.ld -O0
+	x86_64-elf-objdump -M intel -d out/kloslimineboot > out/kloslimineboot.S
 
 $(out)/biosboot.bin:
 	nasm $(src)/boot.x86.S -f bin -o $(out)/biosboot.bin

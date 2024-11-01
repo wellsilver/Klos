@@ -1,6 +1,27 @@
 // find klos and boot it
 #include "int.h"
-#include "io.h"
+#define ioh
+
+static inline uint8_t inb(uint16_t port) {
+  uint8_t result;
+  asm volatile ("inb %1, %0" : "=a"(result) : "Nd"(port));
+  return result;
+}
+
+static inline uint16_t inw(uint16_t port) {
+  uint16_t result;
+  asm volatile ("inw %1, %0" : "=a"(result) : "Nd"(port));
+  return result;
+}
+
+static inline void outb(uint16_t port, uint8_t value) {
+  asm volatile ("outb %0, %1" : : "a"(value), "Nd"(port));
+}
+
+static inline void outw(uint16_t port, uint16_t value) {
+  asm volatile ("outw %0, %1" : : "a"(value), "Nd"(port));
+}
+
 #include <limine.h>
 #include <../disc/disc.h>
 
@@ -114,7 +135,7 @@ static volatile struct _gdt64 gdt = {
 };
 __attribute__((used, section(".text")))
 static volatile struct _gdt64ptr gdtptr = {
-  .size = sizeof(struct _gdt64) - 1,
+  .size = sizeof(struct _gdt64),
   .ptr = &gdt
 };
 
@@ -153,6 +174,21 @@ ulong findkfslba(struct drive drv, uint64_t *cache) {
   } else return 0;
 }
 
+void loadgdt() {
+  asm("lgdt gdtptr");
+  asm volatile (
+      "movw $0x10, %ax;"  // Load data segment selector (index 2, with privilege level)
+      "movw %ax, %ds;"    // Update DS
+      "movw %ax, %es;"    // Update ES
+      "movw %ax, %fs;"    // Update FS
+      "movw %ax, %gs;"    // Update GS
+      "movw $0x08, %ax;"  // Load code segment selector (index 1, with privilege level)
+      "movw %ax, %cs;"    // Update CS (will cause a jump)
+      "jmp 1f;"           // Short jump to avoid pipeline issues
+      "1:"
+  );
+}
+
 // The following will be our kernel's entry point.
 // If renaming kmain() to something else, make sure to change the
 // linker script accordingly.
@@ -160,6 +196,8 @@ void kmain(void) {
   // Ensure the bootloader actually understands our base revision (see spec).
   if (LIMINE_BASE_REVISION_SUPPORTED == 0)
     return;
+
+  loadgdt();
 
   if (memmap_request.response != NULL) { // If we have a memory map that should be good enough to start klos, else just catch fire
     struct limine_memmap_entry largestfree;
@@ -195,12 +233,9 @@ void kmain(void) {
     ulong kernelloc = (*(cache+8)) + beginlba;
     err = drives[0].read(0, kernelloc, 1, cache); // read the highlighted file, which should be the kernel
 
-    asm volatile ("lgdt gdtptr");
-
     // blindly trust that its the kernel, and that it only makes up one range of sectors
     for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
       drives[0].read(0, *(cache+74) + beginlba + sectors, 1, ((void *) largestfree.base)+(sectors*512));
-    
   }
   
 
