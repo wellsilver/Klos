@@ -1,27 +1,6 @@
 // find klos and boot it
 #include "int.h"
-#define ioh
-
-static inline uint8_t inb(uint16_t port) {
-  uint8_t result;
-  asm volatile ("inb %1, %0" : "=a"(result) : "Nd"(port));
-  return result;
-}
-
-static inline uint16_t inw(uint16_t port) {
-  uint16_t result;
-  asm volatile ("inw %1, %0" : "=a"(result) : "Nd"(port));
-  return result;
-}
-
-static inline void outb(uint16_t port, uint8_t value) {
-  asm volatile ("outb %0, %1" : : "a"(value), "Nd"(port));
-}
-
-static inline void outw(uint16_t port, uint16_t value) {
-  asm volatile ("outw %0, %1" : : "a"(value), "Nd"(port));
-}
-
+#include "io.h"
 #include <limine.h>
 #include <../disc/disc.h>
 
@@ -96,49 +75,6 @@ GDT64: ; 64 bit gdt
     dw $ - GDT64 - 1
     dq GDT64
 */
-struct _gdt64 {
-  uint64_t d0;
-  uint32_t d1;
-  uint8_t d2;
-  uint8_t d3;
-  uint8_t d4;
-  uint8_t d5;
-  uint32_t d6;
-  uint8_t d7;
-  uint8_t d8;
-  uint8_t d9;
-  uint8_t dA;
-  uint32_t dB;
-  uint32_t dC;
-} __attribute__((packed));
-struct _gdt64ptr {
-  uint16_t size;
-  void *ptr;
-} __attribute__((packed));
-
-// incase your wondering, yes I hate this
-__attribute__((used, section(".text")))
-static volatile struct _gdt64 gdt = {
-  .d0 = 0,
-  .d1 = 0xFFFF,
-  .d2 = 0,
-  .d3 = 1 << 7 | 1 << 4 | 1 << 3 | 1 << 1,
-  .d4 = 1 << 7 | 1 << 5 | 0xF,
-  .d5 = 0,
-  .d6 = 0xFFFF,
-  .d7 = 0,
-  .d8 = 1 << 7 | 1 << 4 | 1 << 1,
-  .d9 = 1 << 7 | 1 << 6 | 0xF,
-  .dA = 0,
-  .dB = 0x00000068,
-  .dC = 0x00CF8900
-};
-__attribute__((used, section(".text")))
-static volatile struct _gdt64ptr gdtptr = {
-  .size = sizeof(struct _gdt64),
-  .ptr = &gdt
-};
-
 
 struct gpt_entry {
   uint8_t partguid[16];
@@ -172,21 +108,6 @@ ulong findkfslba(struct drive drv, uint64_t *cache) {
       if (cache[0] == 654511333969643) return a; // FOUND IT!!!
     }
   } else return 0;
-}
-
-void loadgdt() {
-  asm("lgdt gdtptr");
-  asm volatile (
-      "movw $0x10, %ax;"  // Load data segment selector (index 2, with privilege level)
-      "movw %ax, %ds;"    // Update DS
-      "movw %ax, %es;"    // Update ES
-      "movw %ax, %fs;"    // Update FS
-      "movw %ax, %gs;"    // Update GS
-      "movw $0x08, %ax;"  // Load code segment selector (index 1, with privilege level)
-      "movw %ax, %cs;"    // Update CS (will cause a jump)
-      "jmp 1f;"           // Short jump to avoid pipeline issues
-      "1:"
-  );
 }
 
 // The following will be our kernel's entry point.
