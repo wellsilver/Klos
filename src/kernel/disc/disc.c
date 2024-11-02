@@ -1,17 +1,12 @@
-#ifndef discs_c
-#define discs_c
-
 #include <int.h>
+#include "atapio.h"
 
 struct drive {
   // how large the drive is
   ulong sizelba;
   // 1 on error
   uint (*read)(uint drive, uint64_t lba, uint sectors, void *ptr);
-
 };
-
-#include "atapio.c"
 
 // writes to (struct drive *drives), returns zero (error) or how many drives there are
 uint all_drives(struct drive *drives) {
@@ -26,5 +21,3 @@ uint all_drives(struct drive *drives) {
 
   return lendrives;
 }
-
-#endif

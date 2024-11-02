@@ -1,8 +1,9 @@
 // find klos and boot it
-#include "int.h"
-#include "io.c"
 #include <limine.h>
-#include <../disc/disc.c>
+
+#include <util/int.h>
+#include <util/io.h>
+#include <disc/disc.h>
 
 #define NULL 0
 

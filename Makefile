@@ -7,16 +7,40 @@ out = out
 elfbin = $(out)/gcc
 bintilbin = $(out)/binutil
 
-build: $(out) limine $(out)/kloslimineboot $(out)/biosboot.bin $(out)/kernel.elf $(out)/klos.img 
-run: $(out) limine $(out)/kloslimineboot $(out)/biosboot.bin $(out)/kernel.elf $(out)/klos.img qemu clean
+kargs = -nostdlib -I $(src)/kernel -I $(src)/kernel/util -O0 -masm=intel -g -c
+
+build: $(out) limine $(out)/main.x86.elf $(out)/util.o $(out)/disc.o $(out)/atapio.o $(out)/mem.o $(out)/main.o $(out)/kernel $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
+run: build qemu clean
 debug: build qemudebug clean
 
-limine:
+limine/limine:
 	git clone https://github.com/limine-bootloader/limine --branch=v8.x-binary
 	cd limine && make
 
+$(out)/main.x86.elf:
+	nasm $(src)/kernel/x86/main.x86.S -f elf64 -o $(out)/main.x86.elf
+
+$(out)/util.o:
+	x86_64-elf-gcc $(kargs) $(src)/kernel/util/util.c -o $(out)/util.o
+
+$(out)/disc.o:
+	x86_64-elf-gcc $(kargs) $(src)/kernel/disc/disc.c -o $(out)/disc.o
+
+$(out)/atapio.o:
+	x86_64-elf-gcc $(kargs) $(src)/kernel/disc/atapio.c -o $(out)/atapio.o
+
+$(out)/mem.o:
+	x86_64-elf-gcc $(kargs) $(src)/kernel/memory/mem.c -o $(out)/mem.o
+
+$(out)/main.o:
+	x86_64-elf-gcc $(kargs) $(src)/kernel/main.c -o $(out)/main.o
+
+$(out)/kernel:
+	x86_64-elf-ld $(src)/kernel/linker.ld $(out)/main.x86.elf $(out)/util.o $(out)/disc.o $(out)/atapio.o $(out)/mem.o $(out)/main.o -o $(out)/kernel.elf
+	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
+
 $(out)/kloslimineboot:
-	x86_64-elf-gcc -nostdlib $(src)/limineboot.c -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -masm=intel -T $(src)/limineboot.ld -O0
+	x86_64-elf-gcc -nostdlib $(src)/limineboot.c $(out)/util.o $(out)/atapio.o $(out)/disc.o -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0
 	x86_64-elf-objdump -M intel -d out/kloslimineboot > out/kloslimineboot.S
 
 $(out)/biosboot.bin:
