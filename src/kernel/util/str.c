@@ -1,5 +1,5 @@
-#ifndef k_strh
-#define k_strh
+#ifndef k_strc
+#define k_strc
 
 void strreverse(char* begin, char* end) {
   char aux;

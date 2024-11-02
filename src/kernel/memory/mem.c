@@ -1,5 +1,5 @@
-#ifndef mem_h
-#define mem_h
+#ifndef mem_c
+#define mem_c
 
 // native memory map type
 struct memory_map {

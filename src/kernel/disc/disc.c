@@ -1,5 +1,5 @@
-#ifndef discs_h
-#define discs_h
+#ifndef discs_c
+#define discs_c
 
 #include <int.h>
 
@@ -11,7 +11,7 @@ struct drive {
 
 };
 
-#include "atapio.h"
+#include "atapio.c"
 
 // writes to (struct drive *drives), returns zero (error) or how many drives there are
 uint all_drives(struct drive *drives) {

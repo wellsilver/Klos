@@ -1,9 +1,9 @@
-#ifndef discsatapio_h
-#define discsatapio_h
+#ifndef discsatapio_c
+#define discsatapio_c
 
 #include <int.h>
-#include <io.h>
-#include "disc.h"
+#include <io.c>
+#include "disc.c"
 
 uint atapio_read48(uint drive, uint64_t lba, uint sectors, void *ptr) {
   if (sectors != 1) return 1;

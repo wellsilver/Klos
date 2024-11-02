@@ -1,8 +1,8 @@
 // find klos and boot it
 #include "int.h"
-#include "io.h"
+#include "io.c"
 #include <limine.h>
-#include <../disc/disc.h>
+#include <../disc/disc.c>
 
 #define NULL 0
 
@@ -78,8 +78,6 @@ void kmain(void) {
   // Ensure the bootloader actually understands our base revision (see spec).
   if (LIMINE_BASE_REVISION_SUPPORTED == 0)
     return;
-
-  loadgdt();
 
   if (memmap_request.response != NULL) { // If we have a memory map that should be good enough to start klos, else just catch fire
     struct limine_memmap_entry largestfree;
