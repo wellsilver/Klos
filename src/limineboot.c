@@ -15,13 +15,11 @@ static volatile LIMINE_BASE_REVISION(2);
 // be made volatile or equivalent, _and_ they should be accessed at least
 // once or marked as used with the "used" attribute as done here.
 
-/*
 __attribute__((used, section(".requests")))
 static volatile struct limine_framebuffer_request framebuffer_request = {
   .id = LIMINE_FRAMEBUFFER_REQUEST,
   .revision = 0
 };
-*/
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_memmap_request memmap_request = {
@@ -38,15 +36,21 @@ volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 volatile LIMINE_REQUESTS_END_MARKER;
 
-uint64_t pml5[512];
+uint64_t pgd[512] __attribute__((aligned(4096)));
+uint64_t pgd[512] __attribute__((aligned(4096)));
+uint64_t pgd[512] __attribute__((aligned(4096)));
 
 // make all memory rwx
 void setuppageing() {
-  for (unsigned int loop=0;loop < 512;loop++) {
-    pml5[loop] = 0x1 || 0x2 || 0x8; // present, writable, writes go directly to memory
-  }
+  
 
-  asm("mov cr3, %0" : : "r" (pml5));
+  // load page
+  asm volatile ("mov cr3, %0" : : "r" (pgd));
+
+  // disable 5 level paging if limine enabled it
+  asm volatile ("mov rax, cr4\n"
+                "and rax, 1 << 12\n"
+                "mov cr4, rax\n" : : : "rax");
 }
 
 struct gpt_entry {
@@ -131,6 +135,7 @@ void kmain(void) {
     for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
       drives[0].read(0, *(cache+74) + beginlba + sectors, 1, ((void *) largestfree.base)+(sectors*512));
     
+
   }
   
 
