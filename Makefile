@@ -7,9 +7,9 @@ out = out
 elfbin = $(out)/gcc
 bintilbin = $(out)/binutil
 
-kargs = -nostdlib -I $(src)/kernel -I $(src)/kernel/util -O0 -masm=intel -g -c
+kargs = -nostdlib -I $(src)/kernel -I $(src)/kernel/util -O0 -masm=intel -g -c -mcmodel=kernel
 
-build: $(out) limine $(out)/main.x86.elf $(out)/util.o $(out)/disc.o $(out)/atapio.o $(out)/mem.o $(out)/main.o $(out)/kernel $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
+build: $(out) limine $(out)/main.x86.elf $(out)/util.o $(out)/disc.o $(out)/atapio.o $(out)/mem.o $(out)/main.o $(out)/kernel.elf $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
 run: build qemu clean
 debug: build qemudebug clean
 
@@ -35,12 +35,12 @@ $(out)/mem.o:
 $(out)/main.o:
 	x86_64-elf-gcc $(kargs) $(src)/kernel/main.c -o $(out)/main.o
 
-$(out)/kernel:
+$(out)/kernel.elf:
 	x86_64-elf-ld $(src)/kernel/linker.ld $(out)/main.x86.elf $(out)/util.o $(out)/disc.o $(out)/atapio.o $(out)/mem.o $(out)/main.o -o $(out)/kernel.elf
 	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
 
 $(out)/kloslimineboot:
-	x86_64-elf-gcc -nostdlib $(src)/limineboot.c $(out)/util.o $(out)/atapio.o $(out)/disc.o -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0
+	x86_64-elf-gcc -nostdlib -mcmodel=kernel $(src)/limineboot.c $(out)/util.o $(out)/atapio.o $(out)/disc.o -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0
 	x86_64-elf-objdump -M intel -d out/kloslimineboot > out/kloslimineboot.S
 
 $(out)/biosboot.bin:
@@ -50,10 +50,10 @@ $(out)/biosboot.bin:
 $(out):
 	mkdir -p $(out)
 
-$(out)/kernel.elf:
-	nasm $(src)/kernel/x86/main.x86.S -f elf64 -o $(out)/main.x86.S.bin
-	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(out)/main.x86.S.bin $(src)/kernel/main.c -masm=intel -g -O0 -o $(out)/kernel.elf
-	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
+#$(out)/kernel.elf:
+#	nasm $(src)/kernel/x86/main.x86.S -f elf64 -o $(out)/main.x86.S.bin
+#	x86_64-elf-gcc -nostdlib -I $(src)/kernel -T $(src)/kernel/linker.ld $(out)/main.x86.S.bin $(src)/kernel/main.c -masm=intel -g -O0 -o $(out)/kernel.elf
+#	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
 
 $(out)/klos.img:
 # format kfs 1000 megabytes

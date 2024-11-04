@@ -33,10 +33,21 @@ static volatile struct limine_memmap_request memmap_request = {
 // These can also be moved anywhere, to any .c file, as seen fit.
 
 __attribute__((used, section(".requests_start_marker")))
-static volatile LIMINE_REQUESTS_START_MARKER;
+volatile LIMINE_REQUESTS_START_MARKER;
 
 __attribute__((used, section(".requests_end_marker")))
-static volatile LIMINE_REQUESTS_END_MARKER;
+volatile LIMINE_REQUESTS_END_MARKER;
+
+uint64_t pml5[512];
+
+// make all memory rwx
+void setuppageing() {
+  for (unsigned int loop=0;loop < 512;loop++) {
+    pml5[loop] = 0x1 || 0x2 || 0x8; // present, writable, writes go directly to memory
+  }
+
+  asm("mov cr3, %0" : : "r" (pml5));
+}
 
 struct gpt_entry {
   uint8_t partguid[16];
@@ -81,6 +92,8 @@ void kmain(void) {
     return;
 
   if (memmap_request.response != NULL) { // If we have a memory map that should be good enough to start klos, else just catch fire
+    setuppageing();
+
     struct limine_memmap_entry largestfree;
     largestfree.base = 0;
     largestfree.length = 0;
@@ -117,6 +130,7 @@ void kmain(void) {
     // blindly trust that its the kernel, and that it only makes up one range of sectors
     for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
       drives[0].read(0, *(cache+74) + beginlba + sectors, 1, ((void *) largestfree.base)+(sectors*512));
+    
   }
   
 
