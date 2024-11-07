@@ -40,15 +40,27 @@ volatile LIMINE_REQUESTS_END_MARKER;
 uint64_t pml4[512] __attribute__((aligned(4096)));
 // page directory pointer table entry
 uint64_t pdpte[512] __attribute__((aligned(4096)));
+// page directory entry
+uint64_t pde[512] __attribute__((aligned(4096)));
 
 // make all memory rwx and mapped to its physical addresses, so its easier to manipulate
 void setuppageing() {
-  // setup fourth level
-  for (unsigned int loop = 1; loop < 512; loop++) // only one needed?
+/* using large pages
+  for (unsigned int loop = 0; loop < 512; loop++) // only one needed? idk
     pml4[loop] = ((uint64_t) pdpte) | 1U | 2U;
   for (unsigned int loop = 0; loop < 3; loop++) // map 3 gigabytes, kernel will replace this with better map
     pdpte[loop] = (0x40000000*loop) | 1U | 2U | 1<<7;
-  
+*/
+  for (unsigned int loop = 0; loop < 512; loop++) // level 4
+    pml4[loop] = ((uint64_t) pdpte) | 1U | 2U;
+  for (unsigned int loop = 0; loop < 512; loop++) // smaller
+    pdpte[loop] = ((uint64_t) pde) | 1U | 2U;
+  for (unsigned int loop = 0; loop < 512; loop++) // 2 megayte pages
+    pde[loop] = 0x100000*loop | 1U | 2U | 1<<7;
+
+  asm volatile ("mov cr0, %0\n" // pg
+                "mov cr4, %1" // pae
+                : : "r" ((uint64_t) 1<<31), "r" ((uint64_t) 1<<5));
   // load page table
   asm volatile ("mov cr3, %0" : : "r" (pml4));
 }
