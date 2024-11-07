@@ -36,21 +36,21 @@ volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 volatile LIMINE_REQUESTS_END_MARKER;
 
-uint64_t pgd[512] __attribute__((aligned(4096)));
-uint64_t pgd[512] __attribute__((aligned(4096)));
-uint64_t pgd[512] __attribute__((aligned(4096)));
+// page map level 4
+uint64_t pml4[512] __attribute__((aligned(4096)));
+// page directory pointer table entry
+uint64_t pdpte[512] __attribute__((aligned(4096)));
 
-// make all memory rwx
+// make all memory rwx and mapped to its physical addresses, so its easier to manipulate
 void setuppageing() {
+  // setup fourth level
+  for (unsigned int loop = 1; loop < 512; loop++) // only one needed?
+    pml4[loop] = ((uint64_t) pdpte) | 1U | 2U;
+  for (unsigned int loop = 0; loop < 3; loop++) // map 3 gigabytes, kernel will replace this with better map
+    pdpte[loop] = (0x40000000*loop) | 1U | 2U | 1<<7;
   
-
-  // load page
-  asm volatile ("mov cr3, %0" : : "r" (pgd));
-
-  // disable 5 level paging if limine enabled it
-  asm volatile ("mov rax, cr4\n"
-                "and rax, 1 << 12\n"
-                "mov cr4, rax\n" : : : "rax");
+  // load page table
+  asm volatile ("mov cr3, %0" : : "r" (pml4));
 }
 
 struct gpt_entry {
