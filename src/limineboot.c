@@ -48,8 +48,12 @@ uint64_t pml4[512] __attribute__((aligned(4096)));
 uint64_t pdpt[512] __attribute__((aligned(4096)));
 // page directory entry
 uint64_t pde[512] __attribute__((aligned(4096)));
+// page directory pointer table (program)
+uint64_t pdptk[512] __attribute__((aligned(4096)));
 // page directory entry (program)
 uint64_t pdek[512] __attribute__((aligned(4096)));
+
+#define rw 1U | 2U
 
 // make all memory rwx and mapped to its physical addresses, so its easier to manipulate
 void setuppageing() {
@@ -58,14 +62,16 @@ void setuppageing() {
     pml4[loop] = ((uint64_t) pdpt) | 1U | 2U; // level 4 (512 gigabytes)
     pdpt[loop] = ((uint64_t) pde) | 1U | 2U;  // level 3 (gigabytes)
     pde[loop] = loop<<21 | 1U | 2U | 1<<7;    // level 2 (2 megabytes)
+    pdptk[loop] = 0;
     pdek[loop] = 0;
   }
 
   struct limine_kernel_address_response kra = *kernelrequest.response;
 
   // map this program so it doesnt freeze when loading
-  pdpt[511] = ((uint64_t) pdek) | 1U | 2U;
-  pdek[511] = kra.physical_base | 1U | 2U | 1<<7;
+  pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = ((uint64_t) pdptk)| rw;
+  pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek) | rw;
+  pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = kra.physical_base | rw | 1<<7;
 
   uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
 
