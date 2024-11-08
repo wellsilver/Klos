@@ -68,15 +68,17 @@ void setuppageing() {
 
   struct limine_kernel_address_response kra = *kernelrequest.response;
 
-  // map this program so it doesnt freeze when loading
+  // map this program so it doesnt become undefined when we put in the new table
   pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = ((uint64_t) pdptk)| rw;
   pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek) | rw;
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = kra.physical_base | rw | 1<<7;
 
   uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
+  
 
   // load page table
   asm volatile ("mov cr3, %0" : : "r" (physical_pml4));
+  // segfaults after mov cr3, on a nop instruction before the function returns
 }
 
 struct gpt_entry {
