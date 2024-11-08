@@ -27,6 +27,12 @@ static volatile struct limine_memmap_request memmap_request = {
   .revision = 0
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_kernel_address_request kernelrequest = {
+  .id = LIMINE_KERNEL_ADDRESS_REQUEST,
+  .revision = 0
+};
+
 // Finally, define the start and end markers for the Limine requests.
 // These can also be moved anywhere, to any .c file, as seen fit.
 
@@ -38,31 +44,30 @@ volatile LIMINE_REQUESTS_END_MARKER;
 
 // page map level 4
 uint64_t pml4[512] __attribute__((aligned(4096)));
-// page directory pointer table entry
-uint64_t pdpte[512] __attribute__((aligned(4096)));
+// page directory pointer table
+uint64_t pdpt[512] __attribute__((aligned(4096)));
 // page directory entry
 uint64_t pde[512] __attribute__((aligned(4096)));
 
 // make all memory rwx and mapped to its physical addresses, so its easier to manipulate
 void setuppageing() {
-/* using large pages
-  for (unsigned int loop = 0; loop < 512; loop++) // only one needed? idk
-    pml4[loop] = ((uint64_t) pdpte) | 1U | 2U;
-  for (unsigned int loop = 0; loop < 3; loop++) // map 3 gigabytes, kernel will replace this with better map
-    pdpte[loop] = (0x40000000*loop) | 1U | 2U | 1<<7;
-*/
-  for (unsigned int loop = 0; loop < 512; loop++) // level 4
-    pml4[loop] = ((uint64_t) pdpte) | 1U | 2U;
-  for (unsigned int loop = 0; loop < 512; loop++) // smaller
-    pdpte[loop] = ((uint64_t) pde) | 1U | 2U;
-  for (unsigned int loop = 0; loop < 512; loop++) // 2 megayte pages
-    pde[loop] = 0x100000*loop | 1U | 2U | 1<<7;
+  struct limine_kernel_address_response kra = *kernelrequest.response;
 
-  asm volatile ("mov cr0, %0\n" // pg
-                "mov cr4, %1" // pae
-                : : "r" ((uint64_t) 1<<31), "r" ((uint64_t) 1<<5));
+  for (unsigned int loop = 0; loop < 512; loop++) {
+    pml4[loop] = ((uint64_t) pdpt) | 1U | 2U; // level 4 (512 gigabytes)
+    pdpt[loop] = ((uint64_t) pde) | 1U | 2U;  // level 3 (gigabytes)
+    pde[loop] = loop<<21 | 1U | 2U | 1<<7;    // level 2 (2 megabytes)
+  }
+
+  // map this executable so it continues to work
+  pml4[511] = (kra.physical_base & ((uint64_t)0x1ff << 39)) | 1U | 2U;
+  pdpt[511] = (kra.physical_base & ((uint64_t)0x1ff << 30)) | 1U | 2U;
+  pde[511]  = (kra.physical_base & ((uint64_t)0x1ff << 21)) | 1U | 2U | 1<<7;
+
+  uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
+
   // load page table
-  asm volatile ("mov cr3, %0" : : "r" (pml4));
+  asm volatile ("mov cr3, %0" : : "r" (physical_pml4));
 }
 
 struct gpt_entry {
