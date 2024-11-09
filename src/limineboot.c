@@ -56,7 +56,7 @@ uint64_t pdek[512] __attribute__((aligned(4096)));
 #define rw 1U | 2U
 
 // make all memory rwx and mapped to its physical addresses, so its easier to manipulate
-void setuppageing() {
+void setuppageing(struct limine_memmap_entry largestfree) {
   // map everything to physical memory
   for (unsigned int loop = 0; loop < 512; loop++) {
     pml4[loop] = ((uint64_t) pdpt) | 1U | 2U; // level 4 (512 gigabytes)
@@ -74,7 +74,6 @@ void setuppageing() {
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = kra.physical_base | rw | 1<<7;
 
   uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
-  
 
   // load page table
   asm volatile ("mov cr3, %0" : : "r" (physical_pml4));
@@ -124,7 +123,10 @@ void kmain(void) {
     return;
 
   if (memmap_request.response != NULL) { // If we have a memory map that should be good enough to start klos, else just catch fire
-    setuppageing();
+    // disable WP so we can write to memory
+    asm volatile ("mov rax, cr0 \n"
+        "and rax, 1<<16 \n"
+        "mov cr0, rax" : : : "rax");
 
     struct limine_memmap_entry largestfree;
     largestfree.base = 0;
@@ -163,7 +165,7 @@ void kmain(void) {
     for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
       drives[0].read(0, *(cache+74) + beginlba + sectors, 1, ((void *) largestfree.base)+(sectors*512));
     
-
+    setuppageing(largestfree);
   }
   
 
