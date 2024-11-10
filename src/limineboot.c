@@ -77,7 +77,6 @@ void setuppageing(struct limine_memmap_entry largestfree) {
 
   // load page table
   asm volatile ("mov cr3, %0" : : "r" (physical_pml4));
-  // segfaults after mov cr3, on a nop instruction before the function returns
 }
 
 struct gpt_entry {
