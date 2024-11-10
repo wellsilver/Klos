@@ -7,6 +7,8 @@ out = out
 
 kernelcsources := $(shell find $(src)/kernel -name "*.c")
 kernelobjects := $(patsubst %.c, out/%.o, $(notdir $(kernelcsources)))
+kerneltarget := x86_64
+
 
 cc = x86-elf-gcc
 
@@ -14,7 +16,7 @@ kargs = -nostdlib -I $(src)/kernel -I $(src)/kernel/util -O0 -masm=intel -g -c -
 
 .PHONY: qemu qemudebug clean
 
-build: $(out) limine $(out)/main.x86.elf $(out)/kernel.elf $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
+build: $(out) limine $(out)/main.$(kerneltarget).elf $(out)/kernel.elf $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
 run: build qemu clean
 debug: build qemudebug clean
 
@@ -25,13 +27,13 @@ limine/limine:
 $(out):
 	mkdir -p $(out)
 
-$(out)/main.x86.elf:
-	nasm $(src)/kernel/x86/main.x86.S -f elf64 -o $(out)/main.x86.elf
+$(out)/main.$(kerneltarget).elf:
+	nasm $(src)/kernel/arch/main.$(kerneltarget).S -f elf64 -o $(out)/main.$(kerneltarget).elf
 
 #kernel compilation
 
 $(out)/kernel.elf: $(kernelobjects)
-	x86_64-elf-ld -T $(src)/kernel/linker.ld $(out)/main.x86.elf $^ -o $(out)/kernel.elf
+	x86_64-elf-gcc -nostdlib -T $(src)/kernel/linker.ld $(out)/main.$(kerneltarget).elf $^ -o $(out)/kernel.elf
 	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
 
 $(kernelobjects): $(kernelcsources)
@@ -45,7 +47,7 @@ $(out)/%.o: $(src)/kernel/*/%.c
 # limine (bootloader) compilation
 
 $(out)/kloslimineboot:
-	x86_64-elf-gcc -nostdlib -mcmodel=kernel $(src)/limineboot.c $(out)/util.o $(out)/atapio.o $(out)/disc.o -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0
+	x86_64-elf-gcc -nostdlib -mcmodel=kernel $(src)/limineboot.c $(kernelobjects) -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0
 	x86_64-elf-objdump -M intel -d out/kloslimineboot > out/kloslimineboot.S
 
 # bios assembly :raah:
