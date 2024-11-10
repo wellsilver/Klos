@@ -40,7 +40,7 @@ $(out)/%.o: $(src)/kernel/%.c
 	x86_64-elf-gcc $(kargs) $< -o $@
 
 $(out)/%.o: $(src)/kernel/*/%.c
-	x86_64-elf-gcc  $(kargs) $< -o $@
+	x86_64-elf-gcc $(kargs) $< -o $@
 
 # limine (bootloader) compilation
 
