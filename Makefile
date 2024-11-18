@@ -20,7 +20,7 @@ build: $(out) limine $(out)/main.$(kerneltarget).elf $(out)/kernel.elf $(out)/kl
 run: build qemu clean
 debug: build qemudebug clean
 
-limine/limine:
+limine:
 	git clone https://github.com/limine-bootloader/limine --branch=v8.x-binary
 	cd limine && make
 
