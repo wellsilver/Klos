@@ -16,11 +16,11 @@ kargs = -nostdlib -I $(src)/kernel -I $(src)/kernel/util -O0 -masm=intel -g -c -
 
 .PHONY: qemu qemudebug clean
 
-build: $(out) limine $(out)/main.$(kerneltarget).elf $(out)/kernel.elf $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
+build: $(out) limine/limine $(out)/main.$(kerneltarget).elf $(out)/kernel.elf $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
 run: build qemu clean
 debug: build qemudebug clean
 
-limine:
+limine/limine:
 	git clone https://github.com/limine-bootloader/limine --branch=v8.x-binary
 	cd limine && make
 
