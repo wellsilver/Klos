@@ -12,11 +12,11 @@ kerneltarget := x86_64
 
 cc = x86-elf-gcc
 
-kargs = -nostdlib -I $(src)/kernel -I $(src)/kernel/util -O0 -masm=intel -g -c -mcmodel=kernel
+kargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -O0 -g -c -masm=intel -mcmodel=large -ffreestanding -fno-pic
 
 .PHONY: qemu qemudebug clean
 
-build: $(out) limine/limine $(out)/main.$(kerneltarget).elf $(out)/kernel.elf $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
+build: $(out) limine/limine $(out)/main.$(kerneltarget).elf $(out)/kernel.bin $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
 run: build qemu clean
 debug: build qemudebug clean
 
@@ -32,9 +32,9 @@ $(out)/main.$(kerneltarget).elf:
 
 #kernel compilation
 
-$(out)/kernel.elf: $(kernelobjects)
-	x86_64-elf-gcc -nostdlib -T $(src)/kernel/linker.ld $(out)/main.$(kerneltarget).elf $^ -o $(out)/kernel.elf
-	x86_64-elf-objdump -M intel -d out/kernel.elf > out/kernel.asm
+$(out)/kernel.bin: $(kernelobjects)
+	x86_64-elf-ld -T $(src)/kernel/linker.ld $(out)/main.$(kerneltarget).elf $^ -o $(out)/kernel.bin 
+	x86_64-elf-objdump -b binary -M intel -D -m i386 out/kernel.bin > out/kernel.asm
 
 $(kernelobjects): $(kernelcsources)
 
@@ -60,7 +60,7 @@ $(out)/biosboot.bin:
 
 $(out)/klos.img:
 # format kfs 1000 megabytes
-	python3 kfs/format.py $(out)/klos.img 1000 $(out)/biosboot.bin $(out)/kernel.elf
+	python3 kfs/format.py $(out)/klos.img 1000 $(out)/biosboot.bin $(out)/kernel.bin
 
 # format the efi fs
 #	mkfs.fat -C -F 32 $(out)/efi.img 20480
