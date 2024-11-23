@@ -69,8 +69,8 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   struct limine_kernel_address_response kra = *kernelrequest.response;
 
   // map this program so it doesnt become undefined when we put in the new table
-  pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = ((uint64_t) pdptk)| rw;
-  pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek) | rw;
+  pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = (kra.physical_base + ((uint64_t) pdptk - kra.virtual_base)) | rw;
+  pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = (kra.physical_base + ((uint64_t) pdek - kra.virtual_base)) | rw;
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = kra.physical_base | rw | 1<<7;
 
   uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
