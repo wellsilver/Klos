@@ -33,6 +33,13 @@ static volatile struct limine_kernel_address_request kernelrequest = {
   .revision = 0
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_paging_mode_request pageqrequest = {
+  .id = LIMINE_PAGING_MODE_REQUEST,
+  .revision = 0,
+  .mode = LIMINE_PAGING_MODE_X86_64_4LVL
+};
+
 // Finally, define the start and end markers for the Limine requests.
 // These can also be moved anywhere, to any .c file, as seen fit.
 
@@ -52,6 +59,9 @@ uint64_t pde[512] __attribute__((aligned(4096)));
 uint64_t pdptk[512] __attribute__((aligned(4096)));
 // page directory entry (program)
 uint64_t pdek[512] __attribute__((aligned(4096)));
+
+// stack
+char stack[512*5];
 
 #define rw 1U | 2U
 
@@ -117,6 +127,10 @@ ulong findkfslba(struct drive drv, uint64_t *cache) {
 // If renaming kmain() to something else, make sure to change the
 // linker script accordingly.
 void kmain(void) {
+  // set the stack to our own so it can still be used without knowing its page
+  asm volatile ("mov rsp, %0" : : "r" (stack+(512*5)));
+  asm volatile ("mov rbp, %0" : : "r" (stack));
+
   // Ensure the bootloader actually understands our base revision (see spec).
   if (LIMINE_BASE_REVISION_SUPPORTED == 0)
     return;
