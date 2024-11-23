@@ -122,11 +122,6 @@ void kmain(void) {
     return;
 
   if (memmap_request.response != NULL) { // If we have a memory map that should be good enough to start klos, else just catch fire
-    // disable WP so we can write to memory
-    asm volatile ("mov rax, cr0 \n"
-        "and rax, 1<<16 \n"
-        "mov cr0, rax" : : : "rax");
-
     struct limine_memmap_entry largestfree;
     largestfree.base = 0;
     largestfree.length = 0;
@@ -143,6 +138,8 @@ void kmain(void) {
         if (i->base + i->length > highest) highest = i->base+i->length;
       }
     }
+
+    setuppageing(largestfree);
 
     numpages = highest/4096;
     
@@ -163,9 +160,7 @@ void kmain(void) {
     // blindly trust that its the kernel, and that it only makes up one range of sectors
     for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
       drives[0].read(0, *(cache+74) + beginlba + sectors, 1, ((void *) largestfree.base)+(sectors*512));
-    
-    setuppageing(largestfree);
-  }
+    }
   
 
   while (1) asm("hlt");
