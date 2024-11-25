@@ -51,10 +51,6 @@ volatile LIMINE_REQUESTS_END_MARKER;
 
 // page map level 4
 uint64_t pml4[512] __attribute__((aligned(4096)));
-// page directory pointer table
-uint64_t pdpt[512] __attribute__((aligned(4096)));
-// page directory entry
-uint64_t pde[512] __attribute__((aligned(4096)));
 // page directory pointer table (program)
 uint64_t pdptk[512] __attribute__((aligned(4096)));
 // page directory entry (program)
@@ -67,21 +63,22 @@ char stack[512*5];
 
 // make all memory rwx and mapped to its physical addresses, so its easier to manipulate
 void setuppageing(struct limine_memmap_entry largestfree) {
+  struct limine_kernel_address_response kra = *kernelrequest.response;
+
   // map everything to physical memory
   for (unsigned int loop = 0; loop < 512; loop++) {
-    pml4[loop] = ((uint64_t) pdpt) | 1U | 2U; // level 4 (512 gigabytes)
-    pdpt[loop] = ((uint64_t) pde) | 1U | 2U;  // level 3 (gigabytes)
-    pde[loop] = loop<<21 | 1U | 2U | 1<<7;    // level 2 (2 megabytes)
+    pml4[loop] = 0; // level 4 (512 gigabytes)
+    // ^ doesnt exist for now
     pdptk[loop] = 0;
     pdek[loop] = 0;
   }
 
-  struct limine_kernel_address_response kra = *kernelrequest.response;
+  unsigned long long allignedbase = (kra.physical_base - (kra.physical_base % 0x200000));
 
   // map this program so it doesnt become undefined when we put in the new table
-  pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = (kra.physical_base + ((uint64_t) pdptk - kra.virtual_base)) | rw;
-  pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = (kra.physical_base + ((uint64_t) pdek - kra.virtual_base)) | rw;
-  pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = kra.physical_base | rw | 1<<7;
+  pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = (allignedbase + ((uint64_t) pdptk - kra.virtual_base)) | rw;
+  pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = (allignedbase + ((uint64_t) pdek - kra.virtual_base)) | rw;
+  pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = allignedbase | rw | 1<<7;
 
   uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
 
@@ -123,14 +120,16 @@ ulong findkfslba(struct drive drv, uint64_t *cache) {
   } else return 0;
 }
 
-// The following will be our kernel's entry point.
-// If renaming kmain() to something else, make sure to change the
-// linker script accordingly.
-void kmain(void) {
-  // set the stack to our own so it can still be used without knowing its page
-  asm volatile ("mov rsp, %0" : : "r" (stack+(512*5)));
-  asm volatile ("mov rbp, %0" : : "r" (stack));
+void main(void);
 
+void kmain(void) {
+  // fix stack
+  asm volatile ("mov rbp, %0" : : "a" (stack));
+  asm volatile ("mov rsp, %0" : : "a" (stack+(512*5)));
+  main();
+}
+
+void main(void) {
   // Ensure the bootloader actually understands our base revision (see spec).
   if (LIMINE_BASE_REVISION_SUPPORTED == 0)
     return;
