@@ -124,9 +124,10 @@ void main(void);
 
 void kmain(void) {
   // fix stack
-  asm volatile ("mov rbp, %0" : : "a" (stack));
+  asm volatile ("mov rbp, %0" : : "a" (stack+(512*5)));
   asm volatile ("mov rsp, %0" : : "a" (stack+(512*5)));
   main();
+  // even though it uses the stack later, it is never going to reach this part
 }
 
 void main(void) {
