@@ -66,12 +66,11 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   struct limine_kernel_address_response kra = *kernelrequest.response;
 
   // map everything to physical memory
-  for (unsigned long long loop = 0; loop < 0x1000000; loop++) {
-    pml4[loop] = (unsigned long long) pdptk | 3U; // level 4 (512 gigabytes)
+  for (unsigned int loop = 0; loop < 512; loop++) {
+    pml4[loop] = 0; // level 4 (512 gigabytes)
     // ^ doesnt exist for now
-    pdptk[loop] = (unsigned long long) pdek | 3U;
-
-    pdek[loop] = loop << 21 | 3U | 1U << 7;
+    pdptk[loop] = 0;
+    pdek[loop] = 0;
   }
 
   unsigned long long allignedbase = (kra.physical_base - (kra.physical_base % 0x200000));
@@ -79,9 +78,10 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   // map this program so it doesnt become undefined when we put in the new table
   pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = (allignedbase + ((uint64_t) pdptk - kra.virtual_base)) | rw;
   pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = (allignedbase + ((uint64_t) pdek - kra.virtual_base)) | rw;
-  pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = allignedbase | rw | 1U << 7;
+  pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = allignedbase | rw | 1<<7;
 
-  register uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
+  uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
+
   // load page table
   asm volatile ("mov cr3, %0" : : "r" (physical_pml4));
 }
