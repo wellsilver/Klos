@@ -51,10 +51,6 @@ volatile LIMINE_REQUESTS_END_MARKER;
 
 // page map level 4
 uint64_t pml4[512] __attribute__((aligned(4096)));
-// page directory pointer table
-uint64_t pdpt[512] __attribute__((aligned(4096)));
-// page directory entry
-uint64_t pde[512] __attribute__((aligned(4096)));
 // page directory pointer table (program)
 uint64_t pdptk[512] __attribute__((aligned(4096)));
 // page directory entry (program)
@@ -71,13 +67,11 @@ void setuppageing(struct limine_memmap_entry largestfree) {
 
   // map everything to physical memory
   for (unsigned long long loop = 0; loop < 0x1000000; loop++) {
-    pml4[loop] = (unsigned long long) pdpt | 3U; // level 4 (512 gigabytes)
+    pml4[loop] = (unsigned long long) pdptk | 3U; // level 4 (512 gigabytes)
     // ^ doesnt exist for now
-    pdpt[loop] = (unsigned long long) pde | 3U;
+    pdptk[loop] = (unsigned long long) pdek | 3U;
 
-    pde[loop] = loop << 21 | 3U | 1U << 7;
-
-    pdptk[loop] = 0;
+    pdek[loop] = loop << 21 | 3U | 1U << 7;
   }
 
   unsigned long long allignedbase = (kra.physical_base - (kra.physical_base % 0x200000));
@@ -87,9 +81,9 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = (allignedbase + ((uint64_t) pdek - kra.virtual_base)) | rw;
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = allignedbase | rw | 1U << 7;
 
-  register uint64_t newcr3 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
+  register uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
   // load page table
-  asm volatile ("mov cr3, %0" : : "r" (newcr3));
+  asm volatile ("mov cr3, %0" : : "r" (physical_pml4));
 }
 
 struct gpt_entry {
