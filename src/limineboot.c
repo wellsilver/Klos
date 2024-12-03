@@ -55,48 +55,44 @@ volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 volatile LIMINE_REQUESTS_END_MARKER;
 
-// page map level 4
-uint64_t *pml4;
-// page directory pointer table
-uint64_t *pdpt;
-// page directory entry
-uint64_t *pde;
-// page directory pointer table (program)
-uint64_t *pdptk;
-// page directory entry (program)
-uint64_t *pdek;
-
 // stack
 char stack[512*5];
 
 #define rw 1U | 2U
 
-// make all memory rwx and mapped to its physical addresses, so its easier to manipulate
+// make a more ideal page table
 void setuppageing(struct limine_memmap_entry largestfree) {
   struct limine_kernel_address_response kra = *kernelrequest.response;
   uint64_t offset = hhdmrequest.response->offset;
 
+  // page map level 4
+  uint64_t *pml4;
+  // page directory pointer table
+  uint64_t *pdpt;
+  // page directory entry
+  uint64_t *pde;
+  // page directory pointer table (program)
+  uint64_t *pdptk;
+  // page directory entry (program)
+  uint64_t *pdek;
+
   uint64_t topfree = offset + largestfree.base + largestfree.length;
 
+  topfree -= (largestfree.base+largestfree.length) % (1U << 21);
+
   pml4 = (void *) topfree - ((512*8)*1);
-  pdpt = (void *) topfree - ((512*8)*2);
-  pde  = (void *) topfree - ((512*8)*3);
-  pdptk= (void *) topfree - ((512*8)*4);
-  pdek = (void *) topfree - ((512*8)*5);
+  pdptk= (void *) topfree - ((512*8)*2);
+  pdek = (void *) topfree - ((512*8)*3);
 
-  // map first gigabyte to real memory, and zero everything else
   for (unsigned int loop = 0; loop < 512; loop++) {
-    pml4[loop] = (uint64_t) pdpt | rw; // level 4 (512 gigabytes)
-    pdpt[loop] = (uint64_t) pde | rw;
-    pde[loop] = loop << 21 | rw;
-
+    pml4[loop] = 0;
     pdptk[loop] = 0;
     pdek[loop] = 0;
   }
+  
+  unsigned long long alignedbase = kra.physical_base - (kra.physical_base % (1U << 21));
 
-  unsigned long long alignedbase = kra.physical_base & 0xFFF;
-
-  // map this program so it doesnt become undefined when we put in thalignedbase + ((uint64_t) pdptk - kra.virtual_base))e new table
+  // map this program so it doesnt become undefined when we put in the new table
   pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = ((uint64_t) pdptk - offset) | rw;
   pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek - offset) | rw;
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = alignedbase | rw | 1<<7;

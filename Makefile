@@ -47,7 +47,7 @@ $(out)/%.o: $(src)/kernel/*/%.c
 # limine (bootloader) compilation
 
 $(out)/kloslimineboot:
-	x86_64-elf-gcc -nostdlib -mcmodel=kernel $(src)/limineboot.c $(kernelobjects) -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0
+	x86_64-elf-gcc -nostdlib -mcmodel=kernel $(src)/limineboot.c $(kernelobjects) -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0 
 	x86_64-elf-objdump -M intel -d out/kloslimineboot > out/kloslimineboot.S
 
 # bios assembly :raah:
@@ -89,9 +89,9 @@ $(out)/klos.img:
 # testing
 
 qemu:
-	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -m 512M -d mmu,int -no-reboot
+	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -m 2G -d mmu,int -no-reboot
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -m 512M -d mmu,int -no-reboot -monitor stdio
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -m 2G -d mmu,int -no-reboot -monitor stdio
 
 clean:
 	rm -rf $(out)
