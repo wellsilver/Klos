@@ -76,13 +76,16 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   // page directory entry (program)
   uint64_t *pdek;
 
-  uint64_t topfree = offset + largestfree.base + largestfree.length;
+  uint64_t topfree = largestfree.base + largestfree.length;
 
-  topfree -= (largestfree.base+largestfree.length) % (1U << 21);
+  topfree -= (largestfree.base+largestfree.length) % 4096;
 
   pml4 = (void *) topfree - ((512*8)*1);
+  pml4 += offset;
   pdptk= (void *) topfree - ((512*8)*2);
+  pdptk += offset;
   pdek = (void *) topfree - ((512*8)*3);
+  pdek += offset;
 
   for (unsigned int loop = 0; loop < 512; loop++) {
     pml4[loop] = 0;
@@ -97,8 +100,10 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek - offset) | rw;
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = alignedbase | rw | 1<<7;
 
+  register uint64_t nextcr3 = pml4 - offset;
+
   // load page table
-  asm volatile ("mov cr3, %0" : : "r" (pml4 - offset));
+  asm volatile ("mov cr3, %0" : : "r" (nextcr3));
 }
 
 struct gpt_entry {
