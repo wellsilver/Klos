@@ -40,6 +40,12 @@ static volatile struct limine_paging_mode_request pageqrequest = {
   .mode = LIMINE_PAGING_MODE_X86_64_4LVL
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_hhdm_request hhdmrequest = {
+  .id = LIMINE_HHDM_REQUEST,
+  .revision = 0
+};
+
 // Finally, define the start and end markers for the Limine requests.
 // These can also be moved anywhere, to any .c file, as seen fit.
 
@@ -50,11 +56,15 @@ __attribute__((used, section(".requests_end_marker")))
 volatile LIMINE_REQUESTS_END_MARKER;
 
 // page map level 4
-uint64_t pml4[512] __attribute__((aligned(4096)));
+uint64_t *pml4;
+// page directory pointer table
+uint64_t *pdpt;
+// page directory entry
+uint64_t *pde;
 // page directory pointer table (program)
-uint64_t pdptk[512] __attribute__((aligned(4096)));
+uint64_t *pdptk;
 // page directory entry (program)
-uint64_t pdek[512] __attribute__((aligned(4096)));
+uint64_t *pdek;
 
 // stack
 char stack[512*5];
@@ -64,26 +74,35 @@ char stack[512*5];
 // make all memory rwx and mapped to its physical addresses, so its easier to manipulate
 void setuppageing(struct limine_memmap_entry largestfree) {
   struct limine_kernel_address_response kra = *kernelrequest.response;
+  uint64_t offset = hhdmrequest.response->offset;
 
-  // map everything to physical memory
+  uint64_t topfree = offset + largestfree.base + largestfree.length;
+
+  pml4 = (void *) topfree - ((512*8)*1);
+  pdpt = (void *) topfree - ((512*8)*2);
+  pde  = (void *) topfree - ((512*8)*3);
+  pdptk= (void *) topfree - ((512*8)*4);
+  pdek = (void *) topfree - ((512*8)*5);
+
+  // map first gigabyte to real memory, and zero everything else
   for (unsigned int loop = 0; loop < 512; loop++) {
-    pml4[loop] = 0; // level 4 (512 gigabytes)
-    // ^ doesnt exist for now
+    pml4[loop] = (uint64_t) pdpt | rw; // level 4 (512 gigabytes)
+    pdpt[loop] = (uint64_t) pde | rw;
+    pde[loop] = loop << 21 | rw;
+
     pdptk[loop] = 0;
     pdek[loop] = 0;
   }
 
-  unsigned long long allignedbase = (kra.physical_base - (kra.physical_base % 0x200000));
+  unsigned long long alignedbase = kra.physical_base & 0xFFF;
 
-  // map this program so it doesnt become undefined when we put in the new table
-  pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = (allignedbase + ((uint64_t) pdptk - kra.virtual_base)) | rw;
-  pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = (allignedbase + ((uint64_t) pdek - kra.virtual_base)) | rw;
-  pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = allignedbase | rw | 1<<7;
-
-  uint64_t physical_pml4 = kra.physical_base + ((uint64_t)pml4 - kra.virtual_base);
+  // map this program so it doesnt become undefined when we put in thalignedbase + ((uint64_t) pdptk - kra.virtual_base))e new table
+  pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = ((uint64_t) pdptk - offset) | rw;
+  pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek - offset) | rw;
+  pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = alignedbase | rw | 1<<7;
 
   // load page table
-  asm volatile ("mov cr3, %0" : : "r" (physical_pml4));
+  asm volatile ("mov cr3, %0" : : "r" (pml4 - offset));
 }
 
 struct gpt_entry {

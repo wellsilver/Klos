@@ -12,7 +12,7 @@ kerneltarget := x86_64
 
 cc = x86-elf-gcc
 
-kargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -O0 -g -c -masm=intel -mcmodel=large -ffreestanding -fno-pic
+kargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -Os -g -c -masm=intel -mcmodel=large -ffreestanding -fPIE
 
 .PHONY: qemu qemudebug clean
 
@@ -89,9 +89,9 @@ $(out)/klos.img:
 # testing
 
 qemu:
-	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -m 4G -d mmu,int -no-reboot
+	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -m 512M -d mmu,int -no-reboot
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -m 4G -d mmu,int -no-reboot -monitor stdio
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -m 512M -d mmu,int -no-reboot -monitor stdio
 
 clean:
 	rm -rf $(out)
