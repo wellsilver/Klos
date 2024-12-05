@@ -77,15 +77,13 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   uint64_t *pdek;
 
   uint64_t topfree = largestfree.base + largestfree.length;
-
   topfree -= (largestfree.base+largestfree.length) % 4096;
 
+  topfree += offset;
+
   pml4 = (void *) topfree - ((512*8)*1);
-  pml4 += offset;
   pdptk= (void *) topfree - ((512*8)*2);
-  pdptk += offset;
   pdek = (void *) topfree - ((512*8)*3);
-  pdek += offset;
 
   for (unsigned int loop = 0; loop < 512; loop++) {
     pml4[loop] = 0;
@@ -100,10 +98,16 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek - offset) | rw;
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = alignedbase | rw | 1<<7;
 
-  register uint64_t nextcr3 = pml4 - offset;
+  uint64_t nextcr3 = (unsigned long long) pml4;
+
+  topfree -= offset;
+
+  pml4 = (void *) topfree - ((512*8)*1);
+  pdptk= (void *) topfree - ((512*8)*2);
+  pdek = (void *) topfree - ((512*8)*3);
 
   // load page table
-  asm volatile ("mov cr3, %0" : : "r" (nextcr3));
+  asm volatile ("mov cr3, %0" : : "r" (pml4));
 }
 
 struct gpt_entry {
@@ -195,7 +199,7 @@ void main(void) {
     for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
       drives[0].read(0, *(cache+74) + beginlba + sectors, 1, ((void *) largestfree.base)+(sectors*512));
     }
-  
+
 
   while (1) asm("hlt");
   return;

@@ -34,7 +34,7 @@ $(out)/main.$(kerneltarget).elf:
 
 $(out)/kernel.bin: $(kernelobjects)
 	x86_64-elf-ld -T $(src)/kernel/linker.ld $(out)/main.$(kerneltarget).elf $^ -o $(out)/kernel.bin 
-	x86_64-elf-objdump -b binary -M intel -D -m i386 out/kernel.bin > out/kernel.asm
+	x86_64-elf-objdump -S -b binary -M intel -D -m i386 out/kernel.bin > out/kernel.asm
 
 $(kernelobjects): $(kernelcsources)
 
@@ -48,7 +48,7 @@ $(out)/%.o: $(src)/kernel/*/%.c
 
 $(out)/kloslimineboot:
 	x86_64-elf-gcc -nostdlib -mcmodel=kernel $(src)/limineboot.c $(kernelobjects) -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0 
-	x86_64-elf-objdump -M intel -d out/kloslimineboot > out/kloslimineboot.S
+	x86_64-elf-objdump -S -M intel -d out/kloslimineboot > out/kloslimineboot.S
 
 # bios assembly :raah:
 
