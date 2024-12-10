@@ -91,7 +91,7 @@ void setuppageing(struct limine_memmap_entry largestfree) {
     pdek[loop] = 0;
   }
   
-  unsigned long long alignedbase = kra.physical_base - (kra.physical_base % (1U << 21));
+  unsigned long long alignedbase = (kra.physical_base & ((uint64_t)0x1ff << 21)) >> 21;
 
   // map this program so it doesnt become undefined when we put in the new table
   pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = ((uint64_t) pdptk - offset) | rw;
