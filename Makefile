@@ -43,7 +43,6 @@ $(out)/%.o: $(src)/kernel/*/%.c
 
 $(out)/biosboot.bin:
 	nasm $(src)/boot.x86.S -f bin -o $(out)/biosboot.bin
-	truncate $(out)/biosboot.bin -s 1536
 
 # make the image
 
@@ -51,21 +50,7 @@ $(out)/klos.img:
 # format kfs 1000 megabytes
 	python3 kfs/format.py $(out)/klos.img 1000 $(out)/biosboot.bin $(out)/kernel.bin
 
-# format the efi fs
-#	mkfs.fat -C -F 32 $(out)/efi.img 20480
-	truncate $(out)/efi.img -s 12M
-	mformat -i $(out)/efi.img
-	mmd -i $(out)/efi.img ::/EFI ::/EFI/BOOT ::/boot
-
-# create the disc image with a efi and kfs partition
-	truncate $(out)/image.img -s 1024M
-	parted $(out)/image.img --script mklabel gpt
-	parted $(out)/image.img --script mkpart primary 2M 12M
-	parted $(out)/image.img --script mkpart primary 13M 1000M
-
-# assemble the partitions
-	dd if=$(out)/efi.img of=$(out)/image.img bs=1M seek=2 conv=notrunc
-	dd if=$(out)/klos.img of=$(out)/image.img bs=1M seek=12 conv=notrunc
+	cp $(out)/klos.img $(out)/image.img
 
 # testing
 

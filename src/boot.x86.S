@@ -266,24 +266,7 @@ bootloader:
   mov word [0xB8000+4], 0x076F
   mov word [0xB8000+6], 0x0774
   
-  mov rax, [highlighted] ; get sector of file descriptor from kfs
-  mov cl, 1
-  mov rdi, tempsector
-  call ata_lba_read
-
-  mov rdi, tempsector
-  mov rax, qword [tempsector+74]   ; mov start to rax
-  mov rcx, qword [tempsector+74+8] ; mov end   to rcx
-
-  sub rcx, rax ; get sector count to read by subtracting the end-start
-  mov rdi, 0x00010000
-  call ata_lba_read
-
-  mov rsp, 0xFF00 ; everything below the kernel and a table is free
-  mov rbp, rsp
-
-; jump to kernel
-  jmp 0x10000
+  
 
 haltloop:
   hlt
