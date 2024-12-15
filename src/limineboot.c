@@ -55,10 +55,9 @@ volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 volatile LIMINE_REQUESTS_END_MARKER;
 
-// stack
-char stack[512*5];
-
 #define rw 1U | 2U
+
+void main(struct limine_memmap_entry largestfree);
 
 // make a more ideal page table
 void setuppageing(struct limine_memmap_entry largestfree) {
@@ -67,9 +66,9 @@ void setuppageing(struct limine_memmap_entry largestfree) {
 
   // page map level 4
   uint64_t *pml4;
-  // page directory pointer table
+  // page directory pointer table (stack)
   uint64_t *pdpt;
-  // page directory entry
+  // page directory entry (stack)
   uint64_t *pde;
   // page directory pointer table (program)
   uint64_t *pdptk;
@@ -90,15 +89,13 @@ void setuppageing(struct limine_memmap_entry largestfree) {
     pdptk[loop] = 0;
     pdek[loop] = 0;
   }
-  
+
   unsigned long long alignedbase = (kra.physical_base & ((uint64_t)0x1ff << 21)) >> 21;
 
   // map this program so it doesnt become undefined when we put in the new table
   pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = ((uint64_t) pdptk - offset) | rw;
   pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek - offset) | rw;
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = alignedbase | rw | 1<<7;
-
-  uint64_t nextcr3 = (unsigned long long) pml4;
 
   topfree -= offset;
 
@@ -144,62 +141,46 @@ ulong findkfslba(struct drive drv, uint64_t *cache) {
   } else return 0;
 }
 
-void main(void);
-
 void kmain(void) {
-  // fix stack
-  asm volatile ("mov rbp, %0" : : "a" (stack+(512*5)));
-  asm volatile ("mov rsp, %0" : : "a" (stack+(512*5)));
-  main();
+  struct limine_memmap_entry largestfree;
+  largestfree.base = 0;
+  largestfree.length = 0;
+  uint64_t highest;
+
+  for (int loop=0;loop<memmap_request.response->entry_count;loop++) {
+    struct limine_memmap_entry *i = memmap_request.response->entries[loop];
+
+    if (i->type == LIMINE_MEMMAP_USABLE) {
+      if (i->length > largestfree.length) {
+        largestfree = *i;
+      }
+      if (i->base + i->length > highest) highest = i->base+i->length;
+    }
+  }
+
+  setuppageing(largestfree);
   // even though it uses the stack later, it is never going to reach this part
 }
 
-void main(void) {
-  // Ensure the bootloader actually understands our base revision (see spec).
-  if (LIMINE_BASE_REVISION_SUPPORTED == 0)
-    return;
+// load the kernel
+void main(struct limine_memmap_entry largestfree) {
+  uint8_t cache[512];
+  struct drive drives[16];
+  uint err;
 
-  if (memmap_request.response != NULL) { // If we have a memory map that should be good enough to start klos, else just catch fire
-    struct limine_memmap_entry largestfree;
-    largestfree.base = 0;
-    largestfree.length = 0;
-    uint64_t highest;
-    uint64_t numpages;
+  uint lendrives = all_drives(drives);
+  if (lendrives == 0) return;
 
-    for (int loop=0;loop<memmap_request.response->entry_count;loop++) {
-      struct limine_memmap_entry *i = memmap_request.response->entries[loop];
+  // TODO make it so it polls every drive, and reads the kernel correctly
 
-      if (i->type == LIMINE_MEMMAP_USABLE) {
-        if (i->length > largestfree.length) {
-          largestfree = *i;
-        }
-        if (i->base + i->length > highest) highest = i->base+i->length;
-      }
-    }
+  ulong beginlba = findkfslba(drives[0], (uint64_t *) cache);
+  if (beginlba == 0) return;
+  ulong kernelloc = (*(cache+8)) + beginlba;
+  err = drives[0].read(0, kernelloc, 1, cache); // read the highlighted file, which should be the kernel
 
-    setuppageing(largestfree);
-
-    numpages = highest/4096;
-    
-    uint8_t cache[512];
-    struct drive drives[16];
-    uint err;
-
-    uint lendrives = all_drives(drives);
-    if (lendrives == 0) return;
-
-    // TODO make it so it polls every drive, and reads the kernel correctly
-
-    ulong beginlba = findkfslba(drives[0], (uint64_t *) cache);
-    if (beginlba == 0) return;
-    ulong kernelloc = (*(cache+8)) + beginlba;
-    err = drives[0].read(0, kernelloc, 1, cache); // read the highlighted file, which should be the kernel
-
-    // blindly trust that its the kernel, and that it only makes up one range of sectors
-    for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
-      drives[0].read(0, *(cache+74) + beginlba + sectors, 1, ((void *) largestfree.base)+(sectors*512));
-    }
-
+  // blindly trust that its the kernel, and that it only makes up one range of sectors
+  for (uint sectors=0;sectors < *(cache+74+8) - *(cache+74);sectors++)
+    drives[0].read(0, *(cache+74) + beginlba + sectors, 1, ((void *) largestfree.base)+(sectors*512));
 
   while (1) asm("hlt");
   return;
