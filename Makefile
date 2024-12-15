@@ -9,20 +9,15 @@ kernelcsources := $(shell find $(src)/kernel -name "*.c")
 kernelobjects := $(patsubst %.c, out/%.o, $(notdir $(kernelcsources)))
 kerneltarget := x86_64
 
-
 cc = x86-elf-gcc
 
 kargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -Os -g -c -masm=intel -mcmodel=large -ffreestanding -fPIE
 
 .PHONY: qemu qemudebug clean
 
-build: $(out) limine/limine $(out)/main.$(kerneltarget).elf $(out)/kernel.bin $(out)/kloslimineboot $(out)/biosboot.bin $(out)/klos.img 
+build: $(out) $(out)/main.$(kerneltarget).elf $(out)/kernel.bin $(out)/biosboot.bin $(out)/klos.img 
 run: build qemu clean
 debug: build qemudebug clean
-
-limine/limine:
-	git clone https://github.com/limine-bootloader/limine --branch=v8.x-binary
-	cd limine && make
 
 $(out):
 	mkdir -p $(out)
@@ -44,12 +39,6 @@ $(out)/%.o: $(src)/kernel/%.c
 $(out)/%.o: $(src)/kernel/*/%.c
 	x86_64-elf-gcc $(kargs) $< -o $@
 
-# limine (bootloader) compilation
-
-$(out)/kloslimineboot:
-	x86_64-elf-gcc -nostdlib -mcmodel=kernel $(src)/limineboot.c $(kernelobjects) -o $(out)/kloslimineboot -g -I limine -I $(src)/kernel/util -I $(src)/kernel -T $(src)/limineboot.ld -masm=intel -O0 
-	x86_64-elf-objdump -S -M intel -d out/kloslimineboot > out/kloslimineboot.S
-
 # bios assembly :raah:
 
 $(out)/biosboot.bin:
@@ -66,21 +55,13 @@ $(out)/klos.img:
 #	mkfs.fat -C -F 32 $(out)/efi.img 20480
 	truncate $(out)/efi.img -s 12M
 	mformat -i $(out)/efi.img
-	mmd -i $(out)/efi.img ::/EFI ::/EFI/BOOT ::/boot ::/boot/limine
-
-# Copy limine to efi.img
-	mcopy -i $(out)/efi.img limine.conf limine/limine-bios.sys ::/boot/limine
-	mcopy -i $(out)/efi.img $(out)/kloslimineboot ::/boot
-	mcopy -i $(out)/efi.img limine/BOOTX64.EFI ::/EFI/BOOT
-	mcopy -i $(out)/efi.img limine/BOOTIA32.EFI ::/EFI/BOOT
+	mmd -i $(out)/efi.img ::/EFI ::/EFI/BOOT ::/boot
 
 # create the disc image with a efi and kfs partition
 	truncate $(out)/image.img -s 1024M
 	parted $(out)/image.img --script mklabel gpt
 	parted $(out)/image.img --script mkpart primary 2M 12M
 	parted $(out)/image.img --script mkpart primary 13M 1000M
-
-	./limine/limine bios-install $(out)/image.img
 
 # assemble the partitions
 	dd if=$(out)/efi.img of=$(out)/image.img bs=1M seek=2 conv=notrunc
