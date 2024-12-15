@@ -14,6 +14,14 @@ highlighted: dq 12 ; kernel is at 12 I hope lol
 code:
 cld
 
+mov eax, 0xB8000
+mov word [eax],   0x0762
+add eax, 2
+mov word [eax], 0x076f
+add eax, 2
+mov word [eax], 0x076F
+add eax, 2
+mov word [eax], 0x0774
 
 xor ax, ax 
 mov ss, ax     ; setup stack
@@ -261,11 +269,28 @@ stringtorbx:
 
 ; load kernel (assuming it is the first file that appears)
 bootloader:
-  mov word [0xB8000],   0x0762
-  mov word [0xB8000+2], 0x076f
-  mov word [0xB8000+4], 0x076F
-  mov word [0xB8000+6], 0x0774
-  
+  ; get the describing sector
+  mov rax, qword [highlighted]
+  mov rcx, 1
+  mov rdi, tempsector
+  call ata_lba_read
+
+  jmp haltloop
+
+  ; lets hope its the first range that appears (well, I mean, we control it so lol)
+  mov rax, qword [tempsector+74] ; start LBA
+  mov rcx, qword [tempsector+74+8] ; end LBA
+  sub rcx, rax
+  mov rdi, 0x00100000 ; 14 megabytes of free memory
+  push rdi
+  call ata_lba_read
+
+  jmp haltloop
+
+  pop rdi
+  add rdi, 24
+  mov rax, qword [rdi] ; offset to ELF entry point
+  add rax, 0x00100000
   
 
 haltloop:
