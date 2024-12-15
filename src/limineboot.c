@@ -76,28 +76,27 @@ void setuppageing(struct limine_memmap_entry largestfree) {
   uint64_t *pdek;
 
   uint64_t topfree = largestfree.base + largestfree.length;
-  topfree -= (largestfree.base+largestfree.length) % 4096;
-
+  topfree = topfree - (topfree % 4096);
   topfree += offset;
 
   pml4 = (void *) topfree - ((512*8)*1);
   pdptk= (void *) topfree - ((512*8)*2);
   pdek = (void *) topfree - ((512*8)*3);
+  pde  = (void *) topfree - ((512*8)*4);
 
   for (unsigned int loop = 0; loop < 512; loop++) {
     pml4[loop] = 0;
     pdptk[loop] = 0;
     pdek[loop] = 0;
+    pde[loop] = 0;
   }
 
-  unsigned long long alignedbase = (kra.physical_base & ((uint64_t)0x1ff << 21)) >> 21;
+  uint64_t alignedbase = kra.physical_base - (kra.physical_base % (1 << 21));
 
   // map this program so it doesnt become undefined when we put in the new table
   pml4[(kra.virtual_base & ((uint64_t)0x1ff << 39)) >> 39] = ((uint64_t) pdptk - offset) | rw;
   pdptk[(kra.virtual_base & ((uint64_t)0x1ff << 30)) >> 30] = ((uint64_t) pdek - offset) | rw;
   pdek[(kra.virtual_base & ((uint64_t)0x1ff << 21)) >> 21] = alignedbase | rw | 1<<7;
-
-  topfree -= offset;
 
   pml4 = (void *) topfree - ((512*8)*1);
   pdptk= (void *) topfree - ((512*8)*2);
