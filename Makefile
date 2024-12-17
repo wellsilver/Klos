@@ -55,9 +55,9 @@ $(out)/klos.img:
 # testing
 
 qemu:
-	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -m 2G -d mmu,int -no-reboot
+	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -m 1G -d int -no-reboot
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -m 2G -d mmu,int -no-reboot -monitor stdio
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -m 1G -d int -no-reboot -monitor stdio
 
 clean:
 	rm -rf $(out)

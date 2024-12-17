@@ -243,30 +243,6 @@ memcpy:
   jnz memcpy
   ret
 
-; 8 bytes from rdi into rax, trashes rcx
-stringtorax:
-  xor rcx, rcx
-.next:
-  mov al, byte [rdi]
-  shl rax, 8
-  inc rdi
-  inc rcx
-  cmp rcx, 8
-  jnz .next
-  ret
-
-; 8 bytes from rdi into rbx, trashes rcx,rdx
-stringtorbx:
-  xor rcx, rcx
-.next:
-  mov bl, byte [rdi]
-  shl rbx, 8
-  inc rdi
-  inc rcx
-  cmp rcx, 8
-  jnz .next
-  ret
-
 ; load kernel (assuming it is the first file that appears)
 bootloader:
   ; get the describing sector
@@ -275,23 +251,16 @@ bootloader:
   mov rdi, tempsector
   call ata_lba_read
 
-  jmp haltloop
-
-  ; lets hope its the first range that appears (well, I mean, we control it so lol)
+  ; get ELF header size
   mov rax, qword [tempsector+74] ; start LBA
-  mov rcx, qword [tempsector+74+8] ; end LBA
-  sub rcx, rax
-  mov rdi, 0x00100000 ; 14 megabytes of free memory
-  push rdi
+  mov r8, rax ; save the start LBA
+  mov rcx, 1
+  mov rdi, tempsector
+  call ata_lba_read
   call ata_lba_read
 
-  jmp haltloop
 
-  pop rdi
-  add rdi, 24
-  mov rax, qword [rdi] ; offset to ELF entry point
-  add rax, 0x00100000
-  
+
 
 haltloop:
   hlt
