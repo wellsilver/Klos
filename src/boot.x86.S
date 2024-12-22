@@ -243,7 +243,6 @@ memcpy:
   jnz memcpy
   ret
 
-; load kernel (assuming it is the first file that appears)
 bootloader:
   ; get the describing sector
   mov rax, qword [highlighted]
@@ -257,10 +256,15 @@ bootloader:
   mov rcx, 1
   mov rdi, tempsector
   call ata_lba_read
-  call ata_lba_read
 
+  mov rdi, tempsector
+  mov r9, qword [rdi+24]
 
+  ; r8 = elf start lba
+  ; r9 = program header offset
+  ; must get where in the elf file the program is,then write it
 
+  ud2
 
 haltloop:
   hlt
