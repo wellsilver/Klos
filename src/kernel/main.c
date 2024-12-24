@@ -4,10 +4,6 @@
 #include <int.h>
 
 void kernel() {
-  kernel:
-
-  uint16_t *a = 0xB8000;
-  *a = 0;
 
   while (1) asm("hlt");
 }

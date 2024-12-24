@@ -282,6 +282,10 @@ bootloader:
   mov rdi, 0x100000
   call ata_lba_read
 
+  ; memory for kernel
+  mov rbp, 0x0007FFFF
+  mov rsp, 0x0007FFFF
+
   jmp 0x100000
 
 haltloop:
@@ -358,33 +362,12 @@ ata_lba_read: ; replace with a fallback to real mode so it works with every driv
   ret
 
 bits 16
-; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
-; http://www.uruk.org/orig-grub/mem64mb.html
-mmapsize   equ 0x7b0d
-mmap       equ 0x7b0f
+
 do_e820:
-  mov byte [0xFFFF], 2 ; tell kernel memory map=e820
-  mov ebx, 0
-  mov word [mmapsize], 0
-  mov di, 0
-  mov es, di
-  mov di, mmap-20
-.loopu:
-  inc word [mmapsize]
-
-  add di, 20
-
-  mov ecx, 20
-  mov edx, 534D4150h
-  mov eax, 0xe820
+  ; make a page table (growing down from 0x00EFFFFF)
   
-  int 0x15
-  jc err
 
-  cmp ebx, 0
-  jz .end
 
-  jmp .loopu
 .end:
   jmp frome820
 bits 64

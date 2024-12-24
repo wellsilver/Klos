@@ -5,8 +5,6 @@ extern kernel
 global start
 
 start:
-  mov word [0xB8000], 0
-  hlt
-  jmp start
+  call kernel
 
 ; gdt sorting and everything else here

@@ -13,8 +13,6 @@ run (has apt, run as sudo) ``bash ./installtools.sh`` to install everything need
 
 kfs has the first 5 sectors free for bios boot (I hate UEFI) and is the full 
 
-kernel loads into 0x10000 all the bootloader needs to do is load it there
+kernel loads into 0x10000 (or is mapped there, preferrably in real memory as its free for bios compat)
 
-kernel stack grows from 0xFF00 to 0x0
-
-Theres a table above 0xFF00 where 0xFFFF stores the type of memory map given, which via the native bootloader is 2=(e820)
+has a fully setup page map (that can be anywhere) where memory not free is marked as unwritable
