@@ -29,7 +29,7 @@ $(out)/main.$(kerneltarget).elf:
 
 $(out)/kernel.bin: $(kernelobjects)
 	x86_64-elf-ld -T $(src)/kernel/linker.ld $(out)/main.$(kerneltarget).elf $^ -o $(out)/kernel.bin 
-	x86_64-elf-objdump -S -b binary -M intel -D -m i386 out/kernel.bin > out/kernel.asm
+	x86_64-elf-objdump -S -M intel -D -m i386 out/kernel.bin > out/kernel.asm
 
 $(kernelobjects): $(kernelcsources)
 

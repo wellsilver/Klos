@@ -257,14 +257,31 @@ bootloader:
   mov rdi, tempsector
   call ata_lba_read
 
-  mov rdi, tempsector
-  mov r9, qword [rdi+24]
+  mov rax, qword [rdi+32]
+  add rdi, rax
 
-  ; r8 = elf start lba
-  ; r9 = program header offset
-  ; must get where in the elf file the program is,then write it
+  mov r9, qword [rdi+8] ; offset in the file
+  mov r10, qword [rdi+32] ; size
 
-  ud2
+  ; get the offset (in sectors)
+  mov rax, r9
+  mov rbx, 512
+  div rbx
+  mov r12, rax ; offset in sectors
+
+  ; get the size in sectors
+  mov rax, r10
+  mov rbx, 512
+  div rbx
+  mov r13, rax ; size in sectors
+  inc r13
+
+  mov rax, r12
+  add rax, r8
+  mov rcx, r13
+  mov rdi, 0x100000
+  call ata_lba_read
+  
 
 haltloop:
   hlt
@@ -280,7 +297,7 @@ haltloop:
 ;
 ; @return None
 ;=============================================================================
-ata_lba_read:
+ata_lba_read: ; replace with a fallback to real mode so it works with every drive the bios supports
   pushfq
   and rax, 0x0FFFFFFF
   push rax

@@ -2,9 +2,9 @@
 ; also include other asm files from here, so we dont need to compile everything separately
 section .text
 extern kernel
-global _start
+global start
 
-_start:
+start:
   jmp kernel
 
 ; gdt sorting and everything else here
