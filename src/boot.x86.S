@@ -365,6 +365,7 @@ bits 16
 
 do_e820:
   ; make a page table (growing down from 0x00EFFFFF)
+  ; for long mode!!
   
 
 
