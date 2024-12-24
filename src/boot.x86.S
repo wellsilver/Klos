@@ -281,7 +281,8 @@ bootloader:
   mov rcx, r13
   mov rdi, 0x100000
   call ata_lba_read
-  
+
+  jmp 0x100000
 
 haltloop:
   hlt
@@ -388,13 +389,10 @@ do_e820:
   jmp frome820
 bits 64
 
-filenamedump:
-  times 28 db 0 ; str
-  db 0 ; \0
+db "boot code end |" ; for ram dump debugging
 
-db "boot end |" ; for ram dump debugging
+times 2560-($-$$) db 1
 
-times 2560-($-$$) db 0
 tempsector: 
 ; free until 0xFF00
 ;            0x7C00

@@ -55,9 +55,9 @@ $(out)/klos.img:
 # testing
 
 qemu:
-	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -m 1G -d int -no-reboot
+	qemu-system-x86_64 -D ./qemulog.txt -hda $(out)/image.img -d int -no-reboot -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -m 1G -d int -no-reboot -monitor stdio
+	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/image.img -d int -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
 
 clean:
 	rm -rf $(out)
