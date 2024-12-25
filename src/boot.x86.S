@@ -286,10 +286,6 @@ bootloader:
   mov rbp, 0x0007FFFF
   mov rsp, 0x0007FFFF
 
-  
-
-  jmp 0x100000
-
 haltloop:
   hlt
   jmp haltloop
@@ -366,13 +362,26 @@ ata_lba_read: ; replace with a fallback to real mode so it works with every driv
 bits 16
 
 do_e820:
-  ; make a page table (growing down from 0xFFF000 with space at 0xFFFFFF for the e820 map)
+  ; make a page table (growing down from 0xFFF000)
+  ; get the e820 table
   mov ax, 0xFFF000 / 0x10
   mov es, ax
   mov ax, 0xFFF000 % 0x10 ; 0
   mov di, ax
 
-  
+  mov ebx, 0
+.next:
+  mov eax, 0xE820 ; magic
+  mov edx, 0x534D4150 ; magic
+  mov ecx, 24
+  int 0x15
+  add di, 24
+  jz err ; on error
+  cmp ebx, 0
+  jne .next
+
+  ; done
+
 
   
 
