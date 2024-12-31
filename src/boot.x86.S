@@ -361,13 +361,15 @@ ata_lba_read: ; replace with a fallback to real mode so it works with every driv
 
 bits 16
 
+; format
+; uint64_t start
+; uint64_t length
+; uint32_t type (1=usable)
+; uint32_t acpi
 do_e820:
   ; make a page table (growing down from 0xFFF000)
-  ; get the e820 table
-  mov ax, 0xFFF000 / 0x10
-  mov es, ax
-  mov ax, 0xFFF000 % 0x10 ; 0
-  mov di, ax
+  mov edi, 0xFFF000
+  ; why tf does it say "use es:di" when it uses edi
 
   mov ebx, 0
 .next:
@@ -380,9 +382,9 @@ do_e820:
   cmp ebx, 0
   jne .next
 
-  ; done
-
-
+  ; donex
+  alt:hlt
+  jmp alt
   
 
 
