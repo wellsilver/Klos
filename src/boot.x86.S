@@ -367,20 +367,9 @@ bits 16
 ; uint32_t type (1=usable)
 ; uint32_t acpi
 do_e820:
-  ; make a page table (growing down from 0xFFF000)
-  mov edi, 0xFFF000
-  ; why tf does it say "use es:di" when it uses edi
-
-  mov ebx, 0
-.next:
-  mov eax, 0xE820 ; magic
-  mov edx, 0x534D4150 ; magic
-  mov ecx, 24
-  int 0x15
-  add di, 24
-  jz err ; on error
-  cmp ebx, 0
-  jne .next
+  mov di, tempsector
+	xor bp, bp		; keep an entry count in bp (idk what this does)
+  
 
   ; donex
   alt:hlt
