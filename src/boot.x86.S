@@ -368,8 +368,19 @@ bits 16
 ; uint32_t acpi
 do_e820:
   mov di, tempsector
-	xor bp, bp		; keep an entry count in bp (idk what this does)
+	xor bp, bp		; keep an entry count in bp (idk what this does but when i copy pasted this it started working)
+  ; Check for compatibility
+  xor ebx, ebx		; ebx must be 0 to start
+	xor bp, bp		; keep an entry count in bp
+	mov edx, 0x0534D4150	; Place "SMAP" into edx
+	mov eax, 0xe820
+  mov ecx, 24		; ask for 24 bytes
+  int 0x15
+  jc err
   
+.next:
+	mov edx, 0x0534D4150	; Place "SMAP" into edx
+	mov eax, 0xe820
 
   ; donex
   alt:hlt
