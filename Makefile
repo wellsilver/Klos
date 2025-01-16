@@ -43,6 +43,7 @@ $(out)/%.o: $(src)/kernel/*/%.c
 
 $(out)/biosboot.bin:
 	nasm $(src)/boot.x86.S -f bin -o $(out)/biosboot.bin
+	nasm $(src)/boot.x86.S -g -o $(out)/biosboot.elf
 
 # make the image
 

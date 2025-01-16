@@ -15,7 +15,7 @@ code:
 cld
 
 mov eax, 0xB8000
-mov word [eax],   0x0762
+mov word [eax], 0x0762
 add eax, 2
 mov word [eax], 0x076f
 add eax, 2
@@ -243,7 +243,12 @@ memcpy:
   jnz memcpy
   ret
 
+loadstr: db "load",0
+
 bootloader:
+  mov rdi, loadstr
+  call prints
+
   ; get the describing sector
   mov rax, qword [highlighted]
   mov rcx, 1
@@ -282,7 +287,7 @@ bootloader:
   mov rdi, 0x100000
   call ata_lba_read
 
-  ; memory for kernel
+  ; setup paging for kernel
   mov rbp, 0x0007FFFF
   mov rsp, 0x0007FFFF
 
@@ -367,26 +372,24 @@ bits 16
 ; uint32_t type (1=usable)
 ; uint32_t acpi
 do_e820:
-  mov di, tempsector
-	xor bp, bp		; keep an entry count in bp (idk what this does but when i copy pasted this it started working)
-  ; Check for compatibility
-  xor ebx, ebx		; ebx must be 0 to start
+  mov edi, tempsector
+	xor ebx, ebx		; ebx must be 0 to start
 	xor bp, bp		; keep an entry count in bp
 	mov edx, 0x0534D4150	; Place "SMAP" into edx
 	mov eax, 0xe820
-  mov ecx, 24		; ask for 24 bytes
+	mov ecx, 24		; ask for 24 bytes
+	int 0x15
+	jc err
+
+  xor bp, bp
+.loopu:
+  mov eax, 0xe820		; eax, ecx get trashed on every int 0x15 call
+	mov ecx, 24		; ask for 24 bytes again
   int 0x15
-  jc err
-  
-.next:
-	mov edx, 0x0534D4150	; Place "SMAP" into edx
-	mov eax, 0xe820
-
-  ; donex
-  alt:hlt
-  jmp alt
-  
-
+  inc bp
+  add di, 24
+  jc .end
+  jmp .loopu
 
 .end:
   jmp frome820
