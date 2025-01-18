@@ -245,7 +245,46 @@ memcpy:
 
 loadstr: db "load",0
 
+settuppaging:
+  mov rbp, r8
+  mov rsp, r9
+
+  mov rdi, tempsector
+  sub rdi, 24 ; so we can add 24 immediately and be fine
+
+  mov rax, qword [e820sizestore]
+  mov cl, 24
+  mul cl
+  mov qword [e820sizestore], rax
+
+  ; search for the largest spot in memory put begin=r10 end=r11
+  mov r10, 0
+  mov r11, 0
+.searchlargest:
+  add rdi, 24
+  
+
+
+  ; check if we ran out of entries to search
+  cmp qword [e820sizestore], rdi
+  jne .endsearchlargest
+  ; check if this entry is bigger than the previous largest entry, if it is record it
+  cmp qword [rdi+8], r11
+  jng .searchlargest
+  mov r10, qword [rdi]
+  mov r11, qword [rdi+8]
+  jmp .searchlargest
+.endsearchlargest:
+
+  ; return to normality
+  mov rbp, r8
+  mov rsp, r9
+
+  ret
+
 bootloader:
+  call settuppaging
+
   mov rdi, loadstr
   call prints
 
@@ -286,10 +325,6 @@ bootloader:
   mov rcx, r13
   mov rdi, 0x100000
   call ata_lba_read
-
-  ; setup paging for kernel
-  mov rbp, 0x0007FFFF
-  mov rsp, 0x0007FFFF
 
 haltloop:
   hlt
@@ -366,11 +401,9 @@ ata_lba_read: ; replace with a fallback to real mode so it works with every driv
 
 bits 16
 
-; format
-; uint64_t start
-; uint64_t length
-; uint32_t type (1=usable)
-; uint32_t acpi
+e820sizestore: dq 0
+
+; write e820 to memory so when we get to 64 bit mode can make a full one
 do_e820:
   mov edi, tempsector
 	xor ebx, ebx		; ebx must be 0 to start
@@ -392,6 +425,8 @@ do_e820:
   jmp .loopu
 
 .end:
+  mov ax, bp
+  mov word [e820sizestore], ax
   jmp frome820
 bits 64
 
