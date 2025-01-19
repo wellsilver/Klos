@@ -244,11 +244,9 @@ memcpy:
   ret
 
 loadstr: db "load",0
+runnstr: db "run",0
 
 settuppaging:
-  mov rbp, r8
-  mov rsp, r9
-
   mov rdi, tempsector
   sub rdi, 24 ; so we can add 24 immediately and be fine
 
@@ -273,19 +271,10 @@ settuppaging:
   mov r11, qword [rdi+8]
   jmp .searchlargest
 .endsearchlargest:
-  
-  ; return to normality
-  mov rbp, r8
-  mov rsp, r9
 
   ret
 
-bootloader:
-  call settuppaging
-
-  mov rdi, loadstr
-  call prints
-
+loadkernel:
   ; get the describing sector
   mov rax, qword [highlighted]
   mov rcx, 1
@@ -323,6 +312,19 @@ bootloader:
   mov rcx, r13
   mov rdi, 0x100000
   call ata_lba_read
+
+  ret
+
+bootloader:
+  mov rdi, loadstr
+  call prints
+
+  call settuppaging
+  call loadkernel
+  
+  mov rdi, runnstr
+  call prints
+
 
 haltloop:
   hlt
