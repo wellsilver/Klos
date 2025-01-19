@@ -255,19 +255,17 @@ settuppaging:
   mov rax, qword [e820sizestore]
   mov cl, 24
   mul cl
-  mov qword [e820sizestore], rax
+  add rax, tempsector
+  mov r12, rax
 
   ; search for the largest spot in memory put begin=r10 end=r11
   mov r10, 0
   mov r11, 0
 .searchlargest:
   add rdi, 24
-  
-
-
   ; check if we ran out of entries to search
-  cmp qword [e820sizestore], rdi
-  jne .endsearchlargest
+  cmp r12, rdi
+  jng .endsearchlargest
   ; check if this entry is bigger than the previous largest entry, if it is record it
   cmp qword [rdi+8], r11
   jng .searchlargest
@@ -275,7 +273,7 @@ settuppaging:
   mov r11, qword [rdi+8]
   jmp .searchlargest
 .endsearchlargest:
-
+  
   ; return to normality
   mov rbp, r8
   mov rsp, r9
