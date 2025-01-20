@@ -256,7 +256,7 @@ settuppaging:
   add rax, tempsector
   mov r12, rax
 
-  ; search for the largest spot in memory put begin=r10 end=r11
+  ; search for the largest spot in memory put begin=r10 size=r11
   mov r10, 0
   mov r11, 0
 .searchlargest:
@@ -271,6 +271,9 @@ settuppaging:
   mov r11, qword [rdi+8]
   jmp .searchlargest
 .endsearchlargest:
+
+  mov rax, r10
+  add rax, r11
 
   ret
 
