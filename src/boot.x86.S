@@ -261,6 +261,9 @@ settuppaging:
   mov r11, 0
 .searchlargest:
   add rdi, 24
+  ; skip this entry if it is not free
+  cmp dword [rdi+16], 1
+  jne .searchlargest
   ; check if we ran out of entries to search
   cmp r12, rdi
   jng .endsearchlargest
