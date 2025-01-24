@@ -32,6 +32,7 @@ mov word [eax], 0x0774
 xor ax, ax
 mov ss, ax
 mov sp, 0x7C00 ; stack grows downwards from 0x7C00
+mov es, ax
 
 ; reset boot disk
 xor ah,ah
@@ -45,17 +46,10 @@ xor ax, ax
 int 14h
 
 ; load the rest of the bootloader
-mov eax, 2
-mov ecx, 4
-mov edi, 0x7E00
+mov eax, 1
+mov ecx, 5
+mov edi, 0x7C00
 call readlba
-
-;; Now we load the kernel
-; get the kfs file descriptor
-mov eax, dword [highlighted]
-mov ecx, 1
-mov edi, tempsector
-;call readlba
 
 call do_e820
 
