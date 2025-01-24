@@ -12,8 +12,12 @@ dw 2 ; version
 highlighted: dq 12 ; kernel is at 12 I hope lol
 ; ^ it is at 12 but this is reset by the disc formater
 
+discsave: db 0
+
 code:
 cld
+
+mov byte [discsave], dl
 
 mov eax, 0xB8000
 mov word [eax], 0x0762
@@ -31,10 +35,14 @@ mov sp, 0x7C00 ; stack grows downwards from 0x7C00
 
 ; reset boot disk
 xor ah,ah
-mov dl, 0x80
+mov dl, byte [discsave]
 int 13h
 cmp ah, 0
 jnz err
+
+xor dx, dx
+xor ax, ax
+int 14h
 
 ; load the rest of the bootloader
 mov eax, 2
@@ -47,7 +55,7 @@ call readlba
 mov eax, dword [highlighted]
 mov ecx, 1
 mov edi, tempsector
-call readlba
+;call readlba
 
 call do_e820
 
@@ -76,27 +84,27 @@ err:
 ; converted to int 13h so accuracy is lost idk. uses tempsector and memcopies to
 ; trashes everything
 readlba:
-  push eax
-  push ecx
   push edi
+  push ecx
+  mov ecx, 64
+  div ecx
+  mov cl, dl
+  mov ch, al
+  pop eax ; number of sectors in ah
+  pop ebx ; store the to address in ebx
 
-  
-  ; convert LBA in EAX to CHS then use ah=2 int 13h
-  mov ah, 2
-  mov dl, 0x80
+  xor dh, dh
+  mov dl, byte [discsave]
+  mov ah, 2h
+n:  hlt
+  jmp n
   int 13h
 
-  ; memcopy from tempsector to destination
-  shl ecx, 9 ; multiply by 512
-  mov eax, tempsector
-.nextbyte:
-  mov dl, byte [ecx]
-  mov byte [edi], dl
-  inc edi
-  inc ecx
-  dec ebx
-  cmp ebx, 0
-  jg .nextbyte
+  mov dx, 0
+  mov al, 'r'
+  mov ah, 1
+  int 14h
+
   ret
 
 e820sizestore: dq 0
