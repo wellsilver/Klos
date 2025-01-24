@@ -41,10 +41,6 @@ int 13h
 cmp ah, 0
 jnz err
 
-xor dx, dx
-xor ax, ax
-int 14h
-
 ; load the rest of the bootloader
 mov eax, 1
 mov ecx, 5
@@ -91,11 +87,6 @@ readlba:
   mov dl, byte [discsave]
   mov ah, 2h
   int 13h
-
-  mov dx, 0
-  mov al, 'r'
-  mov ah, 1
-  int 14h
 
   ret
 
