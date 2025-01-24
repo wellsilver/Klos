@@ -10,6 +10,7 @@ nop
 db "KFS"
 dw 2 ; version
 highlighted: dq 12 ; kernel is at 12 I hope lol
+; ^ it is at 12 but this is reset by the disc formater
 
 code:
 cld
@@ -23,9 +24,10 @@ mov word [eax], 0x076F
 add eax, 2
 mov word [eax], 0x0774
 
-xor ax, ax 
-mov ss, ax     ; setup stack
-mov sp, 0x7b0f-2 ; stack grows downwards from 0x7C00
+; setup stack
+xor ax, ax
+mov ss, ax
+mov sp, 0x7C00 ; stack grows downwards from 0x7C00
 
 ; reset boot disk
 xor ah,ah
@@ -34,21 +36,100 @@ int 13h
 cmp ah, 0
 jnz err
 
-; read the rest of the bootloader
-mov ah, 2h
-mov al, 2
-mov ch, 0 & 0xff
-mov cl, 2
-mov dh, 0
-mov dl, 0x80 ; boot disk
-mov bx, 32256
-;mov bx,  ; first byte in mem of next sector
-int 13h
+; load the rest of the bootloader
+mov eax, 2
+mov ecx, 4
+mov edi, 0x7E00
+call readlba
 
-jmp do_e820
-frome820:
+;; Now we load the kernel
+; get the kfs file descriptor
+mov eax, dword [highlighted]
+mov ecx, 1
+mov edi, tempsector
+call readlba
 
+call do_e820
 
+jmp switch32
+
+bits 16
+err:
+  mov bx, .string - 1
+  mov ah, 0xE
+.strl:
+  inc bx
+  mov al, byte [bx]
+  cmp byte [bx], 0
+  jz .loop
+  int 10h
+  jmp .strl
+.loop:
+  hlt
+  jmp .loop
+.string: db "Unsupported",0
+; ^ more playful message?
+
+; eax = lba
+; ecx = ammount of sectors
+; edi = to
+; converted to int 13h so accuracy is lost idk. uses tempsector and memcopies to
+; trashes everything
+readlba:
+  push eax
+  push ecx
+  push edi
+
+  
+  ; convert LBA in EAX to CHS then use ah=2 int 13h
+  mov ah, 2
+  mov dl, 0x80
+  int 13h
+
+  ; memcopy from tempsector to destination
+  shl ecx, 9 ; multiply by 512
+  mov eax, tempsector
+.nextbyte:
+  mov dl, byte [ecx]
+  mov byte [edi], dl
+  inc edi
+  inc ecx
+  dec ebx
+  cmp ebx, 0
+  jg .nextbyte
+  ret
+
+e820sizestore: dq 0
+; write e820 to memory so when we get to 64 bit mode can make a full one
+do_e820:
+  mov edi, tempsector
+	xor ebx, ebx		; ebx must be 0 to start
+	xor bp, bp		; keep an entry count in bp
+	mov edx, 0x0534D4150	; Place "SMAP" into edx
+	mov eax, 0xe820
+	mov ecx, 24		; ask for 24 bytes
+	int 0x15
+	jc err
+
+  xor bp, bp
+.loopu:
+  mov eax, 0xe820		; eax, ecx get trashed on every int 0x15 call
+	mov ecx, 24		; ask for 24 bytes again
+  int 0x15
+  inc bp
+  add di, 24
+  jc .end
+  jmp .loopu
+
+.end:
+  mov ax, bp
+  mov word [e820sizestore], ax
+  ret
+
+times 510-($-$$) db 1
+dw 0xAA55
+
+bits 16
 switch32:
 cli
 lgdt [GDT32.GDT_descriptor]
@@ -95,6 +176,7 @@ protected32: ; switch straight to long mode
     lgdt [GDT64.Pointer]         ; Load the 64-bit global descriptor table.
     jmp GDT64.Code:longmode      ; Set the code segment and enter 64-bit long mode.
 
+
 bits 64
 longmode:
   cli                           ; Clear the interrupt flag.
@@ -104,8 +186,6 @@ longmode:
   mov fs, ax                    ; Set the F-segment to the A-register.
   mov gs, ax                    ; Set the G-segment to the A-register.
   mov ss, ax                    ; Set the stack segment to the A-register.
-  mov rsp, 0x00000500
-  mov rbp, rsp
 
   jmp bootloader
 
@@ -169,52 +249,6 @@ GDT64: ; 64 bit gdt
     dw $ - GDT64 - 1
     dq GDT64
 
-bits 16
-err:
-  mov bx, .string - 1
-  mov ah, 0xE
-.strl:
-  inc bx
-  mov al, byte [bx]
-  cmp byte [bx], 0
-  jz .loop
-  int 10h
-  jmp .strl
-.loop:
-  hlt
-  jmp .loop
-.string: db "Unsupported",0
-; ^ more playful message?
-
-type: db 0
-
-times 510-($-$$) db 0
-dw 0xAA55
-bits 64
-
-; .call. find a type for a kfs folder entry
-; rdi=pointertofolder al=typetofind
-; returns rdi (pointer to entry in folder) garbage:bl,cl
-loopdirfindtype:
-  xor cl, cl
-.next:
-  mov bl, byte [rdi]
-  cmp bl, al
-  jz .end
-  inc cl
-  cmp cl, 20
-  jz .endmissing
-  add rdi, 25
-  jmp .next
-.end:
-  mov cl,5
-  cmp cl , 0 ; clear z flag
-  ret
-.endmissing:
-  mov cl, 5
-  cmp cl , 5 ; set z flag
-  ret
-
 ; print str vga, for debug only. garbage=rax,rbx rdi=pointertostring. string is null terminated
 prints:
   mov rax, 0xb8000
@@ -229,18 +263,6 @@ prints:
   inc rax
   cmp ch, 0
   jnz .loop
-  ret
-
-; memory copy.
-; rax = from, rbx = to, rcx = how many bytes to transfer. garbage rdx
-memcpy:
-  mov dx, word [rax]
-  mov word [rbx], dx
-  inc rax
-  inc rbx
-  dec rcx
-  cmp rcx, 0
-  jnz memcpy
   ret
 
 loadstr: db "load",0
@@ -285,14 +307,14 @@ loadkernel:
   mov rax, qword [highlighted]
   mov rcx, 1
   mov rdi, tempsector
-  call ata_lba_read
+  call 0
 
   ; get ELF header size
   mov rax, qword [tempsector+74] ; start LBA
   mov r8, rax ; save the start LBA
   mov rcx, 1
   mov rdi, tempsector
-  call ata_lba_read
+  call 0
 
   mov rax, qword [rdi+32]
   add rdi, rax
@@ -317,7 +339,7 @@ loadkernel:
   add rax, r8
   mov rcx, r13
   mov rdi, 0x100000
-  call ata_lba_read
+  call 0
 
   ret
 
@@ -326,7 +348,6 @@ bootloader:
   call prints
 
   call settuppaging
-  call loadkernel
   
   mov rdi, runnstr
   call prints
@@ -335,106 +356,6 @@ bootloader:
 haltloop:
   hlt
   jmp haltloop
-
-; from osdev
-;=============================================================================
-; ATA read sectors (LBA mode) 
-;
-; @param EAX Logical Block Address of sector
-; @param CL  Number of sectors to read
-; @param RDI The address of buffer to put data obtained from disk
-;
-; @return None
-;=============================================================================
-ata_lba_read: ; replace with a fallback to real mode so it works with every drive the bios supports
-  pushfq
-  and rax, 0x0FFFFFFF
-  push rax
-  push rbx
-  push rcx
-  push rdx
-  push rdi
-
-  mov rbx, rax         ; Save LBA in RBX
-
-  mov edx, 0x01F6      ; Port to send drive and bit 24 - 27 of LBA
-  shr eax, 24          ; Get bit 24 - 27 in al
-  or al, 11100000b     ; Set bit 6 in al for LBA mode
-  out dx, al
-
-  mov edx, 0x01F2      ; Port to send number of sectors
-  mov al, cl           ; Get number of sectors from CL
-  out dx, al
-
-  mov edx, 0x1F3       ; Port to send bit 0 - 7 of LBA
-  mov eax, ebx         ; Get LBA from EBX
-  out dx, al
-
-  mov edx, 0x1F4       ; Port to send bit 8 - 15 of LBA
-  mov eax, ebx         ; Get LBA from EBX
-  shr eax, 8           ; Get bit 8 - 15 in AL
-  out dx, al
-
-
-  mov edx, 0x1F5       ; Port to send bit 16 - 23 of LBA
-  mov eax, ebx         ; Get LBA from EBX
-  shr eax, 16          ; Get bit 16 - 23 in AL
-  out dx, al
-
-  mov edx, 0x1F7       ; Command port
-  mov al, 0x20         ; Read with retry.
-  out dx, al
-
-.still_going:  in al, dx
-  test al, 8           ; the sector buffer requires servicing.
-  jz .still_going      ; until the sector buffer is ready.
-
-  mov rax, 256         ; to read 256 words = 1 sector
-  xor bx, bx
-  mov bl, cl           ; read CL sectors
-  mul bx
-  mov rcx, rax         ; RCX is counter for INSW
-  mov rdx, 0x1F0       ; Data port, in and out
-  rep insw             ; in to [RDI]
-
-  pop rdi
-  pop rdx
-  pop rcx
-  pop rbx
-  pop rax
-  popfq
-  ret
-
-bits 16
-
-e820sizestore: dq 0
-
-; write e820 to memory so when we get to 64 bit mode can make a full one
-do_e820:
-  mov edi, tempsector
-	xor ebx, ebx		; ebx must be 0 to start
-	xor bp, bp		; keep an entry count in bp
-	mov edx, 0x0534D4150	; Place "SMAP" into edx
-	mov eax, 0xe820
-	mov ecx, 24		; ask for 24 bytes
-	int 0x15
-	jc err
-
-  xor bp, bp
-.loopu:
-  mov eax, 0xe820		; eax, ecx get trashed on every int 0x15 call
-	mov ecx, 24		; ask for 24 bytes again
-  int 0x15
-  inc bp
-  add di, 24
-  jc .end
-  jmp .loopu
-
-.end:
-  mov ax, bp
-  mov word [e820sizestore], ax
-  jmp frome820
-bits 64
 
 db "boot code end |" ; for ram dump debugging
 
