@@ -96,8 +96,6 @@ readlba:
   xor dh, dh
   mov dl, byte [discsave]
   mov ah, 2h
-n:  hlt
-  jmp n
   int 13h
 
   mov dx, 0
