@@ -73,17 +73,9 @@ err:
 ; edi = to
 ; converted to int 13h so accuracy is lost idk. uses tempsector and memcopies to edi
 ; trashes everything
-loopreadlba:
-  pop eax
-  inc eax
-  dec ecx
 
 readlba:
-  push eax
-  push edi
-  push ecx
-
-  ; eax (lba) to ecx (chs)
+  ; eax (lba) to ecx (chs) only cylinder and sector
   xor edx,edx
   mov ecx, 64
   div ecx
@@ -91,29 +83,15 @@ readlba:
   shr eax, 2
   and eax, 0xC0
   mov ch, al
+  inc cl
 
-  mov bx, 500h
+  mov ebx, 500h
   xor dh, dh
   mov dl, byte [discsave]
   mov ah, 02h
-
+  mov al, 1
   int 13h
   jz err
-
-
-  pop ecx
-  pop edi
-  mov ebx, 0x500
-.loopnxt:
-  mov dl, byte [ebx]
-  mov byte [edi], dl
-  inc ebx
-  inc edi
-  cmp ebx, 0x500+512
-  jne .loopnxt
-
-  cmp ecx, 0
-  jg loopreadlba ; loop through every sector
 
   ret
 
