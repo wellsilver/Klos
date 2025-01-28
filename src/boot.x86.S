@@ -29,8 +29,9 @@ add eax, 2
 mov word [eax], 0x0774
 
 ; clear segment registers
+; freezes wtf???
 xor ax, ax
-mov cs, ax
+;mov cs, ax
 mov ds, ax
 mov ss, ax
 mov es, ax
@@ -38,8 +39,6 @@ mov fs, ax
 mov gs, ax
 
 mov sp, 0x7C00 ; stack grows downwards from 0x7C00
-
-
 
 ; reset boot disk
 xor ah,ah
@@ -56,7 +55,8 @@ call readlba
 
 call do_e820
 
-jmp switch32
+hltloop: hlt
+jmp hltloop
 
 bits 16
 err:
