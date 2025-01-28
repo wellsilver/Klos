@@ -28,11 +28,18 @@ mov word [eax], 0x076F
 add eax, 2
 mov word [eax], 0x0774
 
-; setup stack
+; clear segment registers
 xor ax, ax
+mov cs, ax
+mov ds, ax
 mov ss, ax
-mov sp, 0x7C00 ; stack grows downwards from 0x7C00
 mov es, ax
+mov fs, ax
+mov gs, ax
+
+mov sp, 0x7C00 ; stack grows downwards from 0x7C00
+
+
 
 ; reset boot disk
 xor ah,ah
@@ -85,13 +92,16 @@ readlba:
   mov ch, al
   inc cl
 
+  xor eax, eax
+  xor edx, edx
   mov ebx, 500h
-  xor dh, dh
+
   mov dl, byte [discsave]
-  mov ah, 02h
+  mov ah, 2
   mov al, 1
+
   int 13h
-  jz err
+  jc err
 
   ret
 
