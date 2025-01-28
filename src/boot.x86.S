@@ -42,7 +42,7 @@ cmp ah, 0
 jnz err
 
 ; load the rest of the bootloader
-mov eax, 2
+mov eax, 1
 mov ecx, 4
 mov edi, 0x7E00
 call readlba
@@ -83,29 +83,33 @@ readlba:
   push edi
   push ecx
 
-  xor edx, edx
-
+  ; eax (lba) to ecx (chs)
+  xor edx,edx
   mov ecx, 64
   div ecx
   mov cl, dl
+  shr eax, 2
+  and eax, 0xC0
   mov ch, al
-  mov bx, 500h ; temporary storage
-  mov al, 1
 
+  mov bx, 500h
   xor dh, dh
   mov dl, byte [discsave]
-  mov ah, 2h
+  mov ah, 02h
+
   int 13h
+  jz err
+
 
   pop ecx
   pop edi
-  mov ebx, 500h
+  mov ebx, 0x500
 .loopnxt:
   mov dl, byte [ebx]
   mov byte [edi], dl
   inc ebx
   inc edi
-  cmp ebx, 0x700
+  cmp ebx, 0x500+512
   jne .loopnxt
 
   cmp ecx, 0
