@@ -42,9 +42,9 @@ cmp ah, 0
 jnz err
 
 ; load the rest of the bootloader
-mov eax, 1
-mov ecx, 5
-mov edi, 0x7C00
+mov eax, 2
+mov ecx, 4
+mov edi, 0x7E00
 call readlba
 
 call do_e820
@@ -71,22 +71,45 @@ err:
 ; eax = lba
 ; ecx = ammount of sectors
 ; edi = to
-; converted to int 13h so accuracy is lost idk. uses tempsector and memcopies to
+; converted to int 13h so accuracy is lost idk. uses tempsector and memcopies to edi
 ; trashes everything
+loopreadlba:
+  pop eax
+  inc eax
+  dec ecx
+
 readlba:
+  push eax
   push edi
   push ecx
+
+  xor edx, edx
+
   mov ecx, 64
   div ecx
   mov cl, dl
   mov ch, al
-  pop eax ; number of sectors in ah
-  pop ebx ; store the to address in ebx
+  mov bx, 500h ; temporary storage
+  mov al, 1
 
   xor dh, dh
   mov dl, byte [discsave]
   mov ah, 2h
   int 13h
+
+  pop ecx
+  pop edi
+  mov ebx, 500h
+.loopnxt:
+  mov dl, byte [ebx]
+  mov byte [edi], dl
+  inc ebx
+  inc edi
+  cmp ebx, 0x700
+  jne .loopnxt
+
+  cmp ecx, 0
+  jg loopreadlba ; loop through every sector
 
   ret
 
