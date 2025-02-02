@@ -2,4 +2,3 @@ out/
 qemulog.txt
 limine/
 ram.bin
-posix-uefi
