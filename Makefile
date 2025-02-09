@@ -71,6 +71,7 @@ $(out)/klos.img:
 	dd if=$(out)/efi.img of=$(out)/image.img bs=1M seek=2 conv=notrunc
 	dd if=$(out)/klos.img of=$(out)/image.img bs=1M seek=12 conv=notrunc
 # testing
+# sudo dd if=out/uefi.img of=/dev/sda
 
 qemu:
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/image.img -d int -no-reboot -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
