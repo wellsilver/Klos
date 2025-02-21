@@ -32,13 +32,29 @@ struct ioandoffset findkfs() {
   char *kfs = "KFS";
   // First search the logical partitions, it seems like computers will only create logical partition/fake drive things for the boot drive
   for (unsigned int loop=0;loop<handle_size;loop++) {
-    if (blockio[loop]->Media->LogicalPartition) {
+    if (blockio[loop]->Media->LogicalPartition && blockio[loop]->Media->MediaPresent) {
       uint8_t cache[blockio[loop]->Media->BlockSize];
       err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, 0, blockio[loop]->Media->BlockSize, &cache);
-      if (EFI_ERROR(err)) errexit("Broken disc\n");
+      if (EFI_ERROR(err)) errexit("Broken Part\n");
       if (memcmp(kfs, cache+3, 3)==0) return (struct ioandoffset) {blockio[loop], 0};
     }
   }
+  char *efiheader = "EFI PART";
+  // Time to search every drive
+  for (unsigned int loop=0;loop<handle_size;loop++) {
+    if (!blockio[loop]->Media->LogicalPartition && blockio[loop]->Media->MediaPresent) {
+      uint8_t cache[blockio[loop]->Media->BlockSize];
+      err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, 1, blockio[loop]->Media->BlockSize, &cache);
+      if (EFI_ERROR(err)) errexit("Broken drive\n");
+      if (memcmp(efiheader, cache, 8)==0) { // Valid GPT drive
+        int startlba = *((uint64_t *) (cache+0x48));
+        printf("Drive %i\n", startlba);
+        err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, startlba, blockio[loop]->Media->BlockSize, &cache);
+        if (EFI_ERROR(err)) errexit("Broken drive\n");
+      };
+    }
+  }
+
   return (struct ioandoffset) {1, 0};
 }
 
