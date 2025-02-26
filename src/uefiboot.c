@@ -14,6 +14,14 @@ void errexit(char *str) {
   exit(-1);
 }
 
+struct gptpart {
+  uint8_t typeguid[16];
+  uint8_t unique[16];
+  uint64_t start,end;
+  uint64_t attribute;
+  char name[72];
+};
+
 struct ioandoffset findkfs() {
   efi_guid_t bioGuid = EFI_BLOCK_IO_PROTOCOL_GUID;
   efi_handle_t blockiohandles[24];
@@ -35,8 +43,8 @@ struct ioandoffset findkfs() {
     if (blockio[loop]->Media->LogicalPartition && blockio[loop]->Media->MediaPresent) {
       uint8_t cache[blockio[loop]->Media->BlockSize];
       err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, 0, blockio[loop]->Media->BlockSize, &cache);
-      if (EFI_ERROR(err)) errexit("Broken Part\n");
-      if (memcmp(kfs, cache+3, 3)==0) return (struct ioandoffset) {blockio[loop], 0};
+      //if (EFI_ERROR(err)) errexit("Broken Part\n");
+      //if (memcmp(kfs, cache+3, 3)==0) return (struct ioandoffset) {blockio[loop], 0};
     }
   }
   char *efiheader = "EFI PART";
@@ -48,9 +56,10 @@ struct ioandoffset findkfs() {
       if (EFI_ERROR(err)) errexit("Broken drive\n");
       if (memcmp(efiheader, cache, 8)==0) { // Valid GPT drive
         int startlba = *((uint64_t *) (cache+0x48));
-        printf("Drive %i\n", startlba);
+        printf("Drive %i ", loop);
         err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, startlba, blockio[loop]->Media->BlockSize, &cache);
         if (EFI_ERROR(err)) errexit("Broken drive\n");
+        printf("%s\n", ((struct gptpart *) cache)[0].name);
       };
     }
   }
