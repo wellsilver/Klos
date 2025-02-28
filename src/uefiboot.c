@@ -82,6 +82,6 @@ struct ioandoffset findkfs() {
 int main(int argc, char **argv) {
   struct ioandoffset kfs = findkfs();
   if (kfs.disc == NULL) errexit("Cannot find KFS Partition\n");
-  printf("kfs: %p,%i\n");
+  printf("kfs: %p, %i\n", kfs.disc, kfs.lba);
   while (1) sleep(1);
 }
