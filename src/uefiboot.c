@@ -44,28 +44,32 @@ struct ioandoffset findkfs() {
       uint8_t cache[blockio[loop]->Media->BlockSize];
       err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, 0, blockio[loop]->Media->BlockSize, cache);
       if (EFI_ERROR(err)) errexit("Broken Part\n");
-      if (memcmp(kfs, cache+3, 3)==0) return (struct ioandoffset) {blockio[loop], 0};
+      if (memcmp(kfs, cache+3, 3)==0) return (struct ioandoffset) {blockio[loop], 0}; // Check for header
     }
   }
   char *efiheader = "EFI PART";
   // Time to search every drive
   for (unsigned int loop=0;loop<handle_size;loop++) {
     if (!blockio[loop]->Media->LogicalPartition && blockio[loop]->Media->MediaPresent) {
-      uint8_t cache[blockio[loop]->Media->BlockSize];
-      uint8_t cache2[blockio[loop]->Media->BlockSize];
+      uint8_t cache[blockio[loop]->Media->BlockSize]; // Cache for drive header
+      uint8_t cache2[blockio[loop]->Media->BlockSize]; // Cache for part header
       err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, 1, blockio[loop]->Media->BlockSize, cache);
       if (EFI_ERROR(err)) errexit("Broken drive\n");
+
       if (memcmp(efiheader, cache, 8)==0) { // Valid GPT drive
         int startlba = *((uint64_t *) (cache+0x48));
-        printf("Drive %i\n", loop);
+
         err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, startlba, blockio[loop]->Media->BlockSize, cache);
         if (EFI_ERROR(err)) errexit("Broken drive\n");
+
         efi_partition_entry_t *parts = (void *) cache;
+
         for (unsigned int partloop=0;partloop<4;partloop++) {
           if (parts[loop].PartitionTypeGUID.Data1 == 0) continue;
-          printf("> Part %i, %s\n", partloop, parts[partloop].PartitionName);
+          // Read first sector of the partition
           err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, parts[partloop].StartingLBA, blockio[loop]->Media->BlockSize, cache2);
           if (EFI_ERROR(err)) errexit("Broken drive\n");
+          // Detect kfs header
           if (memcmp(kfs, cache2+3, 3)==0) return (struct ioandoffset) {blockio[loop], parts[partloop].StartingLBA};
         }
       };
