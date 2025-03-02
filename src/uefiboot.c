@@ -6,6 +6,7 @@
 struct ioandoffset {
   efi_block_io_t *disc;
   uint64_t lba;
+  uint64_t highlighted;
 };
 
 void errexit(char *str) {
@@ -44,7 +45,7 @@ struct ioandoffset findkfs() {
       uint8_t cache[blockio[loop]->Media->BlockSize];
       err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, 0, blockio[loop]->Media->BlockSize, cache);
       if (EFI_ERROR(err)) errexit("Broken Part\n");
-      if (memcmp(kfs, cache+3, 3)==0) return (struct ioandoffset) {blockio[loop], 0}; // Check for header
+      if (memcmp(kfs, cache+3, 3)==0) return (struct ioandoffset) {blockio[loop], 0, ((struct kfs_bootsec *) cache)->highlightedfile}; // Check for header
     }
   }
   char *efiheader = "EFI PART";
@@ -70,7 +71,7 @@ struct ioandoffset findkfs() {
           err = blockio[loop]->ReadBlocks(blockio[loop], blockio[loop]->Media->MediaId, parts[partloop].StartingLBA, blockio[loop]->Media->BlockSize, cache2);
           if (EFI_ERROR(err)) errexit("Broken drive\n");
           // Detect kfs header
-          if (memcmp(kfs, cache2+3, 3)==0) return (struct ioandoffset) {blockio[loop], parts[partloop].StartingLBA};
+          if (memcmp(kfs, cache2+3, 3)==0) return (struct ioandoffset) {blockio[loop], parts[partloop].StartingLBA, ((struct kfs_bootsec *) cache2)->highlightedfile};
         }
       };
     }
@@ -82,6 +83,6 @@ struct ioandoffset findkfs() {
 int main(int argc, char **argv) {
   struct ioandoffset kfs = findkfs();
   if (kfs.disc == NULL) errexit("Cannot find KFS Partition\n");
-  printf("kfs: %p, %i\n", kfs.disc, kfs.lba);
+  printf("kfs: %p, %i, %i\n", kfs.disc, kfs.lba, kfs.highlighted);
   while (1) sleep(1);
 }
