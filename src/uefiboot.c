@@ -77,7 +77,7 @@ struct ioandoffset findkfs() {
     }
   }
 
-  return (struct ioandoffset) {NULL, 0};
+  return (struct ioandoffset) {NULL, 0, 0};
 }
 
 int main(int argc, char **argv) {
