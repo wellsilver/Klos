@@ -84,5 +84,8 @@ int main(int argc, char **argv) {
   struct ioandoffset kfs = findkfs();
   if (kfs.disc == NULL) errexit("Cannot find KFS Partition\n");
   printf("kfs: %p, %i, %i\n", kfs.disc, kfs.lba, kfs.highlighted);
+  char *cache[512];
+  kfs.disc->ReadBlocks(kfs.disc, kfs.disc->Media->MediaId, kfs.lba+kfs.highlighted, 512, &cache);
+  struct kfs_file *kernelfile = cache;
   while (1) sleep(1);
 }
