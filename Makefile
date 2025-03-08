@@ -28,7 +28,7 @@ $(out)/main.$(kerneltarget).elf:
 #kernel compilation
 
 $(out)/kernel.elf: $(kernelobjects)
-	x86_64-elf-ld -T $(src)/kernel/linker.ld $(out)/main.$(kerneltarget).elf $^ -o $(out)/kernel.elf
+	x86_64-elf-ld -T $(src)/kernel/linker.ld $(out)/main.$(kerneltarget).elf $^ -o $(out)/kernel.elf -pie
 	x86_64-elf-objdump -S -M intel -D -m i386 out/kernel.elf > out/kernel.asm
 
 $(kernelobjects): $(kernelcsources)
@@ -43,7 +43,7 @@ $(out)/%.o: $(src)/kernel/*/%.c
 
 $(out)/BOOTX64.efi:
 	clang -fshort-wchar -fno-strict-aliasing -ffreestanding -fno-stack-protector -fno-stack-check -I. -I./posix-uefi/uefi -I/usr/include -I/usr/include/efi -I/usr/include/efi/protocol -I/usr/include/efi/x86_64 -D__x86_64__ -DHAVE_USE_MS_ABI -mno-red-zone --target=x86_64-pc-win32-coff -Wno-builtin-requires-header -Wno-incompatible-library-redeclaration -Wno-long-long \
-	-c src/uefiboot.c -o out/uefiboot.o
+	-c src/uefiboot.c -o out/uefiboot.o -O0
 	lld -flavor link -subsystem:efi_application -nodefaultlib -dll -entry:uefi_init posix-uefi/uefi/*.o out/uefiboot.o -out:out/BOOTX64.EFI
 
 # make the image

@@ -84,8 +84,19 @@ int main(int argc, char **argv) {
   struct ioandoffset kfs = findkfs();
   if (kfs.disc == NULL) errexit("Cannot find KFS Partition\n");
   printf("kfs: %p, %i, %i\n", kfs.disc, kfs.lba, kfs.highlighted);
+
   char cache[512];
   kfs.disc->ReadBlocks(kfs.disc, kfs.disc->Media->MediaId, kfs.lba+kfs.highlighted, 512, &cache);
-  struct kfs_file *kernelfile = cache;
+
+  struct kfs_file *kernelfile = (void *) cache;
+  struct kfs_fileentry *entry = (void *) cache+74;
+
+  unsigned long long kernelsize = 512*(entry->end - entry->start);
+  printf("%i, %i, %u\n", entry->start, entry->end, entry->end - entry->start);
+
+  char *kernelelf = malloc(kernelsize);
+  if (kernelelf == 0) errexit("couldnt allocate space for kernel\n");
+  kfs.disc->ReadBlocks(kfs.disc, kfs.disc->Media->MediaId, kfs.lba + entry->start, kernelsize, (void *) kernelelf);
+  printf(":%s\n", kernelelf);
   while (1) sleep(1);
 }
