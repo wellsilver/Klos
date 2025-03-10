@@ -97,6 +97,21 @@ int main(int argc, char **argv) {
   char *kernelelf = malloc(kernelsize);
   if (kernelelf == 0) errexit("couldnt allocate space for kernel\n");
   kfs.disc->ReadBlocks(kfs.disc, kfs.disc->Media->MediaId, kfs.lba + entry->start, kernelsize, (void *) kernelelf);
-  printf(":%s\n", kernelelf);
+
+  // klos wants to be loaded to directly after the first megabyte, it would be really fucking epic if we could put it there in actual memory, so lets see.
+  uintn_t size = sizeof(efi_memory_descriptor_t)*128;
+  uintn_t descriptorsize = sizeof(efi_memory_descriptor_t);
+  uintn_t mapkey;
+  // get memory map size
+  efi_status_t err = BS->GetMemoryMap(&size, NULL, &mapkey, &descriptorsize, NULL);
+  if (err != EFI_BUFFER_TOO_SMALL) errexit("Couldnt get UEFI map\n");
+
+  efi_memory_descriptor_t *map = malloc(size);
+  // get memory map
+  err = BS->GetMemoryMap(&size, map, &mapkey, &descriptorsize, NULL);
+  if (EFI_ERROR(err)) errexit("Couldnt get UEFI map\n");
+  
+  printf("%i entry's\n", size / descriptorsize);
+
   while (1) sleep(1);
 }
