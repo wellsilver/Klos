@@ -106,12 +106,14 @@ int main(int argc, char **argv) {
   efi_status_t err = BS->GetMemoryMap(&size, NULL, &mapkey, &descriptorsize, NULL);
   if (err != EFI_BUFFER_TOO_SMALL) errexit("Couldnt get UEFI map\n");
 
-  efi_memory_descriptor_t *map = malloc(size);
+  efi_memory_descriptor_t *map = malloc(size + (descriptorsize*2)); // malloc() adds an entry or two
   // get memory map
   err = BS->GetMemoryMap(&size, map, &mapkey, &descriptorsize, NULL);
   if (EFI_ERROR(err)) errexit("Couldnt get UEFI map\n");
   
   printf("%i entry's\n", size / descriptorsize);
+
+  
 
   while (1) sleep(1);
 }
