@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
   kfs.disc->ReadBlocks(kfs.disc, kfs.disc->Media->MediaId, kfs.lba+kfs.highlighted, 512, &cache);
 
   struct kfs_file *kernelfile = (void *) cache;
-  struct kfs_fileentry *entry = (void *) cache+74;
+  struct kfs_fileentry *entry = (void *) cache+74; // cc keeps turning sizeof(kfs_file) into 80 instead of 74
 
   unsigned long long kernelsize = 512*(entry->end - entry->start);
   printf("%i, %i, %u\n", entry->start, entry->end, entry->end - entry->start);
@@ -106,14 +106,15 @@ int main(int argc, char **argv) {
   efi_status_t err = BS->GetMemoryMap(&size, NULL, &mapkey, &descriptorsize, NULL);
   if (err != EFI_BUFFER_TOO_SMALL) errexit("Couldnt get UEFI map\n");
 
-  efi_memory_descriptor_t *map = malloc(size + (descriptorsize*2)); // malloc() adds an entry or two
+  char map[size]; // no allocation, no memory map changes? So annoying, even posix-efi's example doesnt work because the size increases drastically after the first getmemorymap call
+  // also ovmf for some reason leaves like no extra memory, sometimes there isnt even enough to allocate this lol
+
   // get memory map
-  err = BS->GetMemoryMap(&size, map, &mapkey, &descriptorsize, NULL);
+  err = BS->GetMemoryMap(&size, (efi_memory_descriptor_t *) map, &mapkey, &descriptorsize, NULL);
+  if (err == EFI_BUFFER_TOO_SMALL) errexit("EFI Map buffer too small\n");
   if (EFI_ERROR(err)) errexit("Couldnt get UEFI map\n");
   
   printf("%i entry's\n", size / descriptorsize);
-
-  
 
   while (1) sleep(1);
 }
