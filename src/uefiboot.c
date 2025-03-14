@@ -116,5 +116,13 @@ int main(int argc, char **argv) {
   
   printf("%i entry's\n", size / descriptorsize);
 
+  printf("%p,%p\nFree memory:\n", map, map+size);
+
+  for (unsigned int loop=0;loop < size / descriptorsize;loop++) {
+    efi_memory_descriptor_t *desc = map + (loop * descriptorsize);
+    if (desc->Type == EfiConventionalMemory)
+      printf("%p -> %p\n", desc->PhysicalStart, desc->PhysicalStart+(desc->NumberOfPages*4096));
+  }
+
   while (1) sleep(1);
 }
