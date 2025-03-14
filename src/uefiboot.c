@@ -118,8 +118,9 @@ int main(int argc, char **argv) {
 
   printf("%p,%p\nFree memory:\n", map, map+size);
 
+  // I kept trying to do all of it in this for loop instead of having the second line but it kept optimizing out map lmao
   for (unsigned int loop=0;loop < size / descriptorsize;loop++) {
-    efi_memory_descriptor_t *desc = map + (loop * descriptorsize);
+    efi_memory_descriptor_t *desc = (void *) map + (loop * descriptorsize);
     if (desc->Type == EfiConventionalMemory)
       printf("%p -> %p\n", desc->PhysicalStart, desc->PhysicalStart+(desc->NumberOfPages*4096));
   }
