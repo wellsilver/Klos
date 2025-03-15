@@ -99,12 +99,12 @@ int main(int argc, char **argv) {
   kfs.disc->ReadBlocks(kfs.disc, kfs.disc->Media->MediaId, kfs.lba + entry->start, kernelsize, (void *) kernelelf);
 
   // klos wants to be loaded to directly after the first megabyte, it would be really fucking epic if we could put it there in actual memory, so lets see.
-  uintn_t size = sizeof(efi_memory_descriptor_t)*128;
+  uintn_t size = 0;
   uintn_t descriptorsize = sizeof(efi_memory_descriptor_t);
   uintn_t mapkey;
   // get memory map size
   efi_status_t err = BS->GetMemoryMap(&size, NULL, &mapkey, &descriptorsize, NULL);
-  if (err != EFI_BUFFER_TOO_SMALL) errexit("Couldnt get UEFI map\n");
+  if (err != EFI_BUFFER_TOO_SMALL) errexit("Couldnt get UEFI map size\n");
 
   char map[size]; // no allocation, no memory map changes? So annoying, even posix-efi's example doesnt work because the size increases drastically after the first getmemorymap call
   // also ovmf for some reason leaves like no extra memory, sometimes there isnt even enough to allocate this lol
@@ -116,13 +116,9 @@ int main(int argc, char **argv) {
   
   printf("%i entry's\n", size / descriptorsize);
 
-  printf("%p,%p\nFree memory:\n", map, map+size);
-
   // I kept trying to do all of it in this for loop instead of having the second line but it kept optimizing out map lmao
   for (unsigned int loop=0;loop < size / descriptorsize;loop++) {
     efi_memory_descriptor_t *desc = (void *) map + (loop * descriptorsize);
-    if (desc->Type == EfiConventionalMemory)
-      printf("%p -> %p\n", desc->PhysicalStart, desc->PhysicalStart+(desc->NumberOfPages*4096));
   }
 
   while (1) sleep(1);

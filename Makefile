@@ -70,7 +70,7 @@ $(out)/klos.img: $(out)/BOOTX64.efi $(out)/kernel.elf | $(out)
 	dd if=$(out)/efi.img of=$(out)/klos.img bs=1M seek=2 conv=notrunc
 	dd if=$(out)/kfs.img of=$(out)/klos.img bs=1M seek=12 conv=notrunc
 
-# sudo dd if=out/image.img of=/dev/sda
+# sudo dd if=out/klos.img of=/dev/sda
 
 ### UTILS
 #
@@ -80,7 +80,7 @@ $(out):
 	mkdir -p $(out)
 
 qemu:
-	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos.img -d int -no-reboot -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
+	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos.img -d int -no-reboot -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -accel kvm
 qemudebug:
 	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
 
