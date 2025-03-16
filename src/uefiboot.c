@@ -23,6 +23,10 @@ struct gptpart {
   char name[72];
 };
 
+struct memregion {
+  uint64_t base,size;
+};
+
 struct ioandoffset findkfs() {
   efi_guid_t bioGuid = EFI_BLOCK_IO_PROTOCOL_GUID;
   efi_handle_t blockiohandles[24];
@@ -80,6 +84,26 @@ struct ioandoffset findkfs() {
   return (struct ioandoffset) {NULL, 0, 0};
 }
 
+void findfreepages(unsigned int *lenfreememret, struct memregion *freemem, void *map, unsigned int loops, unsigned int descriptorsize) {
+  unsigned int lenfreemem = 0;
+
+  // I kept trying to do all of it in this for loop instead of having the second line but it kept optimizing out map lmao
+  for (unsigned int loop=0;loop < loops;loop++) {
+    efi_memory_descriptor_t *desc = (void *) map + (loop * descriptorsize);
+
+    if (desc->Type > 0 && desc->Type <= 7) {
+      if (freemem != 0) {
+        freemem[lenfreemem].base = desc->PhysicalStart;
+        freemem[lenfreemem].size = desc->NumberOfPages*4096;
+      }
+      lenfreemem++;
+    }
+  }
+  if (lenfreememret != 0) {
+    *lenfreememret = lenfreemem;
+  }
+}
+
 int main(int argc, char **argv) {
   struct ioandoffset kfs = findkfs();
   if (kfs.disc == NULL) errexit("Cannot find KFS Partition\n");
@@ -116,10 +140,18 @@ int main(int argc, char **argv) {
   
   printf("%i entry's\n", size / descriptorsize);
 
-  // I kept trying to do all of it in this for loop instead of having the second line but it kept optimizing out map lmao
-  for (unsigned int loop=0;loop < size / descriptorsize;loop++) {
-    efi_memory_descriptor_t *desc = (void *) map + (loop * descriptorsize);
+  // Since we cant allocate memory anymore (to preserve memory map) we haved to use the stack
+  unsigned int lenfree = 0;
+  findfreepages(&lenfree, NULL, map, size / descriptorsize, descriptorsize);
+  struct memregion freeregions[lenfree];
+  findfreepages(&lenfree, (struct memregion *) freeregions, map, size / descriptorsize, descriptorsize);
+  
+  for (unsigned int i = 0;i < lenfree;i++) {
+    printf("%p, %i\n", freeregions[i].base, freeregions[i].size);
   }
+
+
+  
 
   while (1) sleep(1);
 }
