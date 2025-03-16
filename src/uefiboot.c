@@ -140,17 +140,15 @@ int main(int argc, char **argv) {
   
   printf("%i entry's\n", size / descriptorsize);
 
+  // I tried to optimize this manually by having (entrypoint:)'s and having lenfree as a signed integer and stuff but it was adding to the stack in the loop even with -O0 :sob:
+
   // Since we cant allocate memory anymore (to preserve memory map) we haved to use the stack
   unsigned int lenfree = 0;
   findfreepages(&lenfree, NULL, map, size / descriptorsize, descriptorsize);
   struct memregion freeregions[lenfree];
   findfreepages(&lenfree, (struct memregion *) freeregions, map, size / descriptorsize, descriptorsize);
   
-  for (unsigned int i = 0;i < lenfree;i++) {
-    printf("%p, %i\n", freeregions[i].base, freeregions[i].size);
-  }
-
-
+  
   
 
   while (1) sleep(1);
