@@ -104,6 +104,22 @@ void findfreepages(unsigned int *lenfreememret, struct memregion *freemem, void 
   }
 }
 
+struct elf64_programheader {
+  uint32_t p_type;
+  uint32_t p_flags;
+  uint64_t p_offset; // location of segment in file
+  uint64_t p_vaddr; // segment virtual
+  uint64_t p_paddr; // segment physical
+  uint64_t p_filesz;
+  uint64_t p_memsz; // size of segment
+  uint64_t p_align;	// allignment
+};
+
+uint64_t elfgetsize(void *elfheader) {
+  struct elf64_programheader segment = *(struct elf64_programheader *) (elfheader + 32);
+  return segment.p_memsz;
+}
+
 int main(int argc, char **argv) {
   struct ioandoffset kfs = findkfs();
   if (kfs.disc == NULL) errexit("Cannot find KFS Partition\n");
@@ -148,7 +164,8 @@ int main(int argc, char **argv) {
   struct memregion freeregions[lenfree];
   findfreepages(&lenfree, (struct memregion *) freeregions, map, size / descriptorsize, descriptorsize);
   
-  
+  // get size of elf so we can find out if the right spot is free
+  uint64_t elfsize = elfgetsize(kernelelf);
   
 
   while (1) sleep(1);
