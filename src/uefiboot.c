@@ -104,6 +104,13 @@ void findfreepages(unsigned int *lenfreememret, struct memregion *freemem, void 
   }
 }
 
+unsigned int ismemfree(unsigned int lenfree, struct memregion *mem, uint64_t base, uint64_t size) {
+  // TODO add the ability to check over multiple entries
+  for (unsigned int loop=0;loop < lenfree;loop++)
+    if (mem[loop].base <= size && mem[loop].size > size) return 1;
+  return 0;
+}
+
 struct elf64_programheader {
   uint32_t p_type;
   uint32_t p_flags;
@@ -153,6 +160,11 @@ int main(int argc, char **argv) {
   err = BS->GetMemoryMap(&size, (efi_memory_descriptor_t *) map, &mapkey, &descriptorsize, NULL);
   if (err == EFI_BUFFER_TOO_SMALL) errexit("EFI Map buffer too small\n");
   if (EFI_ERROR(err)) errexit("Couldnt get UEFI map\n");
+
+  err = BS->ExitBootServices(IM, mapkey);
+  if (EFI_ERROR(err)) {
+    errexit("ExitBootServices\n");
+  }
   
   printf("%i entry's\n", size / descriptorsize);
 
@@ -166,7 +178,16 @@ int main(int argc, char **argv) {
   
   // get size of elf so we can find out if the right spot is free
   uint64_t elfsize = elfgetsize(kernelelf);
-  
+  register unsigned int debug = 0xff;
+  // Find out if we can put the kernel in real memory (we likely can, as IBM-PC compatible's will leave ~16 megabytes free at the beginning)
+  if (ismemfree(lenfree, freeregions, 0x100000, elfsize)) {
+    // Load kernel to memory
 
-  while (1) sleep(1);
+  } else {
+    // Load kernel to virtual memory
+
+  }
+
+
+  while (1) asm("hlt");
 }
