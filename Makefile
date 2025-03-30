@@ -17,7 +17,7 @@ all: run
 kernelcsources := $(shell find $(src)/kernel -name "*.c")
 kernelobjects := $(patsubst %.c, out/%.o, $(notdir $(kernelcsources)))
 kerneltarget := x86_64
-x
+
 kernelargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -Os -g -c -masm=intel -mcmodel=large -ffreestanding
 
 $(out)/main.$(kerneltarget).elf: $(src)/kernel/arch/main.$(kerneltarget).S | $(out)
