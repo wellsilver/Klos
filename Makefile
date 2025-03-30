@@ -17,14 +17,14 @@ all: run
 kernelcsources := $(shell find $(src)/kernel -name "*.c")
 kernelobjects := $(patsubst %.c, out/%.o, $(notdir $(kernelcsources)))
 kerneltarget := x86_64
-
-kernelargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -Os -g -c -masm=intel -mcmodel=large -ffreestanding -fPIE
+x
+kernelargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -Os -g -c -masm=intel -mcmodel=large -ffreestanding
 
 $(out)/main.$(kerneltarget).elf: $(src)/kernel/arch/main.$(kerneltarget).S | $(out)
 	nasm $< -f elf64 -o $(out)/main.$(kerneltarget).elf
 
 $(out)/kernel.elf: $(kernelobjects) $(out)/main.$(kerneltarget).elf | $(out)
-	x86_64-elf-ld -T $(src)/kernel/linker.ld $^ -o $(out)/kernel.elf -pie
+	x86_64-elf-ld -T $(src)/kernel/linker.ld $^ -o $(out)/kernel.elf
 	x86_64-elf-objdump -S -M intel -D -m i386 out/kernel.elf > out/kernel.asm
 
 $(out)/%.o: $(src)/kernel/%.c | $(out)
