@@ -120,7 +120,7 @@ struct elf64_programheader {
   uint64_t p_filesz;
   uint64_t p_memsz; // size of segment
   uint64_t p_align;	// allignment
-};
+} __attribute__((packed));
 
 uint64_t elfgetsize(void *elfheader) {
   struct elf64_programheader segment = *(struct elf64_programheader *) (elfheader + 32);
@@ -176,10 +176,12 @@ int main(int argc, char **argv) {
   struct memregion freeregions[lenfree];
   findfreepages(&lenfree, (struct memregion *) freeregions, map, size / descriptorsize, descriptorsize);
   
+  void *kernelentry;
+
   // get size of elf so we can find out if the right spot is free
   uint64_t elfsize = elfgetsize(kernelelf);
   register unsigned int debug = 0xff;
-  // Find out if we can put the kernel in real memory (we likely can, as IBM-PC compatible's will leave ~16 megabytes free at the beginning)
+  // Find out if we can put the kernel in real memory (as theres almost allways 16 megabytes free at the beginning)
   if (ismemfree(lenfree, freeregions, 0x100000, elfsize)) {
     // Load kernel to memory
 
