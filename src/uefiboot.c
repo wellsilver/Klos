@@ -111,6 +111,23 @@ unsigned int ismemfree(unsigned int lenfree, struct memregion *mem, uint64_t bas
   return 0;
 }
 
+struct elf64_ehdr {
+  uint8_t  e_ident[16];   /* Magic number and other info */
+  uint16_t e_type;        /* Object file type */
+  uint16_t e_machine;     /* Architecture */
+  uint32_t e_version;     /* Object file version */
+  uint64_t e_entry;       /* Entry point virtual address */
+  uint64_t e_phoff;       /* Program header table file offset */
+  uint64_t e_shoff;       /* Section header table file offset */
+  uint32_t e_flags;       /* Processor-specific flags */
+  uint16_t e_ehsize;      /* ELF header size in bytes */
+  uint16_t e_phentsize;   /* Program header table entry size */
+  uint16_t e_phnum;       /* Program header table entry count */
+  uint16_t e_shentsize;   /* Section header table entry size */
+  uint16_t e_shnum;       /* Section header table entry count */
+  uint16_t e_shstrndx;    /* Section header string table index */
+} __attribute__((packed));
+
 struct elf64_programheader {
   uint32_t p_type;
   uint32_t p_flags;
@@ -122,9 +139,16 @@ struct elf64_programheader {
   uint64_t p_align;	// allignment
 } __attribute__((packed));
 
-uint64_t elfgetsize(void *elfheader) {
-  struct elf64_programheader segment = *(struct elf64_programheader *) (elfheader + 32);
+uint64_t elfgetsize(void *file) {
+  struct elf64_ehdr *header = file;
+  struct elf64_programheader segment = *(struct elf64_programheader *) (header->e_phoff);
   return segment.p_memsz;
+}
+
+uint64_t elfgetpos(void *file) {
+  struct elf64_ehdr *header = file;
+  struct elf64_programheader segment = *(struct elf64_programheader *) (header->e_phoff);
+  return segment.p_offset;
 }
 
 int main(int argc, char **argv) {
@@ -160,14 +184,13 @@ int main(int argc, char **argv) {
   err = BS->GetMemoryMap(&size, (efi_memory_descriptor_t *) map, &mapkey, &descriptorsize, NULL);
   if (err == EFI_BUFFER_TOO_SMALL) errexit("EFI Map buffer too small\n");
   if (EFI_ERROR(err)) errexit("Couldnt get UEFI map\n");
-
+  
+  /*
   err = BS->ExitBootServices(IM, mapkey);
   if (EFI_ERROR(err)) {
     errexit("ExitBootServices\n");
-  }
+  }*/
   
-  printf("%i entry's\n", size / descriptorsize);
-
   // I tried to optimize this manually by having (entrypoint:)'s and having lenfree as a signed integer and stuff but it was adding to the stack in the loop even with -O0 :sob:
 
   // Since we cant allocate memory anymore (to preserve memory map) we haved to use the stack
@@ -176,7 +199,7 @@ int main(int argc, char **argv) {
   struct memregion freeregions[lenfree];
   findfreepages(&lenfree, (struct memregion *) freeregions, map, size / descriptorsize, descriptorsize);
   
-  void *kernelentry;
+  void *kernelentry = ((struct elf64_ehdr *) kernelelf)->e_entry;
 
   // get size of elf so we can find out if the right spot is free
   uint64_t elfsize = elfgetsize(kernelelf);
@@ -184,7 +207,12 @@ int main(int argc, char **argv) {
   // Find out if we can put the kernel in real memory (as theres almost allways 16 megabytes free at the beginning)
   if (ismemfree(lenfree, freeregions, 0x100000, elfsize)) {
     // Load kernel to memory
-
+    memcpy(0x100000, kernelelf + elfgetpos(kernelelf), elfgetsize(kernelelf));
+    int (*kernel)(void) = kernelentry;
+    
+    printf("%p\n", kernel);
+    int a = kernel();
+    printf("%i\n", a);
   } else {
     // Load kernel to virtual memory
 
