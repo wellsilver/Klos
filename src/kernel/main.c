@@ -3,8 +3,8 @@
 #include <memory/mem.h>
 #include <int.h>
 
-int kernel() {
+void kernel() {
 
-  return 1;
+
   while (1) asm("hlt");
 }

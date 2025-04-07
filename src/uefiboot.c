@@ -141,8 +141,8 @@ struct elf64_programheader {
 
 uint64_t elfgetsize(void *file) {
   struct elf64_ehdr *header = file;
-  struct elf64_programheader segment = *(struct elf64_programheader *) (header->e_phoff);
-  return segment.p_memsz;
+  struct elf64_programheader *segment = file + header->e_phoff;
+  return segment->p_memsz;
 }
 
 uint64_t elfgetpos(void *file) {
@@ -185,11 +185,6 @@ int main(int argc, char **argv) {
   if (err == EFI_BUFFER_TOO_SMALL) errexit("EFI Map buffer too small\n");
   if (EFI_ERROR(err)) errexit("Couldnt get UEFI map\n");
   
-  /*
-  err = BS->ExitBootServices(IM, mapkey);
-  if (EFI_ERROR(err)) {
-    errexit("ExitBootServices\n");
-  }*/
   
   // I tried to optimize this manually by having (entrypoint:)'s and having lenfree as a signed integer and stuff but it was adding to the stack in the loop even with -O0 :sob:
 
@@ -207,12 +202,12 @@ int main(int argc, char **argv) {
   // Find out if we can put the kernel in real memory (as theres almost allways 16 megabytes free at the beginning)
   if (ismemfree(lenfree, freeregions, 0x100000, elfsize)) {
     // Load kernel to memory
-    memcpy(0x100000, kernelelf + elfgetpos(kernelelf), elfgetsize(kernelelf));
-    int (*kernel)(void) = kernelentry;
+    memcpy(0x100000, kernelelf + elfgetpos(kernelelf), elfsize);
     
-    printf("%p\n", kernel);
-    int a = kernel();
-    printf("%i\n", a);
+    err = BS->ExitBootServices(IM, mapkey);
+    if (EFI_ERROR(err)) {
+      errexit("ExitBootServices\n");
+    }
   } else {
     // Load kernel to virtual memory
 
