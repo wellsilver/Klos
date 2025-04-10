@@ -147,8 +147,8 @@ uint64_t elfgetsize(void *file) {
 
 uint64_t elfgetpos(void *file) {
   struct elf64_ehdr *header = file;
-  struct elf64_programheader segment = *(struct elf64_programheader *) (header->e_phoff);
-  return segment.p_offset;
+  struct elf64_programheader *segment = (struct elf64_programheader *) (header->e_phoff + file);
+  return segment->p_offset;
 }
 
 int main(int argc, char **argv) {
@@ -184,7 +184,6 @@ int main(int argc, char **argv) {
   err = BS->GetMemoryMap(&size, (efi_memory_descriptor_t *) map, &mapkey, &descriptorsize, NULL);
   if (err == EFI_BUFFER_TOO_SMALL) errexit("EFI Map buffer too small\n");
   if (EFI_ERROR(err)) errexit("Couldnt get UEFI map\n");
-  
   
   // I tried to optimize this manually by having (entrypoint:)'s and having lenfree as a signed integer and stuff but it was adding to the stack in the loop even with -O0 :sob:
 
