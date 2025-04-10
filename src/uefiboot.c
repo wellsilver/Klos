@@ -207,6 +207,8 @@ int main(int argc, char **argv) {
     if (EFI_ERROR(err)) {
       errexit("ExitBootServices\n");
     }
+
+    asm("jmp *%0" : : "r" (kernelentry));
   } else {
     // Load kernel to virtual memory
 
