@@ -25,7 +25,7 @@ struct gptpart {
 
 struct memregion {
   uint64_t base,size;
-};
+} __attribute__((packed));
 
 struct ioandoffset findkfs() {
   efi_guid_t bioGuid = EFI_BLOCK_IO_PROTOCOL_GUID;
@@ -202,13 +202,16 @@ int main(int argc, char **argv) {
   if (ismemfree(lenfree, freeregions, 0x100000, elfsize)) {
     // Load kernel to memory
     memcpy(0x100000, kernelelf + elfgetpos(kernelelf), elfsize);
-    
+
+    printf("%p\n", kernelentry);
+
     err = BS->ExitBootServices(IM, mapkey);
     if (EFI_ERROR(err)) {
       errexit("ExitBootServices\n");
     }
-
-    asm("jmp *%0" : : "r" (kernelentry));
+    
+    void (*kernel)(void *, unsigned int) = kernelentry;
+    kernel(freeregions, lenfree);
   } else {
     // Load kernel to virtual memory
 

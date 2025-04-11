@@ -3,8 +3,8 @@
 #include <memory/mem.h>
 #include <int.h>
 
-void kernel() {
-
+void kernel(struct memregion *freemem, uint lenfreemem) {
+  
 
   while (1) asm("hlt");
 }

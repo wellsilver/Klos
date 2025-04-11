@@ -3,6 +3,8 @@
 #ifndef _STDINT_H
 #define _STDINT_H 1
 
+#define PACKED __attribute__((packed))
+
 typedef unsigned int uint;
 typedef unsigned long long ulong;
 
