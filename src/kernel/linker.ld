@@ -5,7 +5,8 @@ ENTRY("entry")
 SECTIONS
 {
   . = 0x100000;
-  .text : { *(.text.entry) *(.text) }
+  .asm : { *(.asm) }
+  .text : { *(.text) }
   .data : { *(.data) }
   .bss : { *(.bss) }
   

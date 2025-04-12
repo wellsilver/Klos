@@ -203,15 +203,13 @@ int main(int argc, char **argv) {
     // Load kernel to memory
     memcpy(0x100000, kernelelf + elfgetpos(kernelelf), elfsize);
 
-    printf("%p\n", kernelentry);
-
     err = BS->ExitBootServices(IM, mapkey);
     if (EFI_ERROR(err)) {
       errexit("ExitBootServices\n");
     }
     
-    void (*kernel)(void *, unsigned int) = kernelentry;
-    kernel(freeregions, lenfree);
+    __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = kernelentry;
+    kernel(0x100000, freeregions, lenfree);
   } else {
     // Load kernel to virtual memory
 
