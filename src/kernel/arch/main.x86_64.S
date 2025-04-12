@@ -32,7 +32,6 @@ entry:
   add rax, gdtptr - 0x100000
   lgdt [rax]
 
-  ; setup a new page map
 
   ; flush cache writes for coproccessors (is this a good idea?)
   wbnoinvd
