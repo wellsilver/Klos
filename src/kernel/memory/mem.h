@@ -7,7 +7,7 @@ struct memregion {
   uint64_t base,size;
 } PACKED;
 
-extern void meminit(struct memregion, uint len);
+extern void meminit(struct memregion *, uint len);
 
 
 #endif
