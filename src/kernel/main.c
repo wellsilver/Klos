@@ -3,7 +3,7 @@
 #include <memory/mem.h>
 #include <int.h>
 
-void kernel(void *kernellocation, struct memregion *freemem, uint lenfreemem) {
+void kernel(void *kernellocation, void *pagemap, struct memregion *freemem, uint lenfreemem) {
   
 
   while (1) asm("hlt");

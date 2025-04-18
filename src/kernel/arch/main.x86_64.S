@@ -10,11 +10,15 @@ extern stackend
 
 ; kernel should be capable of fully loading itself with just the entry point, memory map and kernel in memory
 ; setup before kernel. This is just undoing all the uefi (or other bootloader) set stuff before actually entering kernel
-; Do not touch rdi, rsi, rdx (they contain Sysv function parameters for kernel)
+; Do not touch rdi, rsi, rdx, r8 (they contain Sysv function parameters for kernel)
 entry:
   ; stack setup, space is reserved by the linker script
   mov rsp, stackend
   dec rsp
+
+  ; new pagetable (created by bootloader, maintained by kernel)
+  mov rax, rsi
+  mov cr3, rax
 
   ; ensure cache is enabled, write protect enabled
   mov rax, cr0

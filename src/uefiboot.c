@@ -151,6 +151,28 @@ uint64_t elfgetpos(void *file) {
   return segment->p_offset;
 }
 
+// Create a page map for the kernel with 2 spare maps (kernel, and data)
+void makepagemap(uint64_t *start) {
+  // LEVEL 4
+  start[0] = start+0x1000;
+  for (unsigned int loop=1;loop<512;loop++)
+    start[loop] = 0;
+  start += 0x1000;
+  // LEVEL 3
+  start[0] = start+0x1000;
+  for (unsigned int loop=1;loop<512;loop++)
+    start[loop] = 0;
+  start += 0x1000;
+  // LEVEL 2 (2 megabyte pages, kernel addresses real memory)
+  for (unsigned int loop=0;loop<512;loop++)
+    start[loop] = (loop << 21) | (1 << 0) | (1 << 7);
+  start += 0x1000;
+  // Next PML2 exists (for data)
+  for (unsigned int loop=0;loop<512;loop++) {
+    start[loop] = 0;
+  }
+}
+
 int main(int argc, char **argv) {
   struct ioandoffset kfs = findkfs();
   if (kfs.disc == NULL) errexit("Cannot find KFS Partition\n");
@@ -198,18 +220,22 @@ int main(int argc, char **argv) {
   // get size of elf so we can find out if the right spot is free
   uint64_t elfsize = elfgetsize(kernelelf);
   register unsigned int debug = 0xff;
-  // Find out if we can put the kernel in real memory (as theres almost allways 16 megabytes free at the beginning)
-  if (ismemfree(lenfree, freeregions, 0x100000, elfsize)) {
+  // Find out if we can put the kernel in real memory
+  if (ismemfree(lenfree, freeregions, 0x1000, elfsize + 0x4000)) { /* kernel then 4 pages */
     // Load kernel to memory
-    memcpy(0x100000, kernelelf + elfgetpos(kernelelf), elfsize);
+    memcpy(0x1000, kernelelf + elfgetpos(kernelelf), elfsize);
+    // Create pagemap for kernel
+    // Pagemap location
+    uint64_t pagemap = 0x1000 + ((elfsize + 0xfff) - ((elfsize + 0xfff) % 0x1000));
+    makepagemap(pagemap);
 
     err = BS->ExitBootServices(IM, mapkey);
     if (EFI_ERROR(err)) {
       errexit("ExitBootServices\n");
     }
     
-    __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = kernelentry;
-    kernel(0x100000, freeregions, lenfree);
+    __attribute__((sysv_abi)) void (*kernel)(void *, void *, void *, unsigned int) = kernelentry;
+    kernel(0x100000, pagemap, freeregions, lenfree);
   } else {
     // Load kernel to virtual memory
 
