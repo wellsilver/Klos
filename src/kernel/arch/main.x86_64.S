@@ -16,10 +16,6 @@ entry:
   mov rsp, stackend
   dec rsp
 
-  ; new pagetable (created by bootloader, maintained by kernel)
-  mov rax, rsi
-  mov cr3, rax
-
   ; ensure cache is enabled, write protect enabled
   mov rax, cr0
   or rax, 1 << 16 ; enable write protect
