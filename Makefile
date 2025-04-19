@@ -6,7 +6,7 @@ CC   = x86_64-elf-gcc
 
 build: $(out)/klos.img
 run: build qemu
-debug: build qemu-debug
+debug: build qemudebug
 
 all: run
 
@@ -82,7 +82,7 @@ $(out):
 qemu:
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos.img -d int -no-reboot -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -accel kvm
 qemudebug:
-	qemu-system-x86_64 -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
+	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
 
 clean:
 	rm -rf $(out)
