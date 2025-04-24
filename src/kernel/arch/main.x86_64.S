@@ -7,6 +7,7 @@ section .asm
 global entry
 extern kernel
 extern stackend
+extern pagemap
 
 ; kernel should be capable of fully loading itself with just the entry point, memory map and kernel in memory
 ; setup before kernel. This is just undoing all the uefi (or other bootloader) set stuff before actually entering kernel
@@ -24,14 +25,14 @@ entry:
 
   ; new IDT
   mov rax, rdi
-  add rax, idtptr - 0x100000
+  add rax, idtptr-0x1000
   lidt [rax]
 
   ; new GDT
   mov rax, rdi
-  add rax, gdtptr - 0x100000
+  add rax, gdtptr-0x1000
   lgdt [rax]
-
+  
 
   ; flush cache writes for coproccessors (is this a good idea?)
   wbnoinvd
@@ -53,5 +54,9 @@ gdtptr:
   dq gdt64
 
 gdt64:
-  times 16 dq 0
+  dq 0 ; null
+  .code: equ $ - gdt64
+    dq (1<<44) | (1<<47) | (1<<41) | (1<<43) | (1<<53)
+  .data: equ $ - gdt64
+    dq (1<<44) | (1<<47) | (1<<41)
 .end:

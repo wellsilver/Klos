@@ -211,7 +211,7 @@ int main(int argc, char **argv) {
     }
     
     __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = kernelentry;
-    kernel(0x100000, freeregions, lenfree);
+    kernel(0x1000, freeregions, lenfree);
   } else {
     // Load kernel to virtual memory
 
