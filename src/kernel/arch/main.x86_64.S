@@ -23,6 +23,7 @@ entry:
   and rax, ~(1 << 30) ; zero cache disable bit (if cr0.cd is zero then cache is enabled)
   mov cr0, rax
 
+  ; if not working after being loaded to virtual memory, it is because idtptr and gdtptr are not adjusted
   ; new IDT
   mov rax, rdi
   add rax, idtptr-0x1000
@@ -43,7 +44,7 @@ entryend:
 
 idtptr:
   dw (idt64.end - idt64) - 1
-  dq idt64
+.ptr:  dq idt64
 
 idt64:
   times 256 dq 0
@@ -51,7 +52,7 @@ idt64:
 
 gdtptr:
   dw (gdt64.end - gdt64) - 1
-  dq gdt64
+.ptr:  dq gdt64
 
 gdt64:
   dq 0 ; null
