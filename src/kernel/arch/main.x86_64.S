@@ -34,6 +34,7 @@ entry:
   add rax, gdtptr-0x1000
   lgdt [rax]
   
+  call newcr3
 
   ; flush cache writes for coproccessors (is this a good idea?)
   wbnoinvd
@@ -41,6 +42,10 @@ entry:
   jmp kernel
 
 entryend:
+
+newcr3:
+
+  ret
 
 idtptr:
   dw (idt64.end - idt64) - 1
