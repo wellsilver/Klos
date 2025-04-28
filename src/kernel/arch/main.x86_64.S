@@ -34,6 +34,7 @@ entry:
   add rax, gdtptr-0x1000
   lgdt [rax]
   
+  ; create a new page map
   call newcr3
 
   ; flush cache writes for coproccessors (is this a good idea?)
@@ -44,7 +45,9 @@ entry:
 entryend:
 
 newcr3:
-
+  ; get addr
+  mov rbx, rdi
+  add rbx. pagemap-0x1000
   ret
 
 idtptr:
