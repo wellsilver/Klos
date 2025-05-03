@@ -48,6 +48,20 @@ newcr3:
   ; get addr
   mov rbx, rdi
   add rbx. pagemap-0x1000
+
+  call cr3pageclear
+
+  
+
+  ret
+
+cr3pageclear:
+  mov rax, 0
+  mov rcx, 0
+.next:
+  add rbx, 8
+  mov qword [rbx], rax
+  loop cr3pageclear
   ret
 
 idtptr:
