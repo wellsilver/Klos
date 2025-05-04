@@ -44,24 +44,66 @@ entry:
 
 entryend:
 
+; pagemap (1 l4, 2 l3, 2 l2)
 newcr3:
   ; get addr
   mov rbx, rdi
-  add rbx. pagemap-0x1000
+  add rbx, pagemap - 0x1000
 
+  ;clear pml4
   call cr3pageclear
+  ;pointer to l3
+  mov qword [rbx], rax
 
+  ;clear l3 1
+  add rbx, 0x1000
+  call cr3pageclear
+  mov rax, rbx
+  add rax, 0x2000 ; first l2
+  mov qword [rbx], rax
+
+  ;clear l3 2
+  add rbx, 0x1000
+  call cr3pageclear
+  mov rax, rbx
+  add rax, 0x2000 ; second l2
+  mov qword [rbx], rax
+
+  ;setup l2 1
+  add rbx, 0x1000
+  call cr3pageset
   
+  ;setup l2 2
+  add rbx, 0x1000
+  call cr3pageset
 
   ret
 
-cr3pageclear:
-  mov rax, 0
-  mov rcx, 0
+; trash rcx; rbx = addr, rax = starting address for l2 pages
+cr3pageset:
+  push rbx
+  mov rcx, 512
+  or rax, 1 | 1<<7
+
 .next:
-  add rbx, 8
   mov qword [rbx], rax
-  loop cr3pageclear
+  add rax, 0x200000
+  add rbx, 8
+  loop .next
+
+  pop rbx
+  ret
+
+; trash rax, rcx; rbx is area to clear
+cr3pageclear:
+  push rbx
+  mov rax, 0
+  mov rcx, 512
+.next:
+  mov qword [rbx], rax
+  add rbx, 8
+  loop .next
+  pop rbx
   ret
 
 idtptr:
