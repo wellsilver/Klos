@@ -12,16 +12,11 @@ extern pagemap
 ; kernel should be capable of fully loading itself with just the entry point, memory map and kernel in memory
 ; setup before kernel. This is just undoing all the uefi (or other bootloader) set stuff before actually entering kernel
 ; Do not touch rdi, rsi, rdx, r8 (they contain Sysv function parameters for kernel)
+; Operates in real memory, rip uknown, uses argument in rdi to map virtual memory for c code
 entry:
   ; stack setup, space is reserved by the linker script
   mov rsp, stackend
   dec rsp
-
-  ; ensure cache is enabled, write protect enabled
-  mov rax, cr0
-  or rax, 1 << 16 ; enable write protect
-  and rax, ~(1 << 30) ; zero cache disable bit (if cr0.cd is zero then cache is enabled)
-  mov cr0, rax
 
   ; if not working after being loaded to virtual memory, it is because idtptr and gdtptr are not adjusted
   ; new IDT
@@ -37,6 +32,12 @@ entry:
   ; create a new page map
   call newcr3
 
+  ; ensure cache is enabled, write protect enabled
+  mov rax, cr0
+  or rax, 1 << 16 ; enable write protect
+  and rax, ~(1 << 30) ; zero cache disable bit (if cr0.cd is zero then cache is enabled)
+  mov cr0, rax
+
   ; flush cache writes for coproccessors (is this a good idea?)
   wbnoinvd
 
@@ -49,37 +50,13 @@ newcr3:
   ; get addr
   mov rbx, rdi
   add rbx, pagemap - 0x1000
-
-  ;clear pml4
-  call cr3pageclear
-  ;pointer to l3
-  mov qword [rbx], rax
-
-  ;clear l3 1
-  add rbx, 0x1000
-  call cr3pageclear
-  mov rax, rbx
-  add rax, 0x2000 ; first l2
-  mov qword [rbx], rax
-
-  ;clear l3 2
-  add rbx, 0x1000
-  call cr3pageclear
-  mov rax, rbx
-  add rax, 0x2000 ; second l2
-  mov qword [rbx], rax
-
-  ;setup l2 1
-  add rbx, 0x1000
-  call cr3pageset
+  ; l4 = rbx, l3 1 = rbx+0x1000, l3 2 = rbx+0x2000, l2 1 = rbx+0x3000, l2 2 = rbx+0x4000
+  ; l3 1 and l2 1 are for this code
+  ; l3 2 and l2 2 are for data
   
-  ;setup l2 2
-  add rbx, 0x1000
-  call cr3pageset
-
   ret
-
-; trash rcx; rbx = addr, rax = starting address for l2 pages
+  
+; trash rcx; rbx = addr, rax = starting address for l2 pages. rbx is saved, rax is not
 cr3pageset:
   push rbx
   mov rcx, 512
@@ -125,3 +102,5 @@ gdt64:
   .data: equ $ - gdt64
     dq (1<<44) | (1<<47) | (1<<41)
 .end:
+
+times 4096-($-$$) nop
