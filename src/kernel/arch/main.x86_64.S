@@ -53,35 +53,9 @@ newcr3:
   ; l4 = rbx, l3 1 = rbx+0x1000, l3 2 = rbx+0x2000, l2 1 = rbx+0x3000, l2 2 = rbx+0x4000
   ; l3 1 and l2 1 are for this code
   ; l3 2 and l2 2 are for data
+  ; all memory is mapped to real memory
   
-  ret
-  
-; trash rcx; rbx = addr, rax = starting address for l2 pages. rbx is saved, rax is not
-cr3pageset:
-  push rbx
-  mov rcx, 512
-  or rax, 1 | 1<<7
-
-.next:
-  mov qword [rbx], rax
-  add rax, 0x200000
-  add rbx, 8
-  loop .next
-
-  pop rbx
-  ret
-
-; trash rax, rcx; rbx is area to clear
-cr3pageclear:
-  push rbx
   mov rax, 0
-  mov rcx, 512
-.next:
-  mov qword [rbx], rax
-  add rbx, 8
-  loop .next
-  pop rbx
-  ret
 
 idtptr:
   dw (idt64.end - idt64) - 1

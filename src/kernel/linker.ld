@@ -4,7 +4,7 @@ ENTRY("entry")
 
 SECTIONS
 {
-  . = 0x1000;
+  . = 0x800000000000;
   .asm : { *(.asm) }
   .text : { *(.text) }
   .data : { *(.data) }
