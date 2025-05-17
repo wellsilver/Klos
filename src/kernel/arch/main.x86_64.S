@@ -49,13 +49,14 @@ entryend:
 newcr3:
   ; get addr
   mov rbx, rdi
-  add rbx, pagemap - 0x1000
+  hlt
+  add rbx, pagemap - 0xFF8000000000
   push rbx
   ; l4 = rbx, l3 1 = rbx+0x1000, l3 2 = rbx+0x2000, l2 1 = rbx+0x3000, l2 2 = rbx+0x4000
   ; l3 1 and l2 1 are for this code
-  ; l3 2 and l2 2 are for data
+  ; l3 2 and l2 2 are for data (and set by the pagefault handler)
   ; all memory is mapped to real memory
-  ; kernel is mapped to 0xFF8000000000
+  ; kernel is mapped to 0xFF8000000000 (l4 512 l3 0 l2 0)
   
   ;; map kernel
   ; l4 (kernel map) to first l3
@@ -65,10 +66,18 @@ newcr3:
   mov qword [rbx], rax
   ; l3 to l2
   mov rbx, qword [rsp+8] ; restore rbx to the page table base
-  add rbx, 0x3000 | 1
-  mov rax, rdi
-  or rax, 1 | 1 << 7 ; 2 megabyte pages
-  mov qword [rbx], rax ; map 2 megabytes of kernel space to where the kernel is
+  add rbx, 0x1000
+  mov rax, rbx
+  add rax, 0x3000
+  or rax, 1
+  mov qword [rbx], rax ; map the level 3 entry to the level 2 entry
+  ; l2 to mem
+  pop rbx ; restore rbx to page table base
+  mov rax, rbx
+  add rax, 0x3000
+  or rax, 1 | 1<<7
+  mov qword [rbx], rax
+
   hlt
 
   ret
