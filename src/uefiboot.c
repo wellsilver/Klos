@@ -192,8 +192,6 @@ int main(int argc, char **argv) {
   findfreepages(&lenfree, NULL, map, size / descriptorsize, descriptorsize);
   struct memregion freeregions[lenfree];
   findfreepages(&lenfree, (struct memregion *) freeregions, map, size / descriptorsize, descriptorsize);
-  
-  void *kernelentry = ((struct elf64_ehdr *) kernelelf)->e_entry;
 
   // get size of elf so we can find out if the right spot is free
   uint64_t elfsize = elfgetsize(kernelelf);
@@ -210,7 +208,7 @@ int main(int argc, char **argv) {
       errexit("ExitBootServices\n");
     }
     
-    __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = kernelentry;
+    __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = 0x1000;
     kernel(0x1000, freeregions, lenfree);
   } else {
     // Load kernel to virtual memory
