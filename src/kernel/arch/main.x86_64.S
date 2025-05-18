@@ -22,17 +22,26 @@ entry:
   mov rax, rdi
   mov rbx, rdi
   add rbx, idt64  - 0xFF8000000000
-  add rax, idtptr - 0xFF8000000000
+  add rax, idtptr - 0xFF8000000000 + 2
   mov qword [rax], rbx
+  sub rax, 2
   lidt [rax]
 
   ; new GDT
   mov rax, rdi
   mov rbx, rdi
   add rbx, gdt64  - 0xFF8000000000
-  add rax, gdtptr - 0xFF8000000000
+  add rax, gdtptr - 0xFF8000000000 + 2
   mov qword [rax], rbx
+  sub rax, 2
   lgdt [rax]
+  
+  ; setup tss in GDT
+  mov rax, rdi
+  add rax, tss64 - 0xFF8000000000
+  
+
+  hlt
   
   ; create a new page map
   call newcr3
@@ -100,11 +109,19 @@ gdtptr:
 .ptr:  dq gdt64
 
 gdt64:
-  dq 0 ; null
+  .null:
+    dq 0 ; null
   .code: equ $ - gdt64
     dq (1<<44) | (1<<47) | (1<<41) | (1<<43) | (1<<53)
   .data: equ $ - gdt64
     dq (1<<44) | (1<<47) | (1<<41)
+  .tss: equ $ - gdt64
+    dq 0
+    dq 0
+.end:
+
+tss64:
+  times 0x68 db 0
 .end:
 
 times 4096-($-$$) nop
