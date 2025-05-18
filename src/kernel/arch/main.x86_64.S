@@ -21,12 +21,12 @@ entry:
   ; if not working after being loaded to virtual memory, it is because idtptr and gdtptr are not adjusted
   ; new IDT
   mov rax, rdi
-  add rax, idtptr-0x1000
+  add rax, idtptr - 0xFF8000000000
   lidt [rax]
 
   ; new GDT
   mov rax, rdi
-  add rax, gdtptr-0x1000
+  add rax, gdtptr - 0xFF8000000000
   lgdt [rax]
   
   ; create a new page map
