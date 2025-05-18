@@ -18,15 +18,20 @@ entry:
   mov rsp, stackend
   dec rsp
 
-  ; if not working after being loaded to virtual memory, it is because idtptr and gdtptr are not adjusted
   ; new IDT
   mov rax, rdi
+  mov rbx, rdi
+  add rbx, idt64  - 0xFF8000000000
   add rax, idtptr - 0xFF8000000000
+  mov qword [rax], rbx
   lidt [rax]
 
   ; new GDT
   mov rax, rdi
+  mov rbx, rdi
+  add rbx, gdt64  - 0xFF8000000000
   add rax, gdtptr - 0xFF8000000000
+  mov qword [rax], rbx
   lgdt [rax]
   
   ; create a new page map
