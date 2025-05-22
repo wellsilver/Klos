@@ -13,9 +13,10 @@ extern pagemap
 ; setup before kernel. This is just undoing all the uefi (or other bootloader) set stuff before actually entering kernel
 ; Do not touch rdi, rsi, rdx, r8 (they contain Sysv function parameters for kernel)
 ; Operates in real memory, rip uknown, uses argument in rdi to map virtual memory for c code
+; TODO replace all mov register, rdi with lea register, [rel memloc]
 entry:
   ; stack setup, space is reserved by the linker script
-  mov rsp, stackend
+  lea rsp, [rel stackend]
   dec rsp
 
   ; new IDT
@@ -34,14 +35,40 @@ entry:
   add rax, gdtptr - 0xFF8000000000 + 2
   mov qword [rax], rbx
   sub rax, 2
-  lgdt [rax]
+  push rax ; only lgdt after setting up the tss
   
   ; setup tss in GDT
   mov rax, rdi
   add rax, tss64 - 0xFF8000000000
+  add rbx, 24 ; rbx is still at the gdt base
+  mov word [rbx], 0x67; size of long mode TSS (set tss.limit)
+  add rbx, 2 ; to tss.base(bits 0->16)
+  mov word [rbx], ax ; write to tss.base(bits 0->16)
+  shl rax, 16
+  add rbx, 3 ; to the access byte
+  mov word [rbx], 0x09 | 1<<7 ; write the access byte
+  add rbx, 2 ; to tss.base(bits 16->64)
+  mov dword [rbx], eax ; write to tss.base(bits 16->64) but writes only 32 bits as only 48 bits (16+32) supported
   
+  pop rax
+  lgdt [rax]
 
-  hlt
+  ; setup GDT
+  push 0x08
+  xor rax, rax
+  lea rax, [rel .reloadcs] ; example of using lea for relative addressing (because it couldve been used before)
+  push rax
+  retfq ; far return, pop RIP then pop CS
+.reloadcs:
+  mov ax, 0x10 ; gdt.data
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
+  mov ss, ax
+  add ax, 8 ; gdt.tss
+  ltr ax ; gdt.tss
+  hlt ; HALT
   
   ; create a new page map
   call newcr3
@@ -52,8 +79,9 @@ entry:
   and rax, ~(1 << 30) ; zero cache disable bit (if cr0.cd is zero then cache is enabled)
   mov cr0, rax
 
-  ; flush cache writes for coproccessors (is this a good idea?)
-  wbnoinvd
+  ; never touching this code or anything before it again
+  serialize
+  wbinvd
 
   jmp kernel
 
@@ -116,7 +144,7 @@ gdt64:
   .data: equ $ - gdt64
     dq (1<<44) | (1<<47) | (1<<41)
   .tss: equ $ - gdt64
-    dq 0
+    dq 0x9 << 40 ; 0x9 access byte (64-bit TSS (Available)), no idea what available/busy means but its definitely required
     dq 0
 .end:
 
