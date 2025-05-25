@@ -124,7 +124,7 @@ newcr3:
   ; get l4 position and set it to l3 1
   and rax, 0xFF8000000000 ; zero all bits that arent part of l4
   shr rax, 48-9
-  shl rax, 3 ; todo combine with shr before
+  shl rax, 3 ; (multiply by 8) todo combine with shr before
   add rbx, rax
   lea rax, [rel pagemap + 0x2000] ; to l3 1
   or rax, 1
@@ -134,7 +134,7 @@ newcr3:
   lea rbx, [rel pagemap + 0x2000] ; to l3 1
   and rax, 0x007F80000000 ; zero all bits that arent part of l4
   shr rax, 48-9-9
-  shl rax, 3 ; todo combine with shr before
+  shl rax, 3 ; (multiply by 8) todo combine with shr before
   add rbx, rax
   lea rax, [rel pagemap + 0x4000] ; to l2 1
   or rax, 1
@@ -144,16 +144,14 @@ newcr3:
   lea rbx, [rel pagemap + 0x4000] ; to l2 1
   and rax, 0x00003fe00000
   shr rax, 48-9-9-9
-  shl rax, 3 ; todo combine with shr before
+  shl rax, 3 ; (multiply by 8) todo combine with shr before
   add rbx, rax
   mov rax, rdi
   or rax, 1 | 1<<7
   mov qword [rbx], rax
 
   lea rax, [rel pagemap]
-  hlt
   mov cr3, rax
-  hlt
 
   ret
 
