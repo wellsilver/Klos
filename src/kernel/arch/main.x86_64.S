@@ -93,7 +93,7 @@ newcr3:
   ; get addr
   mov rbx, rdi
   add rbx, pagemap - 0xFF8000000000
-  push rbx
+  mov rcx, rbx
   ; l4 = rbx, l3 0 = rbx+0x1000, l3 1 = rbx+0x2000, l2 0 = rbx+0x3000, l2 1 = rbx+0x4000
   ; l3 1 and l2 1 are for this code
   ; l3 2 and l2 2 are for data (and set by the pagefault handler)
@@ -107,14 +107,14 @@ newcr3:
   add rbx, 511*8 ; get the 511'th entry (where the kernel is mapped to)
   mov qword [rbx], rax
   ; l3 to l2
-  mov rbx, qword [rsp+8] ; restore rbx to the page table base
+  mov rbx, rcx ; restore rbx to the page table base
   add rbx, 0x1000
   mov rax, rbx
   add rax, 0x3000
   or rax, 1
   mov qword [rbx], rax ; map the level 3 entry to the level 2 entry
   ; l2 to mem
-  pop rbx ; restore rbx to page table base
+  mov rbx, rcx ; restore rbx to page table base
   mov rax, rdi ; this memory is mapped to the kernel
   or rax, 1 | 1<<7
   mov qword [rbx], rax
@@ -148,8 +148,9 @@ newcr3:
   or rax, 1 | 1<<7
   mov qword [rbx], rax
 
+  lea rax, [rel pagemap]
+  mov cr3, rax
   hlt
-  
 
   ret
 
