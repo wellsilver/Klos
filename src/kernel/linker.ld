@@ -16,7 +16,8 @@ SECTIONS
     stackend = .;
   }
 # pagemap (1 l4, 2 l3, 2 l2)
-  pagemap : ALIGN(4096) {
+  .pagemap : ALIGN(4096) {
+    pagemap = .;
     . = . + 0x6000;
     mapend = .;
   }
