@@ -15,9 +15,11 @@ extern pagemap
 ; Operates in real memory, rip uknown, uses argument in rdi to map virtual memory for c code
 ; TODO replace all mov register, rdi with lea register, [rel memloc]
 entry:
+  nop
   ; stack setup, space is reserved by the linker script
   lea rsp, [rel stackend]
   dec rsp
+  cli ; the IDT is empty
 
   ; new IDT
   mov rax, rdi
@@ -68,7 +70,6 @@ entry:
   mov ss, ax
   add ax, 8 ; gdt.tss
   ltr ax ; gdt.tss
-  hlt ; HALT
   
   ; create a new page map
   call newcr3
@@ -80,8 +81,8 @@ entry:
   mov cr0, rax
 
   ; never touching this code or anything before it again
-  serialize
   wbinvd
+  hlt
 
   jmp kernel
 
@@ -91,20 +92,19 @@ entryend:
 newcr3:
   ; get addr
   mov rbx, rdi
-  hlt
   add rbx, pagemap - 0xFF8000000000
   push rbx
-  ; l4 = rbx, l3 1 = rbx+0x1000, l3 2 = rbx+0x2000, l2 1 = rbx+0x3000, l2 2 = rbx+0x4000
+  ; l4 = rbx, l3 0 = rbx+0x1000, l3 1 = rbx+0x2000, l2 0 = rbx+0x3000, l2 1 = rbx+0x4000
   ; l3 1 and l2 1 are for this code
   ; l3 2 and l2 2 are for data (and set by the pagefault handler)
   ; all memory is mapped to real memory
-  ; kernel is mapped to 0xFF8000000000 (l4 512 l3 0 l2 0)
+  ; kernel is mapped to 0xFF8000000000 (l4 511 l3 0 l2 0)
   
   ;; map kernel
   ; l4 (kernel map) to first l3
   mov rax, rbx
   add rax, 0x1000 | 1 ; to the first l3
-  add rbx, 511*8 ; get the 512'th entry (where the kernel is mapped to)
+  add rbx, 511*8 ; get the 511'th entry (where the kernel is mapped to)
   mov qword [rbx], rax
   ; l3 to l2
   mov rbx, qword [rsp+8] ; restore rbx to the page table base
@@ -115,12 +115,41 @@ newcr3:
   mov qword [rbx], rax ; map the level 3 entry to the level 2 entry
   ; l2 to mem
   pop rbx ; restore rbx to page table base
-  mov rax, rbx
-  add rax, 0x3000
+  mov rax, rdi ; this memory is mapped to the kernel
+  or rax, 1 | 1<<7
+  mov qword [rbx], rax
+  
+  ; map this part to memory (so we can continue working here on the new cr3)
+  mov rax, rdi
+  lea rbx, [rel pagemap]
+  ; get l4 position and set it to l3 1
+  and rax, ~0xFF8000000000 ; zero all bits that arent part of l4
+  shr rax, 48-9
+  add rbx, rax
+  lea rax, [rel pagemap + 0x2000] ; to l3 1
+  or rax, 1
+  mov qword [rbx], rax
+  ; get l3 position and set it to l2 1
+  mov rax, rdi
+  lea rbx, [rel pagemap + 0x2000] ; to l3 1
+  and rax, ~0x007F80000000 ; zero all bits that arent part of l4
+  shr rax, 48-9-9
+  add rbx, rax
+  lea rax, [rel pagemap + 0x4000] ; to l2 1
+  or rax, 1
+  mov qword [rbx], rax
+  ; get l2 position and set it to the memory
+  mov rax, rdi
+  lea rbx, [rel pagemap + 0x4000] ; to l2 1
+  and rax, ~0x00003fe00000
+  shr rax, 48-9-9-9
+  add rbx, rax
+  mov rax, rdi
   or rax, 1 | 1<<7
   mov qword [rbx], rax
 
   hlt
+  
 
   ret
 

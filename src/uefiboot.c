@@ -193,13 +193,15 @@ int main(int argc, char **argv) {
   struct memregion freeregions[lenfree];
   findfreepages(&lenfree, (struct memregion *) freeregions, map, size / descriptorsize, descriptorsize);
 
+  // TODO kernel can now be loaded anywhere in memory
+
   // get size of elf so we can find out if the right spot is free
   uint64_t elfsize = elfgetsize(kernelelf);
   register unsigned int debug = 0xff;
   // Find out if we can put the kernel in real memory
-  if (ismemfree(lenfree, freeregions, 0x1000, elfsize + 0x4000)) { /* kernel then 4 pages */
+  if (ismemfree(lenfree, freeregions, 0x200000, elfsize + 0x4000)) { /* kernel then 4 pages */
     // Load kernel to memory
-    memcpy(0x1000, kernelelf + elfgetpos(kernelelf), elfsize);
+    memcpy(0x200000, kernelelf + elfgetpos(kernelelf), elfsize);
     // Create pagemap for kernel
     // Pagemap location
 
@@ -208,8 +210,8 @@ int main(int argc, char **argv) {
       errexit("ExitBootServices\n");
     }
     
-    __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = 0x1000;
-    kernel(0x1000, freeregions, lenfree);
+    __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = 0x200000;
+    kernel(0x200000, freeregions, lenfree);
   } else {
     // Load kernel to virtual memory
 

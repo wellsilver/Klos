@@ -10,16 +10,14 @@ SECTIONS
   .text : { *(.text) }
   .data : { *(.data) }
   .bss : { *(.bss) }
-  
 # 64 KB of stack space
   .stack : {
-    . = . + 0x10000 + (4096-(. % 4096));
+    . = . + 0x10000;
     stackend = .;
   }
 # pagemap (1 l4, 2 l3, 2 l2)
-  pagemap = .;
-  .pagemap : {
-    . = . + 0x5000;
+  pagemap : ALIGN(4096) {
+    . = . + 0x6000;
     mapend = .;
   }
 }
