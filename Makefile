@@ -23,7 +23,7 @@ kernelargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -Os -g -
 $(out)/main.$(kerneltarget).elf: $(src)/kernel/arch/main.$(kerneltarget).S | $(out)
 	nasm $< -f elf64 -o $(out)/main.$(kerneltarget).elf
 
-$(out)/kernel.elf: $(kernelobjects) $(out)/main.$(kerneltarget).elf | $(out)
+$(out)/kernel.elf: $(kernelobjects) $(out)/main.$(kerneltarget).elf | $(out) $(src)/kernel/linker.ld
 	x86_64-elf-ld -T $(src)/kernel/linker.ld $^ -o $(out)/kernel.elf
 	x86_64-elf-objdump -S -M intel -D -m i386 out/kernel.elf > out/kernel.asm
 
