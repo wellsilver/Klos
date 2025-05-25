@@ -91,8 +91,7 @@ entryend:
 ; pagemap (1 l4, 2 l3, 2 l2)
 newcr3:
   ; get addr
-  mov rbx, rdi
-  add rbx, pagemap - 0xFF8000000000
+  lea rbx, [rel pagemap]
   mov rcx, rbx
   ; l4 = rbx, l3 0 = rbx+0x1000, l3 1 = rbx+0x2000, l2 0 = rbx+0x3000, l2 1 = rbx+0x4000
   ; l3 1 and l2 1 are for this code
@@ -123,8 +122,9 @@ newcr3:
   mov rax, rdi
   lea rbx, [rel pagemap]
   ; get l4 position and set it to l3 1
-  and rax, ~0xFF8000000000 ; zero all bits that arent part of l4
+  and rax, 0xFF8000000000 ; zero all bits that arent part of l4
   shr rax, 48-9
+  shl rax, 3 ; todo combine with shr before
   add rbx, rax
   lea rax, [rel pagemap + 0x2000] ; to l3 1
   or rax, 1
@@ -132,8 +132,9 @@ newcr3:
   ; get l3 position and set it to l2 1
   mov rax, rdi
   lea rbx, [rel pagemap + 0x2000] ; to l3 1
-  and rax, ~0x007F80000000 ; zero all bits that arent part of l4
+  and rax, 0x007F80000000 ; zero all bits that arent part of l4
   shr rax, 48-9-9
+  shl rax, 3 ; todo combine with shr before
   add rbx, rax
   lea rax, [rel pagemap + 0x4000] ; to l2 1
   or rax, 1
@@ -141,14 +142,16 @@ newcr3:
   ; get l2 position and set it to the memory
   mov rax, rdi
   lea rbx, [rel pagemap + 0x4000] ; to l2 1
-  and rax, ~0x00003fe00000
+  and rax, 0x00003fe00000
   shr rax, 48-9-9-9
+  shl rax, 3 ; todo combine with shr before
   add rbx, rax
   mov rax, rdi
   or rax, 1 | 1<<7
   mov qword [rbx], rax
 
   lea rax, [rel pagemap]
+  hlt
   mov cr3, rax
   hlt
 
