@@ -22,26 +22,21 @@ entry:
   cli ; the IDT is empty
 
   ; new IDT
-  mov rax, rdi
-  mov rbx, rdi
-  add rbx, idt64  - 0xFF8000000000
-  add rax, idtptr - 0xFF8000000000 + 2
+  lea rbx, [rel idt64]
+  lea rax, [rel idtptr + 2]
   mov qword [rax], rbx
   sub rax, 2
   lidt [rax]
 
   ; new GDT
-  mov rax, rdi
-  mov rbx, rdi
-  add rbx, gdt64  - 0xFF8000000000
-  add rax, gdtptr - 0xFF8000000000 + 2
+  lea rbx, [rel gdt64]
+  lea rax, [rel gdtptr + 2]
   mov qword [rax], rbx
   sub rax, 2
   push rax ; only lgdt after setting up the tss
   
   ; setup tss in GDT
-  mov rax, rdi
-  add rax, tss64 - 0xFF8000000000
+  lea rax, [rel tss64]
   add rbx, 24 ; rbx is still at the gdt base
   mov word [rbx], 0x67; size of long mode TSS (set tss.limit)
   add rbx, 2 ; to tss.base(bits 0->16)
@@ -82,14 +77,21 @@ entry:
 
   ; never touching this code or anything before it again
   wbinvd
-  hlt
 
-  jmp kernel
+  mov rax, kernel
+  jmp rax
 
 entryend:
 
 ; pagemap (1 l4, 2 l3, 2 l2)
 newcr3:
+  ; clear the memory
+  push rdi
+  lea rdi, [rel pagemap]
+  xor rax, rax
+  mov rcx, 0x5000
+  rep stosb
+  pop rdi
   ; get addr
   lea rbx, [rel pagemap]
   mov rcx, rbx
@@ -103,7 +105,7 @@ newcr3:
   ; l4 (kernel map) to first l3
   mov rax, rbx
   add rax, 0x1000 | 1 ; to the first l3
-  add rbx, 511*8 ; get the 511'th entry (where the kernel is mapped to)
+  add rbx, 255*8 ; get the 511'th entry (where the kernel is mapped to)
   mov qword [rbx], rax
   ; l3 to l2
   mov rbx, rcx ; restore rbx to the page table base
@@ -114,6 +116,7 @@ newcr3:
   mov qword [rbx], rax ; map the level 3 entry to the level 2 entry
   ; l2 to mem
   mov rbx, rcx ; restore rbx to page table base
+  add rbx, 0x3000
   mov rax, rdi ; this memory is mapped to the kernel
   or rax, 1 | 1<<7
   mov qword [rbx], rax
