@@ -102,23 +102,18 @@ newcr3:
   ; kernel is mapped to 0xFF8000000000 (l4 511 l3 0 l2 0)
   
   ;; map kernel
-  ; l4 (kernel map) to first l3
-  mov rax, rbx
-  add rax, 0x1000 | 1 ; to the first l3
-  add rbx, 255*8 ; get the 511'th entry (where the kernel is mapped to)
+  ; l4 to first l3
+  lea rax, [rel pagemap + 0x1000 + 1] ; pointer to l3 0, with present bit
+  lea rbx, [rel pagemap + (511*8)] ; pml4[511]
   mov qword [rbx], rax
   ; l3 to l2
-  mov rbx, rcx ; restore rbx to the page table base
-  add rbx, 0x1000
-  mov rax, rbx
-  add rax, 0x3000
-  or rax, 1
+  lea rax, [rel pagemap + 0x3000 + 0x01] ; pointer to l2 0 with present and page size (1 << 7) set 
+  lea rbx, [rel pagemap + 0x1000] ; l3[0]
   mov qword [rbx], rax ; map the level 3 entry to the level 2 entry
   ; l2 to mem
-  mov rbx, rcx ; restore rbx to page table base
-  add rbx, 0x3000
-  mov rax, rdi ; this memory is mapped to the kernel
-  or rax, 1 | 1<<7
+  mov rax, rdi ; pointer to the physical memory with present and pagesize set
+  or rax, 1 | 1<<7 
+  lea rbx, [rel pagemap + 0x3000] ; l2[0]
   mov qword [rbx], rax
   
   ; map this part to memory (so we can continue working here on the new cr3)
