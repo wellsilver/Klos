@@ -4,8 +4,8 @@ ENTRY("entry")
 
 SECTIONS
 {
-# 0xFF8000000000 is 512'th entry in pml4
-  . = 0xFF8000000000;
+# 0xFF8000000000 is 511'th entry in pml4
+  . = 0xFFFFFF8000000000;
   .asm : { *(.asm) }
   .text : { *(.text) }
   .data : { *(.data) }
