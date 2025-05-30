@@ -66,6 +66,19 @@ entry:
   add ax, 8 ; gdt.tss
   ltr ax ; gdt.tss
   
+  ; add pagefault handler
+  lea rax, [rel pagefault]
+  mov cx, es ; they are all the same
+  lea rbx, [rel idt64 + (0x0E*16)] ; address of the pagefault descriptor
+  mov word [rbx], ax ; write the first 16 bits
+  shl rax, 16 ; 16 bits allready written
+  add rbx, 2
+  mov word [rbx], cx ; write the segment
+  add rbx, 2
+  mov word [rbx], 0xE << 9 | 1 << 15 ; flag bits??
+  add rbx, 2
+  mov dword [rbx], eax ; last bits of offset
+
   ; create a new page map
   call newcr3
 
@@ -75,13 +88,15 @@ entry:
   and rax, ~(1 << 30) ; zero cache disable bit (if cr0.cd is zero then cache is enabled)
   mov cr0, rax
 
-  ; never touching this code or anything before it again
-  wbinvd
-
   mov rax, kernel
   jmp rax
 
 entryend:
+
+; map the parts of pagemap reserved for data to real memory when needed
+pagefault:
+
+  iretq
 
 ; pagemap (1 l4, 2 l3, 2 l2)
 newcr3:

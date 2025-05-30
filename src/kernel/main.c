@@ -4,7 +4,9 @@
 #include <int.h>
 
 void kernel(void *kernellocation, struct memregion *freemem, uint lenfreemem) {
-  meminit(freemem, lenfreemem);
+  // Test pagefaulthandler
+  *((char *) 0) = 'a'; 
+  //meminit(freemem, lenfreemem);
 
   while (1) asm("hlt");
 }
