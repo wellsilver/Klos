@@ -67,7 +67,7 @@ entry:
   ltr ax ; gdt.tss
   
   ; add pagefault handler
-  lea rax, [rel pagefault]
+  mov rax, pagefault ; get virtual address of pagefault, imagine if long real mode existed lmao
   mov cx, es ; they are all the same
   lea rbx, [rel idt64 + (0x0E*16)] ; address of the pagefault descriptor
   mov word [rbx], ax ; write the first 16 bits
@@ -95,7 +95,7 @@ entryend:
 
 ; map the parts of pagemap reserved for data to real memory when needed
 pagefault:
-
+  hlt
   iretq
 
 ; pagemap (1 l4, 2 l3, 2 l2)
