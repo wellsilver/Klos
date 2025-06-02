@@ -21,12 +21,26 @@ entry:
   dec rsp
   cli ; the IDT is empty
 
+  ; add pagefault handler
+  mov rax, pagefault ; get virtual address of pagefault, imagine if long real mode existed lmao
+  lea rbx, [rel idt64 + (0x0E*16)] ; address of the pagefault descriptor
+  mov word [rbx], ax ; write the first 16 bits
+  shr rax, 16 ; 16 bits allready written
+  add rbx, 2
+  mov word [rbx], 0x08 ; segment
+  add rbx, 2
+  mov word [rbx], (1 << 15) | (0x0 << 13) | (0xF << 8)
+  add rbx, 2
+  mov qword [rbx], rax ; last bits of offset and enough padding for zero
+
   ; new IDT
   lea rbx, [rel idt64]
   lea rax, [rel idtptr + 2]
   mov qword [rax], rbx
   sub rax, 2
   lidt [rax]
+
+  sti
 
   ; new GDT
   lea rbx, [rel gdt64]
@@ -65,19 +79,6 @@ entry:
   mov ss, ax
   add ax, 8 ; gdt.tss
   ltr ax ; gdt.tss
-  
-  ; add pagefault handler
-  mov rax, pagefault ; get virtual address of pagefault, imagine if long real mode existed lmao
-  mov cx, es ; they are all the same
-  lea rbx, [rel idt64 + (0x0E*16)] ; address of the pagefault descriptor
-  mov word [rbx], ax ; write the first 16 bits
-  shl rax, 16 ; 16 bits allready written
-  add rbx, 2
-  mov word [rbx], cx ; write the segment
-  add rbx, 2
-  mov word [rbx], 0xE << 9 | 1 << 15 ; flag bits??
-  add rbx, 2
-  mov dword [rbx], eax ; last bits of offset
 
   ; create a new page map
   call newcr3
