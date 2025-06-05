@@ -22,17 +22,17 @@ entry:
   cli ; the IDT is empty
 
   ; add pagefault handler
-  mov rax, pagefault ; get virtual address of pagefault, imagine if long real mode existed lmao
-  lea rbx, [rel idt64 + (0x0E*16)] ; address of the pagefault descriptor
-  mov word [rbx], ax ; write the first 16 bits
-  shr rax, 16 ; 16 bits allready written
-  add rbx, 2
-  mov word [rbx], 0x08 ; segment
-  add rbx, 2
-  mov word [rbx], (1 << 15) | (0x0 << 13) | (0xF << 8)
-  add rbx, 2
-  mov qword [rbx], rax ; last bits of offset and enough padding for zero
-
+  lea rbx, [rel idt64 + (0xE*16)]
+  mov rax, pagefault ; get virtual address
+  mov word [rbx], ax               ; offset
+  mov word [rbx+2], 0x08           ; code segment selector
+  mov byte [rbx+4], 0              ; IST (0 = no special stack)
+  mov byte [rbx+5], 0x8E           ; Present, DPL=0, Interrupt gate
+  shr rax, 16
+  mov word [rbx+6], ax             ; offset
+  shr rax, 16
+  mov dword[rbx+8], eax            ; offset
+  
   ; new IDT
   lea rbx, [rel idt64]
   lea rax, [rel idtptr + 2]
