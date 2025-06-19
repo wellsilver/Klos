@@ -122,6 +122,7 @@ newcr3:
   add rbx, rax
   lea rax, [rel pagemap + 0x2000] ; to l3 1
   or rax, 1
+  or rax, 2
   mov qword [rbx], rax
   ; get l3 position and set it to l2 1
   mov rax, rdi
@@ -132,6 +133,7 @@ newcr3:
   add rbx, rax
   lea rax, [rel pagemap + 0x4000] ; to l2 1
   or rax, 1
+  or rax, 2
   mov qword [rbx], rax
   ; get l2 position and set it to the memory
   mov rax, rdi
@@ -142,6 +144,7 @@ newcr3:
   add rbx, rax
   mov rax, rdi
   or rax, 1 | 1<<7
+  or rax, 2
   mov qword [rbx], rax
 
   lea rax, [rel pagemap]
