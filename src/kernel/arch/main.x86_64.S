@@ -19,19 +19,6 @@ entry:
   ; stack setup, space is reserved by the linker script
   lea rsp, [rel stackend]
   dec rsp
-  cli ; the IDT is empty
-
-  ; add pagefault handler
-  lea rbx, [rel idt64 + (0xE*16)]
-  mov rax, pagefault ; get virtual address
-  mov word [rbx], ax               ; offset
-  mov word [rbx+2], 0x08           ; code segment selector
-  mov byte [rbx+4], 0              ; IST (0 = no special stack)
-  mov byte [rbx+5], 0x8E           ; Present, DPL=0, Interrupt gate
-  shr rax, 16
-  mov word [rbx+6], ax             ; offset
-  shr rax, 16
-  mov dword[rbx+8], eax            ; offset
   
   ; new IDT
   lea rbx, [rel idt64]
@@ -39,8 +26,6 @@ entry:
   mov qword [rax], rbx
   sub rax, 2
   lidt [rax]
-
-  sti
 
   ; new GDT
   lea rbx, [rel gdt64]
@@ -93,11 +78,6 @@ entry:
   jmp rax
 
 entryend:
-
-; map the parts of pagemap reserved for data to real memory when needed
-pagefault:
-  hlt
-  iretq
 
 ; pagemap (1 l4, 2 l3, 2 l2)
 newcr3:
