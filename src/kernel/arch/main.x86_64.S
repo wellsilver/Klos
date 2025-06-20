@@ -68,16 +68,31 @@ entry:
   ; create a new page map
   call newcr3
 
+  ; GDT and IDT need to be relocated to the kernels virtual memory (so the page dedicated to this bootcode can be used for data)
+  ; IDT
+  mov rax, idt64
+  lea rbx, [rel idtptr] ; The higher half mapped page isnt writable
+  mov qword [rbx+2], rax
+  lidt [rbx]
+
+  ; GDT
+  mov rax, gdt64
+  lea rbx, [rel gdtptr] ; The higher half mapped page isnt writable
+  mov qword [rbx+2], rax
+  lgdt [rbx]
+  ; Everything is the same so no need to reload GDT? (It double faults for some bs reason anyways)
+
   ; ensure cache is enabled, write protect enabled
   mov rax, cr0
   or rax, 1 << 16 ; enable write protect
   and rax, ~(1 << 30) ; zero cache disable bit (if cr0.cd is zero then cache is enabled)
   mov cr0, rax
 
+  ; jump to kernel (Reload CS while doing it)
   mov rax, kernel
-  jmp rax
-
-entryend:
+  push 0x08
+  push rax
+  retfq
 
 ; pagemap (1 l4, 2 l3, 2 l2)
 newcr3:
