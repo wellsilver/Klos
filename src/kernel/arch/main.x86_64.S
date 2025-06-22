@@ -68,6 +68,9 @@ entry:
   ; create a new page map
   call newcr3
 
+  ; move the stack to kernel space so this page is free for randomly accessing memory lol
+  mov rsp, stackend
+
   ; GDT and IDT need to be relocated to the kernels virtual memory (so the page dedicated to this bootcode can be used for data)
   ; IDT
   mov rax, idt64
@@ -88,11 +91,9 @@ entry:
   and rax, ~(1 << 30) ; zero cache disable bit (if cr0.cd is zero then cache is enabled)
   mov cr0, rax
 
-  ; jump to kernel (Reload CS while doing it)
+  ; jump to kernel
   mov rax, kernel
-  push 0x08
-  push rax
-  retfq
+  jmp rax
 
 ; pagemap (1 l4, 2 l3, 2 l2)
 newcr3:
@@ -116,15 +117,18 @@ newcr3:
   ; l4 to first l3
   lea rax, [rel pagemap + 0x1000 + 1] ; pointer to l3 0, with present bit
   lea rbx, [rel pagemap + (511*8)] ; pml4[511]
+  or rax, 2 ; writable
   mov qword [rbx], rax
   ; l3 to l2
   lea rax, [rel pagemap + 0x3000 + 0x01] ; pointer to l2 0 with present and page size (1 << 7) set 
   lea rbx, [rel pagemap + 0x1000] ; l3[0]
+  or rax, 2 ; writable
   mov qword [rbx], rax ; map the level 3 entry to the level 2 entry
   ; l2 to mem
   mov rax, rdi ; pointer to the physical memory with present and pagesize set
-  or rax, 1 | 1<<7 
+  or rax, 1 | 1<<7
   lea rbx, [rel pagemap + 0x3000] ; l2[0]
+  or rax, 2 ; writable
   mov qword [rbx], rax
   
   ; map this part to memory (so we can continue working here on the new cr3)
