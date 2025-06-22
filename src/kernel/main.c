@@ -3,8 +3,14 @@
 #include <memory/mem.h>
 #include <int.h>
 
-void kernel(void *kernellocation, struct memregion *freemem, uint lenfreemem) {
-  
+void crashandburn() {
+  asm("mov rsp, 0xDEADBEEF" : : : "memory"); // asm isnt usually value like deadbeef.
+  while (1) asm("hlt");
+}
 
+void kernel(void *kernellocation, struct memregion *freemem, uint lenfreemem) {
+  int err = meminit(freemem, lenfreemem);
+  if (err != 0)
+  
   while (1) asm("hlt");
 }
