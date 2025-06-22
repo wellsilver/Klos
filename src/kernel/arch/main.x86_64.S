@@ -113,7 +113,7 @@ newcr3:
   ; all memory is mapped to real memory
   ; kernel is mapped to 0xFF8000000000 (l4 511 l3 0 l2 0)
   
-  ;; map kernel
+  ;; map the kernel to memory
   ; l4 to first l3
   lea rax, [rel pagemap + 0x1000 + 1] ; pointer to l3 0, with present bit
   lea rbx, [rel pagemap + (511*8)] ; pml4[511]
