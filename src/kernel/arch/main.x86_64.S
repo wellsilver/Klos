@@ -91,9 +91,26 @@ entry:
   and rax, ~(1 << 30) ; zero cache disable bit (if cr0.cd is zero then cache is enabled)
   mov cr0, rax
 
+  ; setup page faults
+  mov rax, idt64
+  add rax, 0xE*16
+  mov rbx, pagefault
+  mov word [rax], bx ; first 16 bits of offset
+  shl bx, 16
+  add rax, 2
+  mov word [rax], 0x08 ; segment selector
+  add rax, 2
+  mov word [rax], (1 << 47) | (0xF << 8); flags; present + gate type Trap gate
+
   ; jump to kernel
   mov rax, kernel
   jmp rax
+
+; Maps the spare page to requested memory, standin before the full map is created
+pagefault:
+  mov rax, 0xff
+  hlt
+  iretq
 
 ; pagemap (1 l4, 2 l3, 2 l2)
 newcr3:
