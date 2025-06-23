@@ -10,7 +10,7 @@ void crashandburn() {
 
 void kernel(void *kernellocation, struct memregion *freemem, uint lenfreemem) {
   int err = meminit(freemem, lenfreemem);
-  if (err != 0)
+  if (err != 0) crashandburn();
   
   while (1) asm("hlt");
 }
