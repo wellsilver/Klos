@@ -96,11 +96,13 @@ entry:
   add rax, 0xE*16
   mov rbx, pagefault
   mov word [rax], bx ; first 16 bits of offset
-  shl bx, 16
+  shr rbx, 16
   add rax, 2
   mov word [rax], 0x08 ; segment selector
   add rax, 2
   mov word [rax], (1 << 47) | (0xF << 8); flags; present + gate type Trap gate
+  add rax, 2
+  mov qword [rax], rbx
 
   ; jump to kernel
   mov rax, kernel
