@@ -43,13 +43,17 @@ $(out)/BOOTX64.efi: $(src)/uefiboot.c | $(out)
 	-c $^ -o out/uefiboot.o -O0
 	lld -flavor link -subsystem:efi_application -nodefaultlib -dll -entry:uefi_init posix-uefi/uefi/*.o $(out)/uefiboot.o -out:$(out)/BOOTX64.EFI
 
+# Legacy BIOS
+$(out)/biosboot.bin: $(src)/biosboot.S | $(out)
+	nasm $(src)/biosboot.S -o $(out)/biosboot.bin
+
 ### DISK IMAGE
 #
 #
 
-$(out)/klos.img: $(out)/BOOTX64.efi $(out)/kernel.elf | $(out)
+$(out)/klos.img: $(out)/BOOTX64.efi $(out)/kernel.elf $(out)/biosboot.bin | $(out)
 # format kfs 1000 megabytes
-	python3 kfs/format.py $(out)/kfs.img 1000 0 $(out)/kernel.elf
+	python3 kfs/format.py $(out)/kfs.img 1000 $(out)/biosboot.bin $(out)/kernel.elf
 
 # format the efi fs
 #	mkfs.fat -C -F 32 $(out)/efi.img 20480
