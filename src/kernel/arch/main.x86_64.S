@@ -110,6 +110,7 @@ entry:
 
 ; Maps the spare page to requested memory, standin before the full map is created
 pagefault:
+  cli
   mov rax, 0xff
   hlt
   iretq
