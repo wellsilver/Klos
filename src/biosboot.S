@@ -16,9 +16,13 @@ start:
 cld
 cli
 
-jmp $
+; Enable int13h extensions
+mov ah, 0x41
+mov bx, 0x55AA
+; mov dl, dl
+int 0x13
 
-db "Hello!"
+
 
 times 510-($-$$) db 0
 dw 0xAA55
