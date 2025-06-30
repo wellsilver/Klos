@@ -16,11 +16,30 @@ start:
 cld
 cli
 
-; Enable int13h extensions
 mov ah, 0x41
 mov bx, 0x55AA
-; mov dl, dl
-int 0x13
+; DL is kept as the value bios starts it with
+int 13h
+
+mov word [lbapkt.bufferoff], 0x7C00-512
+mov si, 0
+mov ds, si
+mov si, lbapkt
+mov ah, 0x42
+; DL is still the boot drive BIOS should have set it to
+int 13h
+
+
+; Tables
+
+lbapkt:
+db 16
+db 0
+.num: dw 0
+.bufferseg: dw 0
+.bufferoff: dw 0
+.lba: dq 0
+
 
 
 
