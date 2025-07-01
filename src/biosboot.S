@@ -10,7 +10,7 @@ nop
 ; This is overwritten by the kfs formatter
 db "BAD"
 dw 9999
-highlighted: dq 9999
+highlighted: dq 9999 ; Overwritten by kfs/format.py
 
 start:
 cld
@@ -22,6 +22,8 @@ mov bx, 0x55AA
 int 13h
 
 mov word [lbapkt.bufferoff], 0x7C00-512
+mov eax, [highlighted]
+mov dword [lbapkt.lba], eax
 mov si, 0
 mov ds, si
 mov si, lbapkt
@@ -29,6 +31,7 @@ mov ah, 0x42
 ; DL is still the boot drive BIOS should have set it to
 int 13h
 
+hlt
 
 ; Tables
 
