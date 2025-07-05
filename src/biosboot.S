@@ -12,37 +12,32 @@ db "BAD"
 dw 9999
 highlighted: dq 9999 ; Overwritten by kfs/format.py
 
+; Remember to preserve EDX (It is set to the boot drive by BIOS)
+
+; 1. Read kernel to memory
+; 2. Get memory table
+; 3. Get into long mode with kernel mapped correctly 
+; 4. jmp to kernel
+; in 512 bytes!?!?!?!?? (kfs has room for more but fun challenge if it can fit in 512 bytes)
+
 start:
-cld
 cli
+cld
+jmp 0:start2 ; fix bioses going to 0x7c00:0 instead of 0:0x7c00
+start2:
 
-mov ah, 0x41
-mov bx, 0x55AA
-; DL is kept as the value bios starts it with
-int 13h
+mov sp, 0x7C00
+mov [0x7c00+1], dl
 
-mov word [lbapkt.bufferoff], 0x7C00-512
-mov eax, [highlighted]
-mov dword [lbapkt.lba], eax
-mov si, 0
-mov ds, si
-mov si, lbapkt
-mov ah, 0x42
-; DL is still the boot drive BIOS should have set it to
+; Reset drive
+mov ah, 0
 int 13h
+mov dl, [0x7c00+1] ; restore dl if it was changed
+
+
+
 
 hlt
-
-; Tables
-
-lbapkt:
-db 16
-db 0
-.num: dw 0
-.bufferseg: dw 0
-.bufferoff: dw 0
-.lba: dq 0
-
 
 
 
