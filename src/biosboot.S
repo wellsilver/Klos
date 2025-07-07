@@ -41,9 +41,8 @@ int 13h
 mov dl, [0x7c00+1]
 
 mov si, 0
-mov ds, ax
+mov ds, si
 mov si, discaddr
-mov word [discaddr.ptroff], 0x7A00
 mov ah, 0x42
 int 13h
 
@@ -55,8 +54,8 @@ discaddr:
 db 16 ; size
 db 0
 .sectnum: dw 1
+.ptroff: dw 0x7A00
 .ptrseg: dw 0
-.ptroff: dw 0
 .lba: dq 1
 
 
