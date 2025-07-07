@@ -373,8 +373,8 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
 #vgaromimage: file=bios/VGABIOS-elpin-2.40
-vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
-#vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus
+#vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
 
 #=======================================================================
 # OPTROMIMAGE[1-4]:
