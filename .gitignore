@@ -2,3 +2,4 @@ out/
 qemulog.txt
 limine/
 ram.bin
+bochsout.txt
