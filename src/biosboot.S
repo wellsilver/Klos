@@ -27,18 +27,37 @@ jmp 0:start2 ; fix bioses going to 0x7c00:0 instead of 0:0x7c00
 start2:
 
 mov sp, 0x7C00
-mov [0x7c00+1], dl
+mov [0x7c00+1], dl ; save dl
 
 ; Reset drive
 mov ah, 0
 int 13h
 mov dl, [0x7c00+1] ; restore dl if it was changed
 
+; Enable disc extensions
+mov ah, 0x41
+mov bx, 0x55AA
+int 13h
+mov dl, [0x7c00+1]
 
-
+mov si, 0
+mov ds, ax
+mov si, discaddr
+mov word [discaddr.ptroff], 0x7A00
+mov ah, 0x42
+int 13h
 
 hlt
 
+
+; Disc addr packet
+discaddr:
+db 16 ; size
+db 0
+.sectnum: dw 1
+.ptrseg: dw 0
+.ptroff: dw 0
+.lba: dq 1
 
 
 times 510-($-$$) db 0
