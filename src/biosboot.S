@@ -26,25 +26,21 @@ cld
 jmp 0:start2 ; fix bioses going to 0x7c00:0 instead of 0:0x7c00
 start2:
 
-mov sp, 0x7C00
-mov [0x7c00+1], dl ; save dl
+mov sp, 0x7C01
+mov [sp], dl ; save dl
 
 ; Reset drive
 mov ah, 0
 int 13h
-mov dl, [0x7c00+1] ; restore dl if it was changed
+mov dl, [sp] ; restore dl if it was changed
 
-; Enable disc extensions
-mov ah, 0x41
-mov bx, 0x55AA
+; get disc geometry
+mov ah, 08h
 int 13h
-mov dl, [0x7c00+1]
+mov dl, [sp] ; restore dl if it was changed
 
-mov si, 0
-mov ds, si
-mov si, discaddr
-mov ah, 0x42
-int 13h
+
+
 
 hlt
 
