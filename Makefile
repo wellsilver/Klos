@@ -4,12 +4,6 @@ out  = out
 asmc = nasm
 CC   = x86_64-elf-gcc
 
-build: $(out)/klos.img
-run: build qemu
-debug: build qemudebug
-
-all: run
-
 ### KERNEL COMPILATION
 #
 #
@@ -83,10 +77,16 @@ $(out)/klos.img: $(out)/BOOTX64.efi $(out)/kernel.elf $(out)/biosboot.bin | $(ou
 $(out):
 	mkdir -p $(out)
 
-qemu:
+qemu: $(out)/klos.img
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot
-qemudebug:
+qemu-bios: $(out)/klos.img
+	qemu-system-x86_64 -hda $(out)/kfs.img -D ./qemulog.txt -d int,mmu -no-reboot
+qemudebug: $(out)/klos.img
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
+bochs: $(out)/klos.img
+	bochs -qf bochsrc.txt
+
+all: qemu
 
 clean:
 	rm -rf $(out)
