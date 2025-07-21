@@ -1,7 +1,7 @@
 mkdir /tmp/gccbuild
 cd /tmp/gccbuild
-wget http://mirror.koddos.net/gcc/releases/gcc-13.2.0/gcc-13.2.0.tar.gz
-tar -xf gcc-13.2.0.tar.gz
+wget https://ftp.gnu.org/gnu/gcc/gcc-15.1.0/gcc-15.1.0.tar.gz
+tar -xf gcc-15.1.0.tar.gz
 # below breaks alot, should reinstall it
 apt -y remove build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev

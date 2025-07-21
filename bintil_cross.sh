@@ -1,7 +1,7 @@
 mkdir /tmp/bintilbuild
 cd /tmp/bintilbuild
-wget https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz
-tar -xf binutils-2.41.tar.gz
+wget https://ftp.gnu.org/gnu/binutils/binutils-2.44.tar.gz
+tar -xf binutils-2.44.tar.gz
 # below breaks alot, should reinstall it
 apt -y remove build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 apt -y install build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo libisl-dev
