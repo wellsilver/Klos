@@ -34,12 +34,12 @@ mov ah, 0
 int 13h
 mov dl, [0x7C01] ; restore dl if it was changed
 
-mov eax, dword [highlighted]
-cmp eax, 1
-je err
+mov eax, [highlighted]
 mov ecx, 1
-mov edi, 0x00000500
+mov edi, 0x7C00-512
 call readlba
+
+
 
 hlt
 
