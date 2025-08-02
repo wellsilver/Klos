@@ -34,9 +34,10 @@ mov ah, 0
 int 13h
 mov dl, [0x7C01] ; restore dl if it was changed
 
+; Read the highlighted sector (which is supposed to be the kernel file)
 mov eax, [highlighted]
 mov ecx, 1
-mov edi, 0x7C00-512
+mov edi, 0x500
 call readlba
 
 
@@ -62,9 +63,9 @@ readlba:
 
   xor eax, eax
   xor edx, edx
-  mov ebx, 500h
+  mov ebx, edi
 
-  mov dl, [0x7C01]
+  mov dl, [0x7C01] ; restore from the saved spot
   mov ah, 2
   mov al, 1
 
