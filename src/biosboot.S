@@ -40,7 +40,12 @@ mov ecx, 1
 mov edi, 0x500
 call readlba
 
-
+; Hopefully the kernel file is just one entry..
+mov eax, [0x500+74]
+mov ecx, [0x500+74+8]
+sub ecx, eax
+mov edi, 0x500
+call readlba
 
 hlt
 
