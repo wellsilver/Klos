@@ -34,6 +34,38 @@ mov ah, 0
 int 13h
 mov dl, [0x7C01] ; restore dl if it was changed
 
+; Enter unreal mode so we can load the kernel into upper free memory
+unrealmode:
+xor ax, ax
+mov ds, ax
+                      ; making the stack 7.5k in size
+
+cli                    ; no interrupts
+push ds                ; save real mode
+
+lgdt [gdt32info]         ; load gdt register
+
+mov  eax, cr0          ; switch to pmode by
+or al,1                ; set pmode bit
+mov  cr0, eax
+jmp 0x8:.pmode
+
+.pmode:
+  mov  bx, 0x10          ; select descriptor 2
+  mov  ds, bx            ; 10h = 10000b
+
+  and al,0xFE            ; back to realmode
+  mov  cr0, eax          ; by toggling bit again
+  jmp 0x0:unreal
+
+.unreal:
+  pop ds                 ; get back old segment
+  sti
+
+  mov bx, 0x0f01         ; attrib/char of smiley
+  mov eax, 0x0b8000      ; note 32 bit offset
+  mov word [ds:eax], bx
+
 ; Read the highlighted sector (which is supposed to be the kernel file)
 mov eax, [highlighted]
 mov ecx, 1
@@ -46,8 +78,6 @@ mov ecx, [0x500+74+8]
 sub ecx, eax
 mov edi, 0x500
 call readlba
-
-hlt
 
 ; eax = lba
 ; ecx = ammount of sectors
@@ -83,6 +113,15 @@ err:
   mov eax, 0xDEADBEEF
   jmp $
 
+
+gdtinfo:
+  dw gdt_end - gdt - 1   ;last byte in table
+  dd gdt                 ;start of table
+
+gdt32:        dd 0,0        ; entry 0 is always unused
+codedesc:   db 0xff, 0xff, 0, 0, 0, 10011010b, 00000000b, 0
+flatdesc:   db 0xff, 0xff, 0, 0, 0, 10010010b, 11001111b, 0
+gdt_end:
 
 times 510-($-$$) db 0
 dw 0xAA55
