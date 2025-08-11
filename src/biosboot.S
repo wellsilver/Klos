@@ -76,8 +76,10 @@ call readlba
 mov eax, [0x500+74]
 mov ecx, [0x500+74+8]
 sub ecx, eax
-mov edi, 0x500
+mov edi, 0x00100000
 call readlba
+
+hlt
 
 ; eax = lba
 ; ecx = ammount of sectors
