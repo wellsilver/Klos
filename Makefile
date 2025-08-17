@@ -78,11 +78,11 @@ $(out):
 	mkdir -p $(out)
 
 qemu: $(out)/klos.img
-	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot
+	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -m 1G
 qemu-bios: $(out)/klos.img
-	qemu-system-x86_64 -hda $(out)/kfs.img -D ./qemulog.txt -d int,mmu -no-reboot
+	qemu-system-x86_64 -hda $(out)/kfs.img -D ./qemulog.txt -d int,mmu -no-reboot -m 1G
 qemudebug: $(out)/klos.img
-	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on
+	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -m 1G
 bochs: $(out)/klos.img
 	bochs -qf bochsrc.txt
 

@@ -59,12 +59,10 @@ jmp 0x8:.pmode
 
 .unreal:
   pop ds                 ; get back old segment
-  sti
 
   mov bx, 0x0f01         ; attrib/char of smiley :)
   mov eax, 0x0b8000      ; note 32 bit offset
   mov word [ds:eax], bx
-  hlt
 
 ; Read the highlighted sector (which is supposed to be the kernel file)
 mov eax, [highlighted]
@@ -72,12 +70,9 @@ mov ecx, 1
 mov edi, 0x500
 call readlba
 
-; Hopefully the kernel file is just one entry..
-mov eax, [0x500+74]
-mov ecx, [0x500+74+8]
-sub ecx, eax
-mov edi, 0x00100000
-call readlba
+mov eax, [0x500+74] ; start LBA
+mov ecx, [0x500+74+8] ; remaining sectors
+
 
 hlt
 
