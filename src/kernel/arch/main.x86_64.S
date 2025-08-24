@@ -5,6 +5,8 @@
 ; gdt sorting and everything else here
 section .asm
 global entry
+global tss64
+global idt64
 extern kernel
 extern stackend
 extern pagemap
@@ -104,9 +106,7 @@ newcr3:
   mov rcx, 0x5000
   rep stosb
   pop rdi
-  ; get addr
-  lea rbx, [rel pagemap]
-  mov rcx, rbx
+
   ; l4 = rbx, l3 0 = rbx+0x1000, l3 1 = rbx+0x2000, l2 0 = rbx+0x3000, l2 1 = rbx+0x4000
   ; l3 1 and l2 1 are for this code
   ; l3 2 and l2 2 are for data (and set by the pagefault handler)
@@ -135,7 +135,8 @@ newcr3:
   mov rax, rdi
   lea rbx, [rel pagemap]
   ; get l4 position and set it to l3 1
-  and rax, 0xFF8000000000 ; zero all bits that arent part of l4
+  mov rcx, 0xFF8000000000
+  and rax, rcx ; zero all bits that arent part of l4
   shr rax, 48-9
   shl rax, 3 ; (multiply by 8) todo combine with shr before
   add rbx, rax
@@ -146,7 +147,8 @@ newcr3:
   ; get l3 position and set it to l2 1
   mov rax, rdi
   lea rbx, [rel pagemap + 0x2000] ; to l3 1
-  and rax, 0x007F80000000 ; zero all bits that arent part of l4
+  mov rcx, 0x007F80000000
+  and rax, rcx ; zero all bits that arent part of l4
   shr rax, 48-9-9
   shl rax, 3 ; (multiply by 8) todo combine with shr before
   add rbx, rax
@@ -157,7 +159,8 @@ newcr3:
   ; get l2 position and set it to the memory
   mov rax, rdi
   lea rbx, [rel pagemap + 0x4000] ; to l2 1
-  and rax, 0x00003fe00000
+  mov rcx, 0x00003fe00000
+  and rax, rcx
   shr rax, 48-9-9-9
   shl rax, 3 ; (multiply by 8) todo combine with shr before
   add rbx, rax
