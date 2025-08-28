@@ -174,17 +174,25 @@ newcr3:
 
   ret
 
+align 16
+
 idtptr:
   dw (idt64.end - idt64) - 1
 .ptr:  dq idt64
+
+align 16
 
 idt64:
   times 256 dq 0
 .end:
 
+align 16
+
 gdtptr:
   dw (gdt64.end - gdt64) - 1
 .ptr:  dq gdt64
+
+align 16
 
 gdt64:
   .null:
