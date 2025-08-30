@@ -1,6 +1,7 @@
 //asm("jmp kernel"); // cpu jumps to here, replaced with main.asm. Yes this worked great and had zero problems, I am not kidding.
 
 #include <memory/mem.h>
+#include <arch/interrupt.x86_64.h>
 #include <int.h>
 
 void crashandburn() {
@@ -8,9 +9,17 @@ void crashandburn() {
   while (1) asm("hlt");
 }
 
+void pagefault_mapreal() {
+  while (1) asm("hlt");
+}
+
 void kernel(void *kernellocation, struct memregion *freemem, uint lenfreemem) {
   int err = meminit(freemem, lenfreemem);
   if (err != 0) crashandburn();
   
+  idtsetgate(14, pagefault_mapreal, 0);
+
+  (*(unsigned char *) 0) = 0;
+
   while (1) asm("hlt");
 }
