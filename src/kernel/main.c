@@ -9,17 +9,9 @@ void crashandburn() {
   while (1) asm("hlt");
 }
 
-void pagefault_mapreal() {
-  while (1) asm("hlt");
-}
-
 void kernel(void *kernellocation, struct memregion *freemem, uint lenfreemem) {
   int err = meminit(freemem, lenfreemem);
   if (err != 0) crashandburn();
-  
-  idtsetgate(14, pagefault_mapreal, 0);
-
-  (*(unsigned char *) 0) = 0;
 
   while (1) asm("hlt");
 }
