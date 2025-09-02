@@ -12,7 +12,7 @@ kernelcsources := $(shell find $(src)/kernel -name "*.c")
 kernelobjects := $(patsubst %.c, out/%.o, $(notdir $(kernelcsources)))
 kerneltarget := x86_64
 
-kernelargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -Os -g -c -masm=intel -mcmodel=large -ffreestanding
+kernelargs = -I $(src)/kernel -I $(src)/kernel/util -nostdinc -nostdlib -Os -g -c -masm=intel -mcmodel=large -ffreestanding -mgeneral-regs-only -mno-red-zone
 
 $(out)/main.$(kerneltarget).elf: $(src)/kernel/arch/main.$(kerneltarget).S | $(out)
 	nasm $< -f elf64 -o $(out)/main.$(kerneltarget).elf
