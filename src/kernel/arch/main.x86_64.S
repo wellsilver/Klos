@@ -7,6 +7,7 @@ section .asm
 global entry
 global tss64
 global idt64
+global idtptr
 extern kernel
 extern stackend
 extern pagemap
@@ -73,6 +74,18 @@ entry:
   ; move the stack to kernel space so this page is free for randomly accessing memory lol
   mov rsp, stackend
 
+  ; setup PF and PGF and DF IDT
+  ; PageFault
+  lea rax, [rel idt64 + (0x14*16)]
+  mov rbx, defaultinterrupt
+  mov word [rax], bx ; 16 bits of offset
+  shr rbx, 16
+  mov word [rax+2], 8h ; selector
+  mov word [rax+4], 0b100011110000000 ; Present | trap gate
+  mov word [rax+6], bx ; next 16 bits of offset
+  shr rbx, 16
+  mov dword [rax+8], ebx ; next 32 bits of offset
+  
   ; GDT and IDT need to be relocated to the kernels virtual memory (so the page dedicated to this bootcode can be used for data)
   ; IDT
   mov rax, idt64
@@ -85,7 +98,13 @@ entry:
   lea rbx, [rel gdtptr] ; The higher half mapped page isnt writable
   mov qword [rbx+2], rax
   lgdt [rbx]
-  ; Everything is the same so no need to reload GDT? (It double faults for some bs reason anyways)
+
+  ; Reload GDT
+  lea rax, [rel returnpoint]
+  push qword 0x8
+  push rax
+  retfq
+returnpoint:
 
   ; ensure cache is enabled, write protect enabled
   mov rax, cr0
@@ -174,16 +193,25 @@ newcr3:
 
   ret
 
+; hang
+defaultinterrupt:
+  cli
+  mov rsp, 0xDEADBEEF
+  mov rax, 0xCEFDEAD0
+  hlt
+
 align 16
 
 idtptr:
-  dw (idt64.end - idt64) - 1
+.off:  dw (idt64.end - idt64) - 1
 .ptr:  dq idt64
 
 align 16
 
+; IDT filled with 40 default interrupts (more would take too much space)
 idt64:
-  times 256 dq 0
+  ; offset (16 bits), selector
+  times 40 dq 0,0
 .end:
 
 align 16
