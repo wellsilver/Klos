@@ -21,4 +21,6 @@ void idtsetgate(int gate, void *ptr, uint8_t flags) {
   desc[gate].offset_2 = ((uint64_t)ptr >> 16) & 0xFFFF;
   desc[gate].offset_3 = ((uint64_t)ptr >> 32) & 0xFFFFFFFF;
   desc[gate].zero = 0;
+
+  asm("lidt [%0]" : : "r" (idtptr));
 }
