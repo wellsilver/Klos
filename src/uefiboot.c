@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
   // Find out if we can put the kernel in real memory
   if (ismemfree(lenfree, freeregions, 0x200000, elfsize + 0x4000)) { /* kernel then 4 pages */
     // Load kernel to memory
-    memcpy(0x200000, kernelelf + elfgetpos(kernelelf), elfsize);
+    memcpy((void *) 0x200000, kernelelf + elfgetpos(kernelelf), elfsize);
     // Create pagemap for kernel
     // Pagemap location
 
@@ -210,8 +210,8 @@ int main(int argc, char **argv) {
       errexit("ExitBootServices\n");
     }
     
-    __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = 0x200000;
-    kernel(0x200000, freeregions, lenfree);
+    __attribute__((sysv_abi)) void (*kernel)(void *, void *, unsigned int) = (void *) 0x200000;
+    kernel((void *) 0x200000, freeregions, lenfree);
   } else {
     // Load kernel to virtual memory
 
