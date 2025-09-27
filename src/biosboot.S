@@ -71,8 +71,10 @@ mov edi, 0x500
 call readlba
 
 mov eax, [0x500+74] ; start LBA
-mov ecx, [0x500+74+8] ; remaining sectors
+mov ecx, [0x500+74+8] ; sectors to read
 
+mov edi, 0x500
+call readlba
 
 hlt
 
@@ -84,6 +86,9 @@ hlt
 
 readlba:
   ; eax (lba) to ecx (chs) only cylinder and sector
+  push eax
+  push ecx
+  push edi
   xor edx,edx
   mov ecx, 64
   div ecx
@@ -104,10 +109,24 @@ readlba:
   int 13h
   jc err
 
+  pop edi ; restore the original arguments
+  pop ecx
+  pop eax
+
+  add edi, 512 ; next sector
+  dec ecx ; dont read this sector twice (finished this sector)
+  inc eax ; next sector to read (finished this sector)
+
+  cmp ecx, 0 ; check if the read sector was the last sector
+  jg readlba
+
   ret
 
 err:
-  mov eax, 0xDEADBEEF
+  pop edi
+  pop ecx
+  pop eax
+  mov esp, 0xDEADBEEF
   jmp $
 
 
