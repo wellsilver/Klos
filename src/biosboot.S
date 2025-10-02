@@ -72,7 +72,6 @@ call readlba
 
 mov eax, [0x500+74] ; start LBA
 mov ecx, [0x500+74+8] ; sectors to read
-
 mov edi, 0x500
 call readlba
 
@@ -123,9 +122,7 @@ readlba:
   ret
 
 err:
-  pop edi
-  pop ecx
-  pop eax
+  ; 0x0c DISK_RET_EBADTRACK (atleast with seabios)
   mov esp, 0xDEADBEEF
   jmp $
 
