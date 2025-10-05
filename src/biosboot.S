@@ -64,6 +64,10 @@ jmp 0x8:.pmode
   mov eax, 0x0b8000      ; note 32 bit offset
   mov word [ds:eax], bx
 
+mov ax, 0
+mov dl, [0x7c01]
+int 13h
+
 ; Read the highlighted sector (which is supposed to be the kernel file)
 mov eax, [highlighted]
 mov ecx, 1
@@ -106,7 +110,7 @@ readlba:
   mov al, 1
 
   int 13h
-  jc err
+  jc retry
 
   pop edi ; restore the original arguments
   pop ecx
@@ -121,10 +125,18 @@ readlba:
 
   ret
 
-err:
-  ; 0x0c DISK_RET_EBADTRACK (atleast with seabios)
-  mov esp, 0xDEADBEEF
-  jmp $
+; Kept getting 0x0c error when trying to read (and looking through seabios, that is the only error other than write protect error that gets used...)
+; and it was caused by the atapio hardware saying it error'd even though it shouldnt have an error?
+retry:
+  pop edi
+  pop ecx
+  pop eax
+  
+  mov ax, 0
+  mov dl, [0x7c01]
+  int 13h
+
+  jmp readlba
 
 
 gdt32info:
