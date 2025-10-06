@@ -76,7 +76,7 @@ call readlba
 
 mov eax, [0x500+74] ; start LBA
 mov ecx, [0x500+74+8] ; sectors to read
-mov edi, 0x500
+mov edi, 0x100000 ; extended memory
 call readlba
 
 hlt
@@ -131,6 +131,9 @@ retry:
   pop edi
   pop ecx
   pop eax
+  push eax
+  push ecx
+  push edi
   
   mov ax, 0
   mov dl, [0x7c01]
