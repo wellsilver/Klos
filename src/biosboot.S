@@ -76,7 +76,7 @@ call readlba
 
 mov eax, [0x500+74] ; start LBA
 mov ecx, [0x500+74+8] ; sectors to read
-mov edi, 0x100000 ; extended memory
+mov edi, 0x500 ; extended memory
 call readlba
 
 hlt
@@ -128,16 +128,13 @@ readlba:
 ; Kept getting 0x0c error when trying to read (and looking through seabios, that is the only error other than write protect error that gets used...)
 ; and it was caused by the atapio hardware saying it error'd even though it shouldnt have an error?
 retry:
-  pop edi
-  pop ecx
-  pop eax
-  push eax
-  push ecx
-  push edi
-  
   mov ax, 0
   mov dl, [0x7c01]
   int 13h
+
+  pop edi
+  pop ecx
+  pop eax
 
   jmp readlba
 
