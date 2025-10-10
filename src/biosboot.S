@@ -64,80 +64,70 @@ jmp 0x8:.pmode
   mov eax, 0x0b8000      ; note 32 bit offset
   mov word [ds:eax], bx
 
+mov ah, 0x41
+mov bx, 0x55aa
+mov dl, [0x7c01]
+int 13h
+jc err
+
 mov ax, 0
 mov dl, [0x7c01]
 int 13h
+jc err
 
-; Read the highlighted sector (which is supposed to be the kernel file)
+; Read the highlighted sector (should be kernel file)
 mov eax, [highlighted]
-mov ecx, 1
-mov edi, 0x500
-call readlba
+mov [diskpacket.lba], eax
+mov esi, diskpacket
+mov ax, 0x4200
+mov dl, [0x7c01]
+int 13h
+jc err
 
-mov eax, [0x500+74] ; start LBA
-mov ecx, [0x500+74+8] ; sectors to read
-mov edi, 0x500 ; extended memory
-call readlba
+mov eax, [0x500+74] ; starting lba
+mov [diskpacket.lba], eax
+mov ecx, [0x500+74+8] ; number of sectors
+mov edi, 0x00100000
+
+; get each sector individually then rep movsb them to upper memory
+nextsector:
+push ecx
+push edi
+
+; read the next sector to the cache
+mov esi, diskpacket
+mov ax, 0x4200
+mov dl, [0x7c01]
+int 13h
+jc err
+
+; 512 bytes from the cache to upper memory
+mov ecx, 512
+mov esi, 0x500
+pop edi
+rep movsb
+
+mov eax, save
+inc dword [eax]
+
+pop ecx
+loop nextsector
 
 hlt
 
-; eax = lba
-; ecx = ammount of sectors
-; edi = to
-; converted to int 13h so accuracy is lost idk. uses tempsector and memcopies to edi
-; trashes everything
+err:
+  mov esp, 0xdeadbeef
+  jmp $
 
-readlba:
-  ; eax (lba) to ecx (chs) only cylinder and sector
-  push eax
-  push ecx
-  push edi
-  xor edx,edx
-  mov ecx, 64
-  div ecx
-  mov cl, dl
-  shr eax, 2
-  and eax, 0xC0
-  mov ch, al
-  inc cl
+save: dd 0
 
-  xor eax, eax
-  xor edx, edx
-  mov ebx, edi
-
-  mov dl, [0x7C01] ; restore from the saved spot
-  mov ah, 2
-  mov al, 1
-
-  int 13h
-  jc retry
-
-  pop edi ; restore the original arguments
-  pop ecx
-  pop eax
-
-  add edi, 512 ; next sector
-  dec ecx ; dont read this sector twice (finished this sector)
-  inc eax ; next sector to read (finished this sector)
-
-  cmp ecx, 0 ; check if the read sector was the last sector
-  jg readlba
-
-  ret
-
-; Kept getting 0x0c error when trying to read (and looking through seabios, that is the only error other than write protect error that gets used...)
-; and it was caused by the atapio hardware saying it error'd even though it shouldnt have an error?
-retry:
-  mov ax, 0
-  mov dl, [0x7c01]
-  int 13h
-
-  pop edi
-  pop ecx
-  pop eax
-
-  jmp readlba
-
+diskpacket:
+db 10h
+db 0
+.sectors: dw 1
+.tooffset: dw 0x500
+.tosegment: dw 0
+.lba: dq 0
 
 gdt32info:
   dw gdt_end - gdt32 - 1   ;last byte in table
