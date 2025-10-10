@@ -38,20 +38,22 @@ mov dl, [0x7C01] ; restore dl if it was changed
 unrealmode:
 xor ax, ax
 mov ds, ax
-
+mov es, ax
 cli                    ; no interrupts
-push ds                ; save real mode
+push es ; save real mode
+push ds
 
 lgdt [gdt32info]         ; load gdt register
 
-mov  eax, cr0          ; switch to pmode by
+mov eax, cr0          ; switch to pmode by
 or al,1                ; set pmode bit
-mov  cr0, eax
+mov cr0, eax
 jmp 0x8:.pmode
 
 .pmode:
-  mov  bx, 0x10          ; select descriptor 2
-  mov  ds, bx            ; 10h = 10000b
+  mov bx, 0x10          ; select descriptor 2
+  mov ds, bx            ; 10h = 10000b
+  mov es, bx
 
   and al,0xFE            ; back to realmode
   mov  cr0, eax          ; by toggling bit again
@@ -59,7 +61,8 @@ jmp 0x8:.pmode
 
 .unreal:
   pop ds                 ; get back old segment
-
+  pop es
+  
   mov bx, 0x0f01         ; attrib/char of smiley :)
   mov eax, 0x0b8000      ; note 32 bit offset
   mov word [ds:eax], bx
@@ -105,7 +108,7 @@ jc err
 mov ecx, 512
 mov esi, 0x500
 pop edi
-rep movsb
+;rep movsb
 
 mov eax, save
 inc dword [eax]
