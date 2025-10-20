@@ -108,10 +108,16 @@ jc err
 mov ecx, 512
 mov esi, 0x500
 pop edi
-;rep movsb
+; loop (rep movsb doesnt work)
+nextbyte:
+mov al, [esi]
+mov [edi], al
+inc esi
+inc edi
+loop nextbyte
 
-mov eax, save
-inc dword [eax]
+inc dword [save]
+inc dword [diskpacket.lba]
 
 pop ecx
 loop nextsector
