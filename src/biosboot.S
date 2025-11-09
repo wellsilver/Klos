@@ -87,10 +87,21 @@ mov dl, [0x7c01]
 int 13h
 jc err
 
-mov eax, [0x500+74] ; starting lba
+mov eax, [0x500+74] ; starting lba for ELF
 mov [diskpacket.lba], eax
-mov ecx, [0x500+74+8] ; number of sectors
+mov ecx, [0x500+74+8] ; number of sectors in ELF
 mov edi, 0x00100000
+
+; find where the first segment is in the ELF
+
+; get the header
+mov esi, diskpacket
+mov ax, 0x4200
+mov dl, [0x7c01]
+int 13h
+; get where the segments are stored
+mov eax, [0x500+32]
+hlt
 
 ; get each sector individually then rep movsb them to upper memory
 nextsector:
@@ -121,6 +132,9 @@ inc dword [diskpacket.lba]
 
 pop ecx
 loop nextsector
+
+; have the ELF file, now we just need to set it up...
+
 
 hlt
 
