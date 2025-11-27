@@ -99,8 +99,16 @@ mov esi, diskpacket
 mov ax, 0x4200
 mov dl, [0x7c01]
 int 13h
-; get where the segments are stored
-mov eax, [0x500+32]
+
+; get offset to where the segments are stored
+mov eax, [0x500+32] ; even though its 64 bits its usually in the first 512 bytes of the header (Get program header offset)
+lea ebx, [0x500+eax+8] ; get memory location of offset (get memory location of the segment with the program)
+mov eax, [ebx] ; get the offset of the first memory segment (read the memory location)
+mov ebx, 512
+div ebx ; divide eax by 512, there shouldnt be a remainder
+
+
+
 hlt
 
 ; get each sector individually then rep movsb them to upper memory
