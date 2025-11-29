@@ -86,6 +86,7 @@ qemudebug: $(out)/klos.img
 bochs: $(out)/klos.img
 	bochs -qf bochsrc.txt
 
+build: $(out)/klos.img
 all: qemu
 
 clean:
