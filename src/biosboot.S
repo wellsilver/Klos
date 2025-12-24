@@ -45,6 +45,7 @@ mov es, bx
 mov bx, 0x7E00
 ; DL is already restored
 int 0x13
+mov dl, [0x7C01] ; restore dl if it was changed
 
 ; Enter unreal mode so we can load the kernel into upper free memory
 unrealmode:
@@ -195,8 +196,68 @@ times 510-($-$$) db 0
 dw 0xAA55
 
 switchlong:
+
+;; create a pagemap with memory
+
+pagemap: equ 0x8000
+
+; l4 to first l3
+lea eax, [pagemap + 0x1000 + 1] ; pointer to l3 0, with present bit
+lea ebx, [pagemap + (511*8)] ; pml4[511]
+or eax, 2 ; writable
+mov dword [ebx], eax
+; l3 to l2
+lea eax, [pagemap + 0x3000 + 0x01] ; pointer to l2 0 with present and page size (1 << 7) set 
+lea ebx, [pagemap + 0x1000] ; l3[0]
+or eax, 2 ; writable
+mov dword [ebx], eax ; map the level 3 entry to the level 2 entry
+; l2 to mem
+mov eax, edi ; pointer to the physical memory with present and pagesize set
+or eax, 1 | 1<<7
+lea ebx, [pagemap + 0x3000] ; l2[0]
+or eax, 2 ; writable
+mov dword [ebx], eax
+
+; map this part to memory (so we can continue working here on the new cr3)
+mov eax, edi
+lea ebx, [pagemap]
+; get l4 position and set it to l3 1
+mov ecx, 0xFF8000000000
+and eax, ecx ; zero all bits that arent part of l4
+shr eax, 48-9
+shl eax, 3 ; (multiply by 8) todo combine with shr before
+add ebx, eax
+lea eax, [pagemap + 0x2000] ; to l3 1
+or eax, 1
+or eax, 2
+mov dword [ebx], eax
+; get l3 position and set it to l2 1
+mov eax, edi
+lea ebx, [pagemap + 0x2000] ; to l3 1
+mov ecx, 0x007F80000000
+and eax, ecx ; zero all bits that arent part of l4
+shr eax, 48-9-9
+shl eax, 3 ; (multiply by 8) todo combine with shr before
+add ebx, eax
+lea eax, [pagemap + 0x4000] ; to l2 1
+or eax, 1
+or eax, 2
+mov dword [ebx], eax
+; get l2 position and set it to the memory
+mov eax, edi
+lea ebx, [pagemap + 0x4000] ; to l2 1
+mov ecx, 0x00003fe00000
+and eax, ecx
+shr eax, 48-9-9-9
+shl eax, 3 ; (multiply by 8) todo combine with shr before
+add ebx, eax
+mov eax, edi
+or eax, 1 | 1<<7
+or eax, 2
+mov dword [ebx], eax
+
 hlt
 
-db "Hello there"
+db "Hello there :)"
 
 times 1024-($-$$) db 0
