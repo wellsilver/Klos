@@ -197,7 +197,8 @@ dw 0xAA55
 
 switchlong:
 
-;; create a pagemap with memory
+;; create a pagemap to jump to long mode. 
+; This is kind of repetitive, there should be a second stage in the kernel to do this from unreal mode...
 
 pagemap: equ 0x8000
 
@@ -256,7 +257,64 @@ or eax, 1 | 1<<7
 or eax, 2
 mov dword [ebx], eax
 
+; Disable IRQs
+mov al, 0xFF                      ; Out 0xFF to 0xA1 and 0x21 to disable all IRQs.
+out 0xA1, al
+out 0x21, al
+
+nop
+nop
+
+lidt [IDT]                        ; Load a zero length IDT so that any NMI causes a triple fault.
+
+; Enter long mode.
+mov eax, 10100000b                ; Set the PAE and PGE bit.
+mov cr4, eax
+  
+mov edx, edi                      ; Point CR3 at the PML4.
+mov cr3, edx
+  
+mov ecx, 0xC0000080               ; Read from the EFER MSR. 
+rdmsr    
+
+or eax, 0x00000100                ; Set the LME bit.
+wrmsr
+  
+mov ebx, cr0                      ; Activate long mode -
+or ebx,0x80000001                 ; - by enabling paging and protection simultaneously.
+mov cr0, ebx                    
+
+cli
+lgdt [GDT.Pointer]                ; Load GDT.Pointer defined below.
+  
+jmp 8:LongMode             ; Load CS with 64 bit segment and flush the instruction cache
+
+bits 64
+LongMode:
+
 hlt
+
+    ; Global Descriptor Table
+GDT:
+.Null:
+  dq 0x0000000000000000             ; Null Descriptor - should be present.
+
+.Code:
+  dq 0x00209A0000000000             ; 64-bit code descriptor (exec/read).
+  dq 0x0000920000000000             ; 64-bit data descriptor (read/write).
+    
+ALIGN 4
+  dw 0                              ; Padding to make the "address of the GDT" field aligned on a 4-byte boundary
+
+.Pointer:
+  dw $ - GDT - 1                    ; 16-bit Size (Limit) of GDT.
+  dd GDT                            ; 32-bit Base Address of GDT. (CPU will zero extend to 64-bit)
+
+
+ALIGN 4
+IDT:
+  .Length       dw 0
+  .Base         dd 0
 
 db "Hello there :)"
 
