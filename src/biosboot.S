@@ -202,60 +202,10 @@ switchlong:
 
 pagemap: equ 0x8000
 
-; l4 to first l3
-lea eax, [pagemap + 0x1000 + 1] ; pointer to l3 0, with present bit
-lea ebx, [pagemap + (511*8)] ; pml4[511]
-or eax, 2 ; writable
-mov dword [ebx], eax
-; l3 to l2
-lea eax, [pagemap + 0x3000 + 0x01] ; pointer to l2 0 with present and page size (1 << 7) set 
-lea ebx, [pagemap + 0x1000] ; l3[0]
-or eax, 2 ; writable
-mov dword [ebx], eax ; map the level 3 entry to the level 2 entry
-; l2 to mem
-mov eax, edi ; pointer to the physical memory with present and pagesize set
-or eax, 1 | 1<<7
-lea ebx, [pagemap + 0x3000] ; l2[0]
-or eax, 2 ; writable
-mov dword [ebx], eax
+mov eax, pagemap
 
-; map this part to memory (so we can continue working here on the new cr3)
-mov eax, edi
-lea ebx, [pagemap]
-; get l4 position and set it to l3 1
-mov ecx, 0xFF8000000000
-and eax, ecx ; zero all bits that arent part of l4
-shr eax, 48-9
-shl eax, 3 ; (multiply by 8) todo combine with shr before
-add ebx, eax
-lea eax, [pagemap + 0x2000] ; to l3 1
-or eax, 1
-or eax, 2
-mov dword [ebx], eax
-; get l3 position and set it to l2 1
-mov eax, edi
-lea ebx, [pagemap + 0x2000] ; to l3 1
-mov ecx, 0x007F80000000
-and eax, ecx ; zero all bits that arent part of l4
-shr eax, 48-9-9
-shl eax, 3 ; (multiply by 8) todo combine with shr before
-add ebx, eax
-lea eax, [pagemap + 0x4000] ; to l2 1
-or eax, 1
-or eax, 2
-mov dword [ebx], eax
-; get l2 position and set it to the memory
-mov eax, edi
-lea ebx, [pagemap + 0x4000] ; to l2 1
-mov ecx, 0x00003fe00000
-and eax, ecx
-shr eax, 48-9-9-9
-shl eax, 3 ; (multiply by 8) todo combine with shr before
-add ebx, eax
-mov eax, edi
-or eax, 1 | 1<<7
-or eax, 2
-mov dword [ebx], eax
+; map the first 2 pages (in 2 megabyte pages) to real memory, that should be enough space for the kernel to boot
+
 
 ; Disable IRQs
 mov al, 0xFF                      ; Out 0xFF to 0xA1 and 0x21 to disable all IRQs.
@@ -270,10 +220,10 @@ lidt [IDT]                        ; Load a zero length IDT so that any NMI cause
 ; Enter long mode.
 mov eax, 10100000b                ; Set the PAE and PGE bit.
 mov cr4, eax
-  
-mov edx, edi                      ; Point CR3 at the PML4.
-mov cr3, edx
-  
+
+mov eax, cr3
+mov cr3, eax
+
 mov ecx, 0xC0000080               ; Read from the EFER MSR. 
 rdmsr    
 
@@ -294,7 +244,7 @@ LongMode:
 
 hlt
 
-    ; Global Descriptor Table
+; Global Descriptor Table
 GDT:
 .Null:
   dq 0x0000000000000000             ; Null Descriptor - should be present.
