@@ -200,11 +200,25 @@ switchlong:
 ;; create a pagemap to jump to long mode. 
 ; This is kind of repetitive, there should be a second stage in the kernel to do this from unreal mode...
 
-pagemap: equ 0x8000
+pagemapl4: equ 0x8000 ; l4 here
+pagemapl3: equ 0x8000+0x1000
+pagemapl2: equ 0x8000+(0x1000*2)
 
-mov eax, pagemap
 
 ; map the first 2 pages (in 2 megabyte pages) to real memory, that should be enough space for the kernel to boot
+mov eax, pagemapl4
+mov ebx, pagemapl3
+or ebx, 1 | 2 ; add present and r/w bits
+mov dword [eax], ebx ; l4 to l3 (0)
+
+mov eax, pagemapl3 ; pagemapl3[0]
+mov ebx, pagemapl2
+or ebx, 1 | 2 ; add present and r/w bits
+mov dword [eax], ebx
+
+mov eax, pagemapl2
+mov ebx, 0 | 1 | 2 | 1<<7; present and r/w and pagesize
+mov dword [eax], ebx
 
 
 ; Disable IRQs
@@ -221,7 +235,7 @@ lidt [IDT]                        ; Load a zero length IDT so that any NMI cause
 mov eax, 10100000b                ; Set the PAE and PGE bit.
 mov cr4, eax
 
-mov eax, cr3
+mov eax, pagemapl4
 mov cr3, eax
 
 mov ecx, 0xC0000080               ; Read from the EFER MSR. 
@@ -236,7 +250,7 @@ mov cr0, ebx
 
 cli
 lgdt [GDT.Pointer]                ; Load GDT.Pointer defined below.
-  
+
 jmp 8:LongMode             ; Load CS with 64 bit segment and flush the instruction cache
 
 bits 64
