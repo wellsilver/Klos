@@ -163,6 +163,16 @@ inc dword [diskpacket.lba]
 pop ecx
 loop nextsector
 
+; the kernel needs a memory map, need to make it using e820 before long mode
+memmap: equ 0x8000
+
+; Only give free memory, kernel/memory/mem.h
+; struct memregion {
+;  uint64_t base,size;
+; } PACKED;
+
+
+
 ; have the kernel loaded.... Now just need to jump to it in long mode.
 jmp switchlong
 
@@ -200,9 +210,9 @@ switchlong:
 ;; create a pagemap to jump to long mode. 
 ; This is kind of repetitive, there should be a second stage in the kernel to do this from unreal mode...
 
-pagemapl4: equ 0x8000 ; l4 here
-pagemapl3: equ 0x8000+0x1000
-pagemapl2: equ 0x8000+(0x1000*2)
+pagemapl4: equ 0x9000 ; l4 here
+pagemapl3: equ 0x9000+0x1000
+pagemapl2: equ 0x9000+(0x1000*2)
 
 
 ; map the first 2 pages (in 2 megabyte pages) to real memory, that should be enough space for the kernel to boot
@@ -219,7 +229,6 @@ mov dword [eax], ebx
 mov eax, pagemapl2
 mov ebx, 0 | 1 | 2 | 1<<7; present and r/w and pagesize
 mov dword [eax], ebx
-
 
 ; Disable IRQs
 mov al, 0xFF                      ; Out 0xFF to 0xA1 and 0x21 to disable all IRQs.
