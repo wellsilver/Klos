@@ -171,7 +171,15 @@ memmap: equ 0x8000
 ;  uint64_t base,size;
 ; } PACKED;
 
-
+xor ebx. ebx
+mov di, 0
+e820loop:
+mov eax, e820h
+mov edx, 'SMAP'
+mov ecx, 20
+int 15h
+cmp ebx, 0
+jne e820loop
 
 ; have the kernel loaded.... Now just need to jump to it in long mode.
 jmp switchlong
