@@ -84,7 +84,7 @@ qemu-bios: $(out)/klos.img
 qemudebug: $(out)/klos.img
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -m 1G
 bochs: $(out)/klos.img
-	bochs -qf bochsrc.txt
+	bochs -q -dbg 'floppya: 1_44=$(out)/klos.img, status=inserted'
 
 build: $(out)/klos.img
 all: qemu
