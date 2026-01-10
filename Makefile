@@ -45,10 +45,12 @@ $(out)/biosboot.bin: $(src)/biosboot.S | $(out)
 #
 #
 
-$(out)/klos.img: $(out)/BOOTX64.efi $(out)/kernel.elf $(out)/biosboot.bin | $(out)
-# format kfs 1000 megabytes
+# BIOS BOOT (out/kfs.img)
+$(out)/kfs.img: $(out)/biosboot.bin $(out)/kernel.elf | $(out)
 	python3 kfs/format.py $(out)/kfs.img 1000 $(out)/biosboot.bin $(out)/kernel.elf
 
+# UEFI BOOT (out/klos.img)
+$(out)/klos.img: $(out)/kfs.img $(out)/BOOTX64.efi $(out)/kernel.elf $(out)/biosboot.bin | $(out)
 # format the efi fs
 #	mkfs.fat -C -F 32 $(out)/efi.img 20480
 	truncate $(out)/efi.img -s 12M
@@ -83,8 +85,8 @@ qemu-bios: $(out)/klos.img
 	qemu-system-x86_64 -hda $(out)/kfs.img -D ./qemulog.txt -d int,mmu -no-reboot -m 1G -chardev stdio,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios
 qemudebug: $(out)/klos.img
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -m 1G
-bochs: $(out)/klos.img
-	bochs -q -dbg 'floppya: 1_44=$(out)/klos.img, status=inserted'
+bochs: $(out)/kfs.img
+	bochs -q 'floppya: 1_44=$(out)/kfs.img, status=inserted'
 
 build: $(out)/klos.img
 all: qemu
