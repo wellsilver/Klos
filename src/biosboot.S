@@ -186,9 +186,25 @@ hlt
 
 hlt
 
+; incase of failure
 err:
-  mov esp, 0xdeadbeef
+  mov cx, 12
+  lea eax, [rel errstr]
+  mov ebx, 0xB8000
+  mov sp, 0xdead
+errloop:
+  mov dl, byte [eax]
+  mov byte [ebx], dl
+  inc ebx
+  mov byte [ebx], 0xF | 1 <<< 7 ; white text | blink
+  inc eax
+  inc ebx
+  loop errloop
+  cli
+  hlt
   jmp $
+
+errstr: db "KLOS - ERROR"
 
 save: dd 0
 
