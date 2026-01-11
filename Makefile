@@ -45,12 +45,12 @@ $(out)/biosboot.bin: $(src)/biosboot.S | $(out)
 #
 #
 
-# BIOS BOOT (out/kfs.img)
+# Filesystem, no partition table, BIOS BOOT (out/kfs.img)
 $(out)/kfs.img: $(out)/biosboot.bin $(out)/kernel.elf | $(out)
 	python3 kfs/format.py $(out)/kfs.img 1000 $(out)/biosboot.bin $(out)/kernel.elf
 
-# UEFI BOOT (out/klos.img)
-$(out)/klos.img: $(out)/kfs.img $(out)/BOOTX64.efi $(out)/kernel.elf $(out)/biosboot.bin | $(out)
+# Generic GPT UEFI BOOT (out/klos.img)
+$(out)/klos_uefi.img: $(out)/kfs.img $(out)/BOOTX64.efi $(out)/kernel.elf $(out)/biosboot.bin | $(out)
 # format the efi fs
 #	mkfs.fat -C -F 32 $(out)/efi.img 20480
 	truncate $(out)/efi.img -s 12M
@@ -61,16 +61,20 @@ $(out)/klos.img: $(out)/kfs.img $(out)/BOOTX64.efi $(out)/kernel.elf $(out)/bios
 	mcopy -i $(out)/efi.img $(out)/BOOTX64.EFI ::/EFI/BOOT
 
 # create the disc image with a efi and kfs partition
-	truncate $(out)/klos.img -s 1024M
-	parted $(out)/klos.img --script mklabel gpt
-	parted $(out)/klos.img --script mkpart primary 2M 12M
-	parted $(out)/klos.img --script mkpart primary 13M 1000M
+	touch $(out)/klos_uefi.img
+	parted $(out)/klos_uefi.img --script mklabel gpt
+	parted $(out)/klos_uefi.img --script mkpart primary 2M 12M
+	parted $(out)/klos_uefi.img --script mkpart primary 13M 1000M
 
 # assemble the partitions
-	dd if=$(out)/efi.img of=$(out)/klos.img bs=1M seek=2 conv=notrunc
-	dd if=$(out)/kfs.img of=$(out)/klos.img bs=1M seek=12 conv=notrunc
+	dd if=$(out)/efi.img of=$(out)/klos_uefi.img bs=1M seek=2 conv=notrunc
+	dd if=$(out)/kfs.img of=$(out)/klos_uefi.img bs=1M seek=12 conv=notrunc
 
 # sudo dd if=out/klos.img of=/dev/sda
+
+# CDROM (El Torito) BIOS BOOT (out/klos_eltorito.iso)
+$(out)/klos_eltorito.iso: $(out)/kfs.img
+	xorriso -as mkisofs -b kfs.img -no-emul-boot -boot-load-size 4 -o $(out)/klos_eltorito.iso $(out)/kfs.img
 
 ### UTILS
 #
@@ -79,14 +83,14 @@ $(out)/klos.img: $(out)/kfs.img $(out)/BOOTX64.efi $(out)/kernel.elf $(out)/bios
 $(out):
 	mkdir -p $(out)
 
-qemu: $(out)/klos.img
+qemu: $(out)/klos_uefi.img
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -m 1G
-qemu-bios: $(out)/klos.img
+qemu-bios: $(out)/kfs.img
 	qemu-system-x86_64 -hda $(out)/kfs.img -D ./qemulog.txt -d int,mmu -no-reboot -m 1G -chardev stdio,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios
-qemudebug: $(out)/klos.img
+qemudebug: $(out)/klos_uefi.img
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -m 1G
-bochs: $(out)/kfs.img
-	bochs -q 'floppya: 1_44=$(out)/kfs.img, status=inserted'
+bochs: $(out)/klos_eltorito.iso
+	bochs -q 'boot:cdrom' 'ata0-master: type=cdrom, path=out/klos_eltorito.iso, status=inserted'
 
 build: $(out)/klos.img
 all: qemu

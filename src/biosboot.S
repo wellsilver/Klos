@@ -29,23 +29,27 @@ start2:
 mov sp, 0x7C00
 mov [0x7C01], dl ; save dl
 
-; Reset drive
-mov ah, 0
+; (is this required?)
+mov ah, 0x41
+mov bx, 0x55aa
+mov dl, [0x7c01]
 int 13h
-mov dl, [0x7C01] ; restore dl if it was changed
+jc err
 
-; Get extra sector (for more code space)
-mov ah, 2
-mov al, 1
-mov ch, 0
-mov cl, 2 ; the extra sector (sector after this)
-mov dh, 0
-mov bx, 0
-mov es, bx
-mov bx, 0x7E00
-; DL is already restored
-int 0x13
-mov dl, [0x7C01] ; restore dl if it was changed
+; reset drive
+mov ax, 0
+mov dl, [0x7c01]
+int 13h
+jc err
+
+; Read the extra sector
+mov eax, 2
+mov [diskpacket.lba], eax
+mov esi, diskpacket
+mov ax, 0x4200
+mov dl, [0x7c01]
+int 13h
+jc err
 
 ; Enter unreal mode so we can load the kernel into upper free memory
 unrealmode:
@@ -79,17 +83,6 @@ jmp 0x8:.pmode
   mov bx, 0x0f01         ; attrib/char of smiley :)
   mov eax, 0x0b8000      ; note 32 bit offset
   mov word [ds:eax], bx
-
-mov ah, 0x41
-mov bx, 0x55aa
-mov dl, [0x7c01]
-int 13h
-jc err
-
-mov ax, 0
-mov dl, [0x7c01]
-int 13h
-jc err
 
 ; Read the highlighted sector (should be kernel file)
 mov eax, [highlighted]
@@ -179,11 +172,6 @@ mov edi, 0x8000
 mov ecx, 24
 int 15h
 jz err
-
-mov edi, 0x8000+8+8
-mov eax, [edi]
-cmp eax, 1
-je addmap
 
 
 cmp ebx, 0
