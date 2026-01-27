@@ -57,18 +57,18 @@ $(out)/klos_uefi.img: $(out)/kfs.img $(out)/BOOTX64.efi $(out)/kernel.elf $(out)
 	mformat -i $(out)/efi.img
 	mmd -i $(out)/efi.img ::/EFI ::/EFI/BOOT ::/boot
 
-# Copy limine to efi.img
+# Copy UEFI bootloader efi.img
 	mcopy -i $(out)/efi.img $(out)/BOOTX64.EFI ::/EFI/BOOT
 
-# create the disc image with a efi and kfs partition
-	touch $(out)/klos_uefi.img
+# create the disc image with a efi and kfs partition - 100M not a special number
+	truncate $(out)/klos_uefi.img -s 100M
 	parted $(out)/klos_uefi.img --script mklabel gpt
-	parted $(out)/klos_uefi.img --script mkpart primary 2M 12M
-	parted $(out)/klos_uefi.img --script mkpart primary 13M 1000M
+	parted $(out)/klos_uefi.img mkpart EFI FAT32 2048s 2MiB
+	parted $(out)/klos_uefi.img mkpart klos 2MiB 100%
 
-# assemble the partitions
-	dd if=$(out)/efi.img of=$(out)/klos_uefi.img bs=1M seek=2 conv=notrunc
-	dd if=$(out)/kfs.img of=$(out)/klos_uefi.img bs=1M seek=12 conv=notrunc
+# copy partitions to the disc image
+	dd if=$(out)/efi.img of=$(out)/klos_uefi.img bs=512 seek=2048
+	dd if=$(out)/kfs.img of=$(out)/klos_uefi.img seek=2MiB
 
 # sudo dd if=out/klos.img of=/dev/sda
 
@@ -84,11 +84,11 @@ $(out):
 	mkdir -p $(out)
 
 qemu: $(out)/klos_uefi.img
-	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -m 1G
+	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -D ./qemulog.txt -hda $(out)/klos_uefi.img -d int,mmu -no-reboot -m 1G
 qemu-bios: $(out)/kfs.img
 	qemu-system-x86_64 -hda $(out)/kfs.img -D ./qemulog.txt -d int,mmu -no-reboot -m 1G -chardev stdio,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios
 qemudebug: $(out)/klos_uefi.img
-	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -m 1G
+	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos_uefi.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -m 1G
 bochs: $(out)/klos_eltorito.iso
 	bochs -q 'boot:cdrom' 'ata0-master: type=cdrom, path=out/klos_eltorito.iso, status=inserted'
 
