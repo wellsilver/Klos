@@ -29,13 +29,6 @@ start2:
 mov sp, 0x7C00
 mov [0x7C01], dl ; save dl
 
-; (is this required?)
-mov ah, 0x41
-mov bx, 0x55aa
-mov dl, [0x7c01]
-int 13h
-jc err
-
 ; reset drive
 mov ax, 0
 mov dl, [0x7c01]
@@ -46,9 +39,28 @@ jc err
 mov eax, 2
 mov [diskpacket.lba], eax
 mov esi, diskpacket
-mov ax, 0x4200
+mov ax, 0x42
 mov dl, [0x7c01]
 int 13h
+jc err
+
+; get e820
+; the kernel needs a memory map, need to make it using e820 before long mode (and before unreal mode, since that messes with the registers)
+memmap: equ 0x8000
+
+; Only give free memory, kernel/memory/mem.h
+; struct memregion {
+;  uint64_t base,size;
+; } PACKED;
+
+xor ebx, ebx ; must be NULL on first call
+mov es, bx ; addressing 0x8000
+e820loop:
+mov eax, 0xE820
+mov edi, memmap
+mov ecx, 24
+mov edx, 0x534D4150
+int 15h
 jc err
 
 ; Enter unreal mode so we can load the kernel into upper free memory
@@ -156,35 +168,7 @@ inc dword [diskpacket.lba]
 pop ecx
 loop nextsector
 
-; the kernel needs a memory map, need to make it using e820 before long mode
-memmap: equ 0x8000
-
-; Only give free memory, kernel/memory/mem.h
-; struct memregion {
-;  uint64_t base,size;
-; } PACKED;
-
-xor ebx, ebx
-e820loop:
-mov eax, 0xe820
-mov edx, "SMAP"
-mov edi, 0x8000
-mov ecx, 24
-int 15h
-jz err
-
-
-cmp ebx, 0
-jne e820loop
-
-; have the kernel loaded.... Now just need to jump to it in long mode.
 jmp switchlong
-
-addmap:
-hlt
-
-
-hlt
 
 ; incase of failure
 err:
@@ -314,4 +298,5 @@ IDT:
 
 db "Hello there :)"
 
+freearea:
 times 1024-($-$$) db 0
