@@ -55,20 +55,23 @@ memmap: equ 0x8000
 
 ; First write the entire map it gives
 xor ebx, ebx ; must be NULL on first call
-mov es, bx ; addressing 0x8000
+mov es, bx ; addressing 0x8000 (zero es)
+mov edi, memmap
 e820loop:
 mov eax, 0xE820
-mov edi, memmap
 mov ecx, 20
 mov edx, 0x534D4150
 int 15h
 jc err
 
-add di, cl ; sometimes it will give more than 20 bytes
+xor ch, ch
+add di, cx ; sometimes it will give more than 20 bytes
 
 ; if ebx is 0 (wrapped around and returned to first index) then finish loop
 cmp ebx, 0
 jne e820loop ; if ready
+
+
 
 ; Enter unreal mode so we can load the kernel into upper free memory
 unrealmode:
