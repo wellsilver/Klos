@@ -47,26 +47,44 @@ jc err
 ; get e820
 ; the kernel needs a memory map, need to make it using e820 before long mode (and before unreal mode, since that messes with the registers)
 memmap: equ 0x8000
+memmaplen: equ 0x7FFF ; char, size of memmap
+memmap_store: equ 0x7F00 ; store the entry while its processed
 
 ; Only give free memory, kernel/memory/mem.h
 ; struct memregion {
 ;  uint64_t base,size;
 ; } PACKED;
 
+; store the current position on memmap in the stack
+mov edi, 0x8000
+push edi
+
 ; First write the entire map it gives
 xor ebx, ebx ; must be NULL on first call
-mov es, bx ; addressing 0x8000 (zero es)
-mov edi, memmap
+mov es, bx ; addressing first megabyte (zero es)
 e820loop:
-mov eax, 0xE820
-mov ecx, 20
-mov edx, 0x534D4150
+mov eax, 0xE820 ; INT 15h, AX=E820
+mov ecx, 20 ; the size, its nice to just ignore the ACPI
+mov edx, 0x534D4150 ; magic number
+mov edi, memmap_store ; where the entry is stored while its processed
 int 15h
 jc err
 
-xor ch, ch
-add di, cx ; sometimes it will give more than 20 bytes
+; test if it free memory, if so; add to memmap, if not then ignore it
+mov eax, [edi+8+8] ; get uint32_t type
+cmp eax, 1 ; if the value in EAX, which is ram is free for use
+jne .checkifdone ; if it is not free memory, skip over the writing and check if done with the loop
+; write the entry
+mov ecx, 20 ; copy 20 bytes
+mov esi, edi ; move from memmap_store buffer
+pop edi ; get the current position in memmap
+push esi ; save whatevers in esi for e820 function
+rep movsb
+pop esi
+push edi ; save the current position into memmap
+inc byte [memmaplen]
 
+.checkifdone:
 ; if ebx is 0 (wrapped around and returned to first index) then finish loop
 cmp ebx, 0
 jne e820loop ; if ready
@@ -182,7 +200,7 @@ jmp switchlong
 
 ; incase of failure
 err:
-  mov cx, 12
+  mov cx, 5
   lea eax, [rel errstr]
   mov ebx, 0xB8000
   mov sp, 0xdead
@@ -198,7 +216,7 @@ errloop:
   hlt
   jmp $
 
-errstr: db "KLOS - ERROR"
+errstr: db "ERROR"
 
 save: dd 0
 
