@@ -76,9 +76,9 @@ cmp eax, 1 ; if the value in EAX, which is ram is free for use
 jne .checkifdone ; if it is not free memory, skip over the writing and check if done with the loop
 ; write the entry
 mov ecx, 20 ; copy 20 bytes
+push esi
 mov esi, edi ; move from memmap_store buffer
-pop edi ; get the current position in memmap
-push esi ; save whatevers in esi for e820 function
+pop edi ; get the current position in memmap 
 rep movsb
 pop esi
 push edi ; save the current position into memmap
@@ -88,8 +88,6 @@ inc byte [memmaplen]
 ; if ebx is 0 (wrapped around and returned to first index) then finish loop
 cmp ebx, 0
 jne e820loop ; if ready
-
-
 
 ; Enter unreal mode so we can load the kernel into upper free memory
 unrealmode:
