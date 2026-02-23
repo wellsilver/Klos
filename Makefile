@@ -90,7 +90,7 @@ qemu-bios: $(out)/kfs.img
 qemudebug: $(out)/klos_uefi.img
 	qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd -s -S -D ./qemulog.txt -hda $(out)/klos_uefi.img -d int,mmu -no-reboot -monitor stdio -M memory-backend=foo.ram -object memory-backend-file,size=1G,id=foo.ram,mem-path=ram.bin,share=on,prealloc=on -m 1G
 bochs: $(out)/klos_eltorito.iso
-	bochs -q 'boot:cdrom' 'ata0-master: type=cdrom, path=out/klos_eltorito.iso, status=inserted'
+	bochs -dbg_gui -q 'boot:cdrom' 'ata0-master: type=cdrom, path=out/klos_eltorito.iso, status=inserted'
 
 build: $(out)/klos.img
 all: qemu
