@@ -76,18 +76,18 @@ cmp eax, 1 ; if the value in EAX, which is ram is free for use
 jne .checkifdone ; if it is not free memory, skip over the writing and check if done with the loop
 ; write the entry
 mov ecx, 20 ; copy 20 bytes
-push esi
-mov esi, edi ; move from memmap_store buffer
-pop edi ; get the current position in memmap 
+mov esi, edi ; move from memmap_store buffer (e820 stores the buffer in edi, but rep movsb wants esi)
+pop edi ; get the destination 0x800+(20*index)
 rep movsb
-pop esi
-push edi ; save the current position into memmap
+push edi ; save the current pointer
 inc byte [memmaplen]
 
 .checkifdone:
 ; if ebx is 0 (wrapped around and returned to first index) then finish loop
 cmp ebx, 0
 jne e820loop ; if ready
+
+pop edi ; free the stack again
 
 ; Enter unreal mode so we can load the kernel into upper free memory
 unrealmode:
@@ -111,7 +111,7 @@ jmp 0x8:.pmode
   mov es, bx
 
   and al,0xFE            ; back to realmode
-  mov  cr0, eax          ; by toggling bit again
+  mov cr0, eax          ; by toggling bit again
   jmp 0x0:.unreal
 
 .unreal:
@@ -246,7 +246,6 @@ switchlong:
 pagemapl4: equ 0x9000 ; l4 here
 pagemapl3: equ 0x9000+0x1000
 pagemapl2: equ 0x9000+(0x1000*2)
-
 
 ; map the first 2 pages (in 2 megabyte pages) to real memory, that should be enough space for the kernel to boot
 mov eax, pagemapl4
