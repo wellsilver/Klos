@@ -143,6 +143,7 @@ mov esi, diskpacket
 mov ax, 0x4200
 mov dl, [0x7c01]
 int 13h
+jc err
 
 ; get offset to where the segments are stored
 mov eax, [0x500+32] ; even though its 64 bits its usually in the first 512 bytes of the header (Get program header offset)
