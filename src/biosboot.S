@@ -158,6 +158,7 @@ mov eax, [0x500+32] ; even though its 64 bits its usually in the first 512 bytes
 lea ebx, [0x500+eax+8+8+8+8] ; get memory location of size
 mov eax, [ebx] ; get size (in the file) of segment to eax
 mov ebx, 512
+xor edx, edx
 div ebx ; divide eax by 512 to get sectors
 inc eax ; so we dont lose any straggler bytes in the remainder
 
