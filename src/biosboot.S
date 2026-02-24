@@ -236,7 +236,7 @@ dw 0xAA55
 db "KLOS_S2"
 
 switchlong:
-hlt
+
 ;; create a pagemap to jump to long mode. 
 ; This is kind of repetitive, there should be a second stage in the kernel to do this from unreal mode...
 
