@@ -35,14 +35,7 @@ mov dl, [0x7c01]
 int 13h
 jc err
 
-; Read the extra sector
-mov eax, 2
-mov [diskpacket.lba], eax
-mov esi, diskpacket
-mov ax, 0x42
-mov dl, [0x7c01]
-int 13h
-jc err
+
 
 ; get e820
 ; the kernel needs a memory map, need to make it using e820 before long mode (and before unreal mode, since that messes with the registers)
@@ -226,7 +219,7 @@ db 0
 .sectors: dw 1
 .tooffset: dw 0x500
 .tosegment: dw 0
-.lba: dq 0
+.lba: dq 2
 
 gdt32info:
   dw gdt_end - gdt32 - 1   ;last byte in table
@@ -240,8 +233,10 @@ gdt_end:
 times 510-($-$$) db 0
 dw 0xAA55
 
-switchlong:
+db "KLOS_S2"
 
+switchlong:
+hlt
 ;; create a pagemap to jump to long mode. 
 ; This is kind of repetitive, there should be a second stage in the kernel to do this from unreal mode...
 
