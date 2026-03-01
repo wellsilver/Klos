@@ -293,6 +293,8 @@ jmp 8:LongMode             ; Load CS with 64 bit segment and flush the instructi
 
 bits 64
 LongMode:
+mov rax, 0x00100000
+jmp rax
 
 hlt
 
