@@ -35,7 +35,11 @@ mov dl, [0x7c01]
 int 13h
 jc err
 
-
+mov [diskpacket.lba], 0x10 ; volume descriptor
+mov esi, diskpacket
+mov ax, 0x4200
+mov dl, [0x7c01]
+int 13h
 
 ; get e820
 ; the kernel needs a memory map, need to make it using e820 before long mode (and before unreal mode, since that messes with the registers)
@@ -233,7 +237,7 @@ gdt_end:
 times 510-($-$$) db 0
 dw 0xAA55
 
-db "KLOS_S2"
+db "KLOS S2"
 
 switchlong:
 
@@ -293,8 +297,7 @@ jmp 8:LongMode             ; Load CS with 64 bit segment and flush the instructi
 
 bits 64
 LongMode:
-mov rax, 0x00100000
-jmp rax
+;jmp 0x00100000
 
 hlt
 
@@ -319,8 +322,6 @@ ALIGN 4
 IDT:
   .Length       dw 0
   .Base         dd 0
-
-db "Hello there :)"
 
 freearea:
 times 1024-($-$$) db 0
