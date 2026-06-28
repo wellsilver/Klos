@@ -35,11 +35,20 @@ mov dl, [0x7c01]
 int 13h
 jc err
 
+; Get the LBA of klos image file, then load it
+
+volumedescriptor:
+; find the primary volume descriptor first!
 mov [diskpacket.lba], 0x10 ; volume descriptor
+.typeloop:
 mov esi, diskpacket
 mov ax, 0x4200
 mov dl, [0x7c01]
 int 13h
+add [diskpacket.lba], 4 ; each descriptor is 2048 bytes (so 4 sectors long ??)
+
+cmp byte [0x500], 1 ; is this descriptor the primary volume descriptor?
+jne .typeloop ; if it isnt jump back to .typeloop to read the next sector
 
 ; get e820
 ; the kernel needs a memory map, need to make it using e820 before long mode (and before unreal mode, since that messes with the registers)
