@@ -47,6 +47,8 @@ mov dl, [0x7c01]
 int 13h
 add [diskpacket.lba], 4 ; each descriptor is 2048 bytes (so 4 sectors long ??)
 
+cmp byte [0x500], 255 ; if reached terminator then error
+je err
 cmp byte [0x500], 1 ; is this descriptor the primary volume descriptor?
 jne .typeloop ; if it isnt jump back to .typeloop to read the next sector
 
