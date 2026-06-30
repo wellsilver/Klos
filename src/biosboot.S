@@ -52,6 +52,15 @@ je err
 cmp byte [0x500], 1 ; is this descriptor the primary volume descriptor?
 jne .typeloop ; if it isnt jump back to .typeloop to read the next sector
 
+xor eax, eax
+mov al, byte [156+18]
+
+mov eax, dword [156+2] ; load extent lba
+mov [diskpacket.lba], eax ; to the directory
+mov ax, 0x4200
+mov dl, [0x7c01]
+int 13h
+
 ; get e820
 ; the kernel needs a memory map, need to make it using e820 before long mode (and before unreal mode, since that messes with the registers)
 memmap: equ 0x8000
@@ -206,6 +215,11 @@ loop nextsector
 
 jmp switchlong
 
+times 510-($-$$) db 0
+dw 0xAA55
+
+db "KLOS S2"
+
 ; incase of failure
 err:
   mov cx, 5
@@ -244,11 +258,6 @@ gdt32:        dd 0,0        ; entry 0 is always unused
 codedesc:   db 0xff, 0xff, 0, 0, 0, 10011010b, 00000000b, 0
 flatdesc:   db 0xff, 0xff, 0, 0, 0, 10010010b, 11001111b, 0
 gdt_end:
-
-times 510-($-$$) db 0
-dw 0xAA55
-
-db "KLOS S2"
 
 switchlong:
 
